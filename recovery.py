@@ -5,7 +5,6 @@
 #   2026/1/23 By GoutouStdio
 #   @2022~2026 GoutouStdio. Open all rights.
 
-import btcfg
 import main
 import kernel
 import logk
