@@ -19,6 +19,8 @@
   - [ ] 实现系统签名，启动系统时会检测
   - [x] 实现一个简易的恢复模式
   - [ ] 实现GUI
+  - [ ] 把json配置文件改成我们的spc格式（SpaceConfig）
+  - [ ] 移植spf解析
     
 ## 贡献者：
   - GoutouStdio-cn
