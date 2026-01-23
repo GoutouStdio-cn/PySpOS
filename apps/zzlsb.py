@@ -1,13 +1,23 @@
-import api
+#   
+#   zzlsb.py
+#   简单的猜数字游戏（别问我为什么文件名是zzlsb）
+#
+#   2026/1/23 by GoutouStdio
+#   @ 2022~2026 GoutouStdio. Open all rights.
+
 import random
 
-number = 0   # 初始化这个数字
-def main():
-    number = random.randint(0,100)
+number = 0   # 初始化这个数字为0
+text = ['炸鸡', '炖肉', '胖牛', '汉堡', '飞电6Chanllger'] # 语库列表
 
-    print("大胖牛发放了%d个大粑粑" % number)
+def main():
+    print("简单猜数字游戏，根据提示语找答案！\n")
+    number = random.randint(0,100)  # 生成答案
+    dmm = random.randint(0,6)       # 大妈妈
+    print(f"大妈妈，你要做{text[dmm]}的话，你大该要放{float(number / dmm)}克盐。\n\n")
+
     while True:
-        ip = int(input("输入你猜的数字> "))
+        ip = int(input("输入你猜的数字："))
 
         if ip == number:
             print("中")

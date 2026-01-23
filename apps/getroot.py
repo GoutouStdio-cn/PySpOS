@@ -11,7 +11,7 @@ def main():
             api.api_ok("已获取 ROOT 权限！")
         else:
             api.api_error("获取 ROOT 权限失败！")
-        print("注意：ROOT 权限为'高危权限'，请谨慎使用！")
+        print("操作成功完成。")
     print("操作成功完成。")
 
 # 最重要的
