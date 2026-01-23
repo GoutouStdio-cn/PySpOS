@@ -9,6 +9,8 @@ import sys
 import btcfg
 import uuid
 import re
+import logk
+import recovery
 
 # 设置 apps 目录为模块搜索路径
 current_dir = os.getcwd()
@@ -18,16 +20,16 @@ sys.path.append(apps_dir)
 # 全局变量定义处
 bootcfg = btcfg.load_bootcfg()
 rootstate = bool(btcfg.get_bootcfg('rootstate'))
+boot_time = logk.get_boot_time()
 
 # 主函数
 def main():
-    printk.info("加载 PySpKernel...")
+    logk.printl("main", "加载 PySpKernel...", boot_time)
     if not btcfg.get_bootcfg('locked'):
         print("")
-    printk.info(f"Bootloader：{"已上锁" if bootcfg['locked'] else "已解锁"}，ROOT 权限：{"未启用" if not bootcfg['rootstate'] else "已启用"}")
-    printk.ok(f"加载完成，您使用的操作系统为：{sys.platform}, 你的设备id为：{uuid.getnode()}")
-    
-    printk.ok("ROOT 状态：" + "已启用" if rootstate else "未启用")
+    logk.printl("main", f"Bootloader：{"已上锁" if bootcfg['locked'] else "已解锁"}，ROOT 权限：{"未启用" if not bootcfg['rootstate'] else "已启用"}", boot_time)
+    logk.printl("main", f"加载完成，您使用的操作系统为：{sys.platform}, 你的设备id为：{uuid.getnode()}", boot_time)
+    logk.printl("main",  "ROOT已启用" if rootstate else "ROOT未启用", boot_time)
     kernel.loop()
 
 def print_sunhb():
@@ -101,6 +103,8 @@ def handle_command(prompt):
     elif prompt == "python":
         os.system("python")
         print()
+    elif prompt == "recovery":
+        recovery.recovery_main("kernel_jump")
     elif prompt == "shb":
         print_sunhb()
     elif prompt in ("ls", "dir"):

@@ -11,6 +11,7 @@ from fs import current_dir
 import uuid
 import hashlib
 import random
+import logk
 
 # PySpOS ASCII 艺术 Logo   
 ascii_logo = r'''
@@ -129,16 +130,20 @@ def print_prompt():
     print(prompt_header)
     return prompt_line
 
-# 内核主循环
-def loop():    
-    username = get_system_username()
+# 清屏
+def screen_clear():
     if os.name == "nt":
         os.system("cls")
     else:
         os.system("clear")    
+
+# 内核主循环
+def loop():    
+    screen_clear() # 清屏
+    username = get_system_username()
     print(ascii_logo)
 
-    print(f"\n你有 {cores} 个 CPU 逻辑核心，Token = {token}")
+    logk.printl("kernel", f"你有 {cores} 个 CPU 逻辑核心，Token = {token}", main.boot_time)
     print(f"欢迎使用 PySpOS 操作系统，{username}！")
     print()  # 打印一个空行
     while 1:

@@ -95,7 +95,7 @@ def load_bootcfg():
         
         return bootcfg
     except FileNotFoundError as e:
-        print("\033[31mbootcfg.json 已损坏，请自行新建新的bootcfg或到售后处理。\033[0m")
+        print("\033[31mbootcfg.json 已损坏\033[0m")
         if printk.confirm(f"系统启动失败（原因：{e}），是否尝试自动修复？"):
             create_bootcfg()
             print("操作成功完成\n")
@@ -104,7 +104,7 @@ def load_bootcfg():
         input("按下任意键关闭系统...")
         sys.exit(0)
     except json.JSONDecodeError as e:
-        print("\033[31mbootcfg.json 已损坏，请自行新建新的bootcfg或到售后处理。\033[0m")
+        print("\033[31mbootcfg.json 已损坏\033[0m")
         if printk.confirm(f"系统启动失败（原因：{e}），是否尝试自动修复？"):
             create_bootcfg()
             print("操作成功完成\n")
