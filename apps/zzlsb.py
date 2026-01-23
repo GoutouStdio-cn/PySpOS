@@ -20,10 +20,10 @@ def main():
         ip = int(input("输入你猜的数字："))
 
         if ip == number:
-            print("中")
+            print("恭喜你猜中了！\n")
             break
         else:
-            print("没中")
+            print(f"很遗憾你没有猜中，答案是{number}\n")
 
 if __name__ == "__exec__":
     try:
