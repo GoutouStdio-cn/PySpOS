@@ -23,7 +23,7 @@ def recovery_main(jumpinfo) -> str:
         if prompt == "help":
             print("help     打印本帮助信息")
             print("erase    清除bootcfg和pycache信息")
-            print("optimize 清理Python运行内存，让性能更高（实验性的）")
+            print("optimize 调用GC垃圾回收，让性能更高（实验性的）")
             print("exit     退出Recovery\n")
         elif prompt == "erase":
             if os.path.isdir("etc"):
@@ -39,10 +39,10 @@ def recovery_main(jumpinfo) -> str:
         elif prompt == "exit":
             break
         elif prompt == "optimize":
-            # 触发垃圾回收2次
+            # 触发GC垃圾回收2次
             gc.collect()
             gc.collect(2)
-            logk.printl("recovery", "已清理垃圾！\n", main.boot_time)
+            logk.printl("recovery", "GC垃圾回收执行完毕！\n", main.boot_time)
         else:
             print(f"找不到 {prompt} 命令")
     
