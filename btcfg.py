@@ -1,12 +1,18 @@
+#
+#   btcfg.py
+#   bootcfg.json 操作模块
+#
+#   By GoutouStdio
+#   @ 2022~2026 GoutouStdio. Open all rights.
+
 import json
 import sys
 import os
-import main
-import kernel
 import shutil
 import printk
 import hashlib
 
+# bootcfg.json 的位置
 boot_config = r'%s/etc/bootcfg.json' % os.getcwd()
 
 # 计算配置校验和（排除校验和自身）
@@ -113,7 +119,7 @@ def load_bootcfg():
         input("按下任意键关闭系统...")
         sys.exit(0)
     except ValueError as e:  # 捕获校验和错误
-        print(f"\033[31m检测到非法修改启动配置，拒绝启动，请到售后处理。\033[0m")
+        print(f"\033[31m检测到非法修改启动配置，拒绝启动。\033[0m")
         if printk.confirm("是否尝试自动修复系统？"):
             create_bootcfg()
             print("操作成功完成\n")

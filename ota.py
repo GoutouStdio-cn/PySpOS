@@ -1,4 +1,9 @@
-# ota.py - PySpOS OTA更新模块
+#   
+#   ota.py
+#   PySpOS OTA更新以及槽位模块
+#
+#   By GoutouStdio
+#   @2022~2026 GoutouStdio. Open all rights.
 
 import os
 import shutil
@@ -19,47 +24,47 @@ OTA_PACKAGE_NAME = "update.zip"
 VERSION_FILE = "version.txt"  # 版本文件
 UPDATE_LOG = "update_log.json"  # 更新日志
 
+# 获取当前的槽位
 def get_current_slot() -> str:
-    """获取当前激活的槽位"""
     if os.path.exists(CURRENT_SLOT_FILE):
         with open(CURRENT_SLOT_FILE, 'r') as f:
             slot = f.read().strip()
             if slot in [SLOT_A, SLOT_B]:
                 return slot
-    # 默认使用SLOT_A
+    # 如果没有，默认使用槽位_A
     set_current_slot(SLOT_A)
     return SLOT_A
 
+# 设置激活的槽位
 def set_current_slot(slot: str) -> None:
-    """设置当前激活的槽位"""
     if slot in [SLOT_A, SLOT_B]:
         with open(CURRENT_SLOT_FILE, 'w') as f:
             f.write(slot)
         printk.info(f"已设置当前槽位为: {slot}")
 
+# 获取其他槽位
 def get_other_slot() -> str:
-    """获取备用槽位（与当前槽位相反）"""
     return SLOT_B if get_current_slot() == SLOT_A else SLOT_A
 
+# 检查是否有更新（这个以后可以抓取云端内容检查）
 def check_for_update() -> bool:
-    """检查是否存在更新包"""
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
     return os.path.exists(package_path) and os.path.isfile(package_path)
 
+# 获取指定槽位里的PySpOS版本
 def get_version(slot: str) -> str:
-    """获取指定槽位的系统版本"""
     version_path = os.path.join(slot, VERSION_FILE)
     if os.path.exists(version_path):
         with open(version_path, 'r') as f:
             return f.read().strip()
     return "未知版本"
 
+# 获取当前槽位里PySpOS版本
 def get_current_version() -> str:
-    """获取当前激活槽位的版本"""
     return get_version(get_current_slot())
 
+# 获取更新包版本
 def get_update_version() -> str:
-    """获取更新包中的版本"""
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
     try:
         with zipfile.ZipFile(package_path, 'r') as zip_ref:
@@ -70,22 +75,22 @@ def get_update_version() -> str:
         printk.error(f"读取更新包版本失败: {str(e)}")
     return "未知版本"
 
+# 验证更新包（不太完善这个，这个以后改进）
 def verify_update_compatibility() -> bool:
-    """验证更新包与当前系统的兼容性（版本号对比）"""
     current_ver = get_current_version()
     update_ver = get_update_version()
     
-    # 简单版本号对比（假设格式为x.y.z）
+    # 对比版本号
     try:
         current_parts = list(map(int, current_ver.split('.')))
         update_parts = list(map(int, update_ver.split('.')))
         return update_parts > current_parts
     except Exception:
-        printk.warn("版本格式不正确，跳过兼容性检查")
-        return True
+        printk.warn("版本格式不正确！")
+        return False
 
+# 将更新包安装到另一槽位
 def install_update() -> bool:
-    """将更新包安装到备用槽位"""
     if not check_for_update():
         printk.error("未找到更新包")
         return False
@@ -141,8 +146,8 @@ def install_update() -> bool:
     printk.ok(f"更新已成功安装到 {target_slot}")
     return True
 
+# 切换槽位
 def switch_slot() -> bool:
-    """切换当前激活的槽位"""
     current = get_current_slot()
     target = get_other_slot()
     
@@ -162,8 +167,8 @@ def switch_slot() -> bool:
     printk.ok(f"槽位已切换至 {target}，重启后生效")
     return True
 
+# 获取OTA更新状态
 def get_ota_status() -> dict:
-    """获取OTA更新状态信息"""
     return {
         "current_slot": get_current_slot(),
         "current_version": get_current_version(),
@@ -173,8 +178,8 @@ def get_ota_status() -> dict:
         "update_version": get_update_version() if check_for_update() else None
     }
 
+# 清理更新包文件
 def clean_update_package() -> None:
-    """清理更新包文件"""
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
     if os.path.exists(package_path):
         try:
