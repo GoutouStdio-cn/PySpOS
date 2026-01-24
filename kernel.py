@@ -1,4 +1,9 @@
-# kernel.py - PySpOS 内核处理(不是真内核)
+#   
+#   kernel.py
+#   PySpOS 主程序
+#
+#   By GoutouStdio
+#   @ 2022~2026 GoutouStdio. Open all rights.
 
 import printk
 import os
@@ -12,6 +17,7 @@ import uuid
 import hashlib
 import random
 import logk
+import gc
 
 # PySpOS ASCII 艺术 Logo   
 ascii_logo = r'''
@@ -147,6 +153,9 @@ def loop():
     print(f"欢迎使用 PySpOS 操作系统，{username}！")
     print()  # 打印一个空行
     while 1:
+        # 循环执行GC垃圾回收，循环一次就回收两次
+        gc.collect()
+        gc.collect(2)
         try:
             prompt = input(print_prompt())
             

@@ -1,4 +1,9 @@
-# main.py - PySpOS 主程序入口
+#  
+#   main.py
+#   PySpOS 入口
+#
+#   By GoutouStdio
+#   @ 2022~2026 GoutouStdio. Open all rights.
 
 import os
 import printk
@@ -25,13 +30,13 @@ boot_time = logk.get_boot_time()
 # 主函数
 def main():
     logk.printl("main", "加载 PySpKernel...", boot_time)
-    if not btcfg.get_bootcfg('locked'):
-        print("")
     logk.printl("main", f"Bootloader：{"已上锁" if bootcfg['locked'] else "已解锁"}，ROOT 权限：{"未启用" if not bootcfg['rootstate'] else "已启用"}", boot_time)
     logk.printl("main", f"加载完成，您使用的操作系统为：{sys.platform}, 你的设备id为：{uuid.getnode()}", boot_time)
     logk.printl("main",  "ROOT已启用" if rootstate else "ROOT未启用", boot_time)
+
     kernel.loop()
 
+# 打印孙浩博是小可爱
 def print_sunhb():
     cores = kernel.cores
     print(f"‘shb’程序将打印孙浩博是小可爱！{cores}次。\n")
@@ -40,7 +45,7 @@ def print_sunhb():
     print()
 
 # 处理命令
-def handle_command(prompt):
+def handle_command(prompt) -> str:
     if prompt == "help":
         print("clear      清屏")
         print("echo       打印指定的字符串")
