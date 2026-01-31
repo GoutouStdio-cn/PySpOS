@@ -10,7 +10,7 @@ import logk
 import main
 
 # 全局变量，控制运行日志是否开启
-run_log_enabled = 0
+run_log_enabled = 1
 
 # 运行指定路径的spf文件
 def run_spf(spf_path):
@@ -34,7 +34,7 @@ def run_spf(spf_path):
 
         for cmd in commands:
             if cmd.startswith("putchar(") and cmd.endswith(")"):
-                param = cmd[8: -1].strip()
+                param = cmd[8: -1].strip() # 中间的那个字符串
                 # 检查字符串是否被""包裹
                 if not (param.startswith('"') and param.endswith('"')):
                     raise SyntaxError(f"putchar参数需双引号包裹，执行失败")
@@ -48,6 +48,8 @@ def run_spf(spf_path):
                     logk.printl("parser_spf", f"SPF 文件地址：{spf_path}已退出，退出号为{int(param)}", main.boot_time)
                 print()
                 return
+            else:
+                raise SyntaxError(f"未知命令：{cmd}，执行失败")
         # gc垃圾回收
         gc.collect()
     except Exception as i:
