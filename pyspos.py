@@ -38,7 +38,7 @@ OS_VENDOR = "GoutouStdio"
 OS_COPYRIGHT = "@2022~2026 GoutouStdio. Open all rights."
 
 # Select whether to enable spf support.
-SPF_ENABLED = True 
+SPF_ENABLED = True
 
 # SPF parser version.
 SPF_VERSION = "0.1" # The spf parser is too simple, so we think the version should be 0.1.
