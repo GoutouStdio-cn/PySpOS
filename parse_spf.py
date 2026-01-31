@@ -10,7 +10,7 @@ import logk
 import main
 
 # 全局变量，控制运行日志是否开启
-run_log_enabled = 1
+run_log_enabled = 0
 
 # 运行指定路径的spf文件
 def run_spf(spf_path):
