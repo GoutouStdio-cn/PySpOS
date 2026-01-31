@@ -47,21 +47,21 @@ SPF_VERSION = "0.1" # The spf parser is too simple, so we think the version shou
 SPC_ENABLED = False # SpaceConfig is disabled for now, because it is not developed yet.
 
 # SpaceConfig Version.
-SPC_VERSION = NULL # SpaceConfig is not developed yet, so we think its version is 0
+SPC_VERSION = NULL # SpaceConfig is not developed yet, so we think its version is NULL
 
 # Select whether to enable Space User Interface.
 SPUI_ENABLED = False # SUI2 is disabled for now, because it is not developed yet.
 
 # SPUI Version.
-SPUI_VERSION = NULL # SPUI is not developed yet, so we think its version is 0
+SPUI_VERSION = NULL # SPUI is not developed yet, so we think its version is NULL
 
 # Sunglass Settings.
 if SPUI_ENABLED:
     # Select whether to enable SunGlass.
-    SUNGALASS_ENABLED = True # SunGlass is true by default.
+    SUNGALASS_ENABLED = True # SunGlass is true by default. (You can change this in spui settings later)
 
     # SunGlass Version.
-    SUNGALASS_VERSION = NULL # SunGlass is not developed yet, so we think its version is 0
+    SUNGALASS_VERSION = NULL # SunGlass is not developed yet, so we think its version is NULL
 else:
     # You don't need these values, because you have disabled SPUI.
     SUNGALASS_ENABLED = NULL

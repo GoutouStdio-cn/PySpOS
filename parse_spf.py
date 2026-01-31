@@ -1,6 +1,6 @@
 #
 #   parse_spf.py
-#   spf解析功能（移植的SpaceOS的spf解析器）
+#   spf解析功能（移植的SpaceOS的spf解析器，跟那个不大一样）
 #
 #   2026/1/31 By GoutouStdio
 #   @2022~2026 GoutouStdio. Open all rights.
@@ -18,7 +18,7 @@ else:
 
 # 运行指定路径的spf文件
 def run_spf(spf_path):
-    if not spf_path : raise SyntaxError("path is null") # c写习惯了在哪都加个空判断
+    if not spf_path : raise SyntaxError("path is null") # C语言写习惯了，在哪都加个空判断
 
     try:
         code = ''
