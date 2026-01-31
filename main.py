@@ -16,6 +16,7 @@ import uuid
 import re
 import logk
 import recovery
+import parse_spf
 
 # 设置 apps 目录为模块搜索路径
 current_dir = os.getcwd()
@@ -89,8 +90,32 @@ def handle_command(prompt) -> str:
             
             # 执行代码并传入全局上下文
             exec(code, exec_namespace)
-            printk.ok(f"应用 {text} 已退出\n")
         
+        except Exception as e:
+            printk.error(f"执行 {text} 失败: {str(e)}\n")
+
+    elif prompt.startswith("openspf "):
+        text = prompt[8:].strip()
+        # 自动添加spf后缀
+        if not text.endswith(".spf"):
+            text += ".spf"
+        
+        # 路径安全检查
+        if re.search(r'\.\./', text) or os.path.isabs(text):
+            printk.error("错误：文件名不允许包含 ../ 或绝对路径\n")
+            return
+        try:
+            # 根文件所在目录
+            root_dir = os.path.dirname(os.path.abspath(__file__))
+            # app所在目录
+            app_path = os.path.join(root_dir, "spfapps", text)
+            
+            # 检查文件是否存在且为文件
+            if not os.path.exists(app_path) or not os.path.isfile(app_path):
+                printk.error(f"未找到可执行文件: {text}\n")
+                return
+            
+            parse_spf.run_spf(app_path)
         except Exception as e:
             printk.error(f"执行 {text} 失败: {str(e)}\n")
     elif prompt == "echo":

@@ -35,6 +35,7 @@ def recovery_main(jumpinfo) -> str:
                 shutil.rmtree("__pycache__")
             else:
                 logk.printl("recovery", "pycache文件夹已经清除了", main.boot_time)
+            gc.collect()
             logk.printl("recovery", "清除完成，请重启程序\n", main.boot_time)
         elif prompt == "exit":
             break
