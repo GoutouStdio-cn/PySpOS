@@ -8,9 +8,13 @@
 import gc
 import logk
 import main
+import pyspos
 
-# 全局变量，控制运行日志是否开启
-run_log_enabled = 0
+# 全局变量，控制运行日志是否开启（如果系统开发阶段为alpha或开发者模式则开启，那时候很需要）
+if pyspos.OS_DEVELOP_STAGE == "alpha" or pyspos.DEVELOPER_MODE:
+    run_log_enabled = 1
+else:
+    run_log_enabled = 0
 
 # 运行指定路径的spf文件
 def run_spf(spf_path):

@@ -16,7 +16,15 @@ import uuid
 import re
 import logk
 import recovery
-import parse_spf
+import pyspos
+if pyspos.SPF_ENABLED:
+    import parse_spf
+else:
+    class parse_spf:
+        @staticmethod
+        # 占位符，因为此时 SPF_ENABLED 为假
+        def run_spf(spf_path):
+            raise NotImplementedError("SPF support is disabled in this build. spf path: " + spf_path)
 
 # 设置 apps 目录为模块搜索路径
 current_dir = os.getcwd()
@@ -121,8 +129,8 @@ def handle_command(prompt) -> str:
     elif prompt == "echo":
         print("Usage: echo 指定的字符串\n")
     elif prompt == "osver":
-        print(f"OS Version: 3.14.15-PySpOS\n")
-        print(f"Kernel(Python) Version:{platform.python_version()}\n")
+        print(f"PySpOS 版本: {pyspos.OS_VERSION}, 开发阶段: {pyspos.OS_DEVELOP_STAGE}")
+        print(f"Python 版本: {platform.python_version()}\n")
     elif prompt == "shutdown":
         kernel.exit()
     elif prompt == "clear":
