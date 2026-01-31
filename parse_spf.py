@@ -1,6 +1,6 @@
 #
 #   parse_spf.py
-#   spf解析功能
+#   spf解析功能（移植的SpaceOS的spf解析器）
 #
 #   2026/1/31 By GoutouStdio
 #   @2022~2026 GoutouStdio. Open all rights.
@@ -14,43 +14,42 @@ run_log_enabled = 0
 
 # 运行指定路径的spf文件
 def run_spf(spf_path):
-    if not spf_path : raise SystemError("path为空") # c写习惯了在哪都加个空判断
+    if not spf_path : raise SyntaxError("path is null") # c写习惯了在哪都加个空判断
 
     try:
         code = ''
         # 打开spf文件
         with open(spf_path, 'r', encoding='utf-8') as f:
             code = f.read()
-        if run_log_enabled:
-            logk.printl("parser_spf", f"spf 文件内容：{code}", main.boot_time)
 
         code = "\n".join([line.strip().replace("\t", "") for line in code.splitlines() if line.strip()])
         if run_log_enabled:
-            print(f"File contant: {code}")
-        if not code: raise SystemError("读取spf文件时出现错误")
+            print(f"File contant:\n{code}")
+        if not code: raise SyntaxError("An error occurred while reading the spf file, the file may be empty or corrupted")
 
-        # 命令
+        # 代码内容
         commands = [cmd.strip() for cmd in code.split(";") if cmd.strip()]
 
+        # 遍历执行代码
         for cmd in commands:
             if cmd.startswith("putchar(") and cmd.endswith(")"):
                 param = cmd[8: -1].strip() # 中间的那个字符串
                 # 检查字符串是否被""包裹
                 if not (param.startswith('"') and param.endswith('"')):
-                    raise SyntaxError(f"putchar参数需双引号包裹，执行失败")
+                    raise SyntaxError(f"putchar parameter must be string, got {param}")
                 output_str = param[1:-1]
                 print(output_str)
             elif cmd.startswith("exit(") and cmd.endswith(")"):
                 param = cmd[5: -1].strip()
                 if not param:
-                    raise SyntaxError("未指定退出号")
+                    raise SyntaxError("You must provide an exit code")
                 if run_log_enabled:
-                    logk.printl("parser_spf", f"SPF 文件地址：{spf_path}已退出，退出号为{int(param)}", main.boot_time)
+                    logk.printl("parser_spf", f"SPF file path: {spf_path} is exited, exitcode is {int(param)}", main.boot_time)
                 print()
-                return
+                return # 退出spf程序
             else:
-                raise SyntaxError(f"未知命令：{cmd}，执行失败")
-        # gc垃圾回收
+                raise SyntaxError(f"Unknown code {cmd}")
+        # 执行gc垃圾回收
         gc.collect()
     except Exception as i:
-        logk.printl("parser_spf", f"spf运行出现未知错误：{i}", main.boot_time)
+        logk.printl("parser_spf", f"spf run has fatal error: {i}", main.boot_time)
