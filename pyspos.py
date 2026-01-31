@@ -55,7 +55,7 @@ SPUI_ENABLED = False # SUI2 is disabled for now, because it is not developed yet
 # SPUI Version.
 SPUI_VERSION = NULL # SPUI is not developed yet, so we think its version is 0
 
-
+# Sunglass Settings.
 if SPUI_ENABLED:
     # Select whether to enable SunGlass.
     SUNGALASS_ENABLED = True # SunGlass is true by default.
