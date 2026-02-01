@@ -76,7 +76,7 @@ def run_spf(spf_path):
                     print()
                     return  # 退出spf程序
                 
-                # 4. 未知命令
+                # 未知命令
                 else:
                     raise SyntaxError(f"Unknown code {cmd_stripped}")
             except Exception as cmd_err:
