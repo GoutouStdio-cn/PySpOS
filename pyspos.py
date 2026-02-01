@@ -1,6 +1,6 @@
 #
 #   pyspos.py
-#   PySpOS Base Information File
+#   PySpOS Base information file
 #
 #   2026/1/31 By GoutouStdio
 #   @2022~2026 GoutouStdio. Open all rights.

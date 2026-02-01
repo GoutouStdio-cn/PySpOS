@@ -1,3 +1,4 @@
+// 第一个spf应用，会按需扩展
 putchar("第一个spf应用程序（我说的是PySpOS，但实际SpaceOS第一个spf也叫hello.spf）");
 putchar("孙浩博是小可爱");
-exit(0);
+exit(0);    // 退出码是0
