@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>版本历史 - PySpOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
 </head>
@@ -40,6 +44,44 @@
     </footer>
 
     <script>
+        // 苹果Liquid Glass效果 - 实时鼠标跟踪渲染
+        function initLiquidGlassEffect() {
+            const cards = document.querySelectorAll('.version-card, .contributor, .feature-card, section, .platform-item, .step-content pre, .changelog-item, .compatibility-list li, .rollback-steps li');
+            
+            cards.forEach(card => {
+                let animationFrame;
+                
+                const updateMousePosition = (e) => {
+                    if (animationFrame) {
+                        cancelAnimationFrame(animationFrame);
+                    }
+                    
+                    animationFrame = requestAnimationFrame(() => {
+                        const rect = card.getBoundingClientRect();
+                        const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+                        const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+                        
+                        card.style.setProperty('--mouse-x', `${x}%`);
+                        card.style.setProperty('--mouse-y', `${y}%`);
+                    });
+                };
+                
+                card.addEventListener('mousemove', updateMousePosition);
+                
+                card.addEventListener('mouseenter', (e) => {
+                    updateMousePosition(e);
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    if (animationFrame) {
+                        cancelAnimationFrame(animationFrame);
+                    }
+                    card.style.removeProperty('--mouse-x');
+                    card.style.removeProperty('--mouse-y');
+                });
+            });
+        }
+
         const fallbackVersionData = { 
             "changelog": [
                 {
@@ -54,7 +96,7 @@
                 },
                 {
                     "version": "3.0.0",
-                    "date": "2026-02-04",
+                    "date": "2026-01-24",
                     "type": "beta",
                     "changes": [
                         "完善了zzlsb猜数字游戏",
@@ -86,21 +128,89 @@
             }
         }
 
-        function renderVersionHistory(versionData) {
+        // 版本号比较函数
+        function compareVersions(version1, version2) {
+            // 解析版本号为数组，处理预发布版本
+            const parseVersion = (version) => {
+                const parts = version.split('-');
+                const main = parts[0].split('.').map(Number);
+                const prerelease = parts[1] || '';
+                return { main, prerelease };
+            };
+
+            const v1 = parseVersion(version1);
+            const v2 = parseVersion(version2);
+
+            // 比较主版本号
+            for (let i = 0; i < Math.max(v1.main.length, v2.main.length); i++) {
+                const num1 = v1.main[i] || 0;
+                const num2 = v2.main[i] || 0;
+                if (num1 > num2) return 1;
+                if (num1 < num2) return -1;
+            }
+
+            // 主版本号相同，比较预发布版本
+            if (v1.prerelease && !v2.prerelease) return -1;
+            if (!v1.prerelease && v2.prerelease) return 1;
+            if (v1.prerelease && v2.prerelease) {
+                return v1.prerelease.localeCompare(v2.prerelease);
+            }
+
+            return 0;
+        }
+
+        // 实时获取文件大小
+        async function getFileSize(url) {
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                if (response.ok) {
+                    const contentLength = response.headers.get('content-length');
+                    if (contentLength) {
+                        const size = parseInt(contentLength, 10);
+                        if (size < 1024) {
+                            return `${size} B`;
+                        } else if (size < 1024 * 1024) {
+                            return `${(size / 1024).toFixed(1)} KB`;
+                        } else {
+                            return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+                        }
+                    }
+                }
+                return '未知';
+            } catch (error) {
+                console.error('获取文件大小失败:', error);
+                return '未知';
+            }
+        }
+
+        async function renderVersionHistory(versionData) {
             const container = document.getElementById('version-history');
             let html = '<div class="version-cards">';
 
-            versionData.changelog.forEach((release, index) => {
-                const isNew = index === 0;
+            // 找出最新版本
+            const versions = versionData.changelog.map(release => release.version);
+            const latestVersion = versions.reduce((latest, current) => {
+                return compareVersions(current, latest) > 0 ? current : latest;
+            });
+
+            // 获取文件大小
+            const latestFileSize = await getFileSize('PySpOS.zip');
+
+            versionData.changelog.forEach((release) => {
+                const isNew = release.version === latestVersion;
                 const badgeClass = release.type === 'release' ? 'badge-stable' : 'badge-beta';
                 const badgeText = release.type === 'release' ? '正式版' : '测试版';
                 const newBadge = isNew ? '<span class="badge badge-new">NEW</span>' : '';
                 const releaseTag = release.version === '3.0.1-pre' ? 'pre_version' : 'beta_version';
+                
+                // 使用实时获取的文件大小
+                const fileSize = isNew ? latestFileSize : '64.8 KB';
 
                 html += `
                     <div class="version-card ${isNew ? 'latest' : ''}">
                         <h3>v${release.version} ${newBadge} <span class="badge ${badgeClass}">${badgeText}</span></h3>
                         <div class="date">${release.date}</div>
+                        <div class="file-size">文件大小: ${fileSize}</div>
                         <div class="changes">
                             <h4>更新内容</h4>
                             <ul>
@@ -110,7 +220,7 @@
                         <div class="download-actions">
                             <a href="${isNew ? 'PySpOS.zip' : `https://github.com/GoutouStdio-cn/PySpOS/releases/download/${releaseTag}/PySpOS.zip`}" 
                                class="btn btn-primary">
-                                下载源代码
+                                下载源代码 <i class="fas fa-download"></i>
                             </a>
                         </div>
                     </div>
@@ -119,6 +229,9 @@
 
             html += '</div>';
             container.innerHTML = html;
+            
+            // 初始化Liquid Glass效果
+            setTimeout(initLiquidGlassEffect, 100);
         }
 
         loadVersionData();

@@ -41,6 +41,9 @@ boot_time = logk.get_boot_time()
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(script_dir) if os.path.basename(script_dir) in ['slot_a', 'slot_b'] else script_dir
 
+# 检查是否在槽位目录中运行
+in_slot = os.path.basename(script_dir) in ['slot_a', 'slot_b']
+
 # 切换到当前槽位目录
 current_slot_file = os.path.join(root_dir, "current_slot")
 if os.path.exists(current_slot_file):
@@ -49,11 +52,16 @@ if os.path.exists(current_slot_file):
             current_slot = f.read().strip()
             slot_path = os.path.join(root_dir, current_slot)
             if os.path.exists(slot_path):
-                os.chdir(slot_path)
-                current_dir = os.getcwd()
-                apps_dir = os.path.join(current_dir, 'apps')
-                sys.path.append(apps_dir)
-                logk.printl("main", f"已切换到槽位: {current_slot}", boot_time)
+                # 如果当前不在槽位目录中，切换到槽位目录
+                if not in_slot:
+                    os.chdir(slot_path)
+                    current_dir = os.getcwd()
+                    apps_dir = os.path.join(current_dir, 'apps')
+                    sys.path.append(apps_dir)
+                    logk.printl("main", f"已切换到槽位: {current_slot}", boot_time)
+                else:
+                    # 已经在槽位目录中，保持当前目录
+                    logk.printl("main", f"当前已在槽位: {current_slot}", boot_time)
             else:
                 logk.printl("main", f"槽位 {current_slot} 不存在，使用根目录", boot_time)
     except Exception as e:
@@ -63,13 +71,13 @@ else:
 
 # 获取应用路径
 def get_app_path(app_name: str) -> str:
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(root_dir, "apps", app_name)
+    # 使用当前工作目录的apps目录
+    return os.path.join(os.getcwd(), "apps", app_name)
 
 # 获取spf应用路径
 def get_spf_path(app_name: str) -> str:
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(root_dir, "spfapps", app_name)
+    # 使用当前工作目录的spfapps目录
+    return os.path.join(os.getcwd(), "spfapps", app_name)
 
 # 验证文件名安全性
 def is_safe_filename(filename: str) -> bool:
@@ -223,8 +231,8 @@ def cmd_openspf(app_name: str):
     except Exception as e:
         printk.error(f"执行 {app_name} 失败: {str(e)}\n")
 
+# 检查是否有可用的更新命令
 def cmd_ota_check():
-    """检查是否有可用的更新"""
     update_info = ota.check_cloud_update()
     if update_info:
         if update_info['has_update']:
@@ -235,16 +243,16 @@ def cmd_ota_check():
             print(f"当前已是最新版本: {update_info['current_version']}")
     print()
 
+# 下载并安装更新命令
 def cmd_ota_update():
-    """下载并安装更新"""
     result = ota.download_and_install_update()
     if result:
-        print("更新已成功安装，重启后生效\n")
+        print("更新已成功安装，系统将自动重启\n")
     else:
         print("更新失败\n")
 
+# 查看OTA更新状态命令
 def cmd_ota_status():
-    """查看OTA更新状态"""
     status = ota.get_ota_status()
     print(f"当前槽位: {status['current_slot']}")
     print(f"当前版本: {status['current_version']}")
@@ -255,16 +263,16 @@ def cmd_ota_status():
         print(f"更新版本: {status['update_version']}")
     print()
 
+# 回滚到上一个版本命令
 def cmd_ota_rollback():
-    """回滚到上一个版本"""
     result = ota.rollback_update()
     if result:
         print("回滚成功，重启后生效\n")
     else:
         print("回滚失败\n")
 
+# 清理更新包
 def cmd_ota_clean():
-    """清理更新包文件"""
     ota.clean_update_package()
     print()
 

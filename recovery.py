@@ -12,11 +12,74 @@ import shutil
 import os
 import gc
 import ota
+import sys
+import subprocess
+
+# 获取根目录
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(script_dir) if os.path.basename(script_dir) in ['slot_a', 'slot_b'] else script_dir
+
+def ensure_root_directory():
+    """确保在根目录下运行"""
+    current_dir = os.getcwd()
+    if current_dir != root_dir:
+        logk.printl("recovery", f"切换到根目录: {root_dir}", main.boot_time)
+        os.chdir(root_dir)
+        logk.printl("recovery", f"当前目录已切换到: {os.getcwd()}", main.boot_time)
+
+def check_and_terminate_main_process():
+    """检查并终止可能存在的 main 进程"""
+    try:
+        # 使用系统命令查找可能正在运行的 main.py 进程
+        if os.name == 'nt':  # Windows
+            result = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq python.exe', '/FO', 'CSV'], 
+                                  capture_output=True, text=True, cwd=root_dir)
+            if result.returncode == 0:
+                lines = result.stdout.strip().split('\n')
+                current_pid = str(os.getpid())
+                
+                for line in lines[1:]:  # 跳过标题行
+                    if line:
+                        parts = line.split(',')
+                        if len(parts) >= 2:
+                            pid = parts[1].strip('"')
+                            
+                            # 获取进程命令行
+                            cmd_result = subprocess.run(['wmic', 'process', 'where', f'ProcessId={pid}', 'get', 'CommandLine'], 
+                                                      capture_output=True, text=True)
+                            if cmd_result.returncode == 0 and 'main.py' in cmd_result.stdout and pid != current_pid:
+                                logk.printl("recovery", f"发现正在运行的 main 进程 (PID: {pid})，正在终止...", main.boot_time)
+                                subprocess.run(['taskkill', '/PID', pid, '/F'], cwd=root_dir)
+                                logk.printl("recovery", f"main 进程已终止", main.boot_time)
+        else:  # Linux/Unix
+            result = subprocess.run(['ps', 'aux'], capture_output=True, text=True, cwd=root_dir)
+            if result.returncode == 0:
+                lines = result.stdout.strip().split('\n')
+                current_pid = str(os.getpid())
+                
+                for line in lines[1:]:  # 跳过标题行
+                    if line and 'main.py' in line and current_pid not in line:
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            pid = parts[1]
+                            logk.printl("recovery", f"发现正在运行的 main 进程 (PID: {pid})，正在终止...", main.boot_time)
+                            subprocess.run(['kill', '-9', pid], cwd=root_dir)
+                            logk.printl("recovery", f"main 进程已终止", main.boot_time)
+    except Exception as e:
+        logk.printl("recovery", f"检查进程时出错: {e}", main.boot_time)
 
 # 主程序
 def recovery_main(jumpinfo) -> str:
+    # 确保在根目录下运行
+    ensure_root_directory()
+    
+    # 检查并终止可能存在的 main 进程
+    check_and_terminate_main_process()
+    
     kernel.screen_clear() # 清屏
     logk.printl("recovery", f"跳入到recovery, jumpinfo={jumpinfo}", main.boot_time)
+    logk.printl("recovery", f"当前目录: {os.getcwd()}", main.boot_time)
+    logk.printl("recovery", f"根目录: {root_dir}", main.boot_time)
     logk.printl("recovery", "欢迎使用PySpOS Recovery，输入help获取可用命令", main.boot_time)
     while 1:
         prompt = input("recovery> ")    # 我们recovery的提示符
@@ -32,25 +95,40 @@ def recovery_main(jumpinfo) -> str:
             print("ota_clean  清理更新包文件")
             print("exit     退出Recovery\n")
         elif prompt == "erase":
-            # 清除bootcfg和pycache信息
-            if os.path.isdir("etc"):
-                shutil.rmtree("etc")
+            # 清除bootcfg和pycache信息（使用根目录绝对路径）
+            etc_path = os.path.join(root_dir, "etc")
+            if os.path.isdir(etc_path):
+                shutil.rmtree(etc_path)
+                logk.printl("recovery", f"已清除根目录下的etc文件夹: {etc_path}", main.boot_time)
             else:
-                logk.printl("recovery", "etc文件夹已经清除了", main.boot_time)
+                logk.printl("recovery", "根目录下的etc文件夹已经清除了", main.boot_time)
             
-            if os.path.isdir("__pycache__"):
-                shutil.rmtree("__pycache__")
+            # 清除根目录下的pycache
+            pycache_path = os.path.join(root_dir, "__pycache__")
+            if os.path.isdir(pycache_path):
+                shutil.rmtree(pycache_path)
+                logk.printl("recovery", f"已清除根目录下的pycache文件夹: {pycache_path}", main.boot_time)
             else:
-                logk.printl("recovery", "pycache文件夹已经清除了", main.boot_time)
+                logk.printl("recovery", "根目录下的pycache文件夹已经清除了", main.boot_time)
             
             # 清除槽位内容
             slots = ["slot_a", "slot_b"]
             for slot in slots:
-                if os.path.isdir(slot):
-                    shutil.rmtree(slot)
-                    logk.printl("recovery", f"槽位 {slot} 已清除", main.boot_time)
+                slot_path = os.path.join(root_dir, slot)
+                if os.path.isdir(slot_path):
+                    shutil.rmtree(slot_path)
+                    logk.printl("recovery", f"槽位 {slot} 已清除: {slot_path}", main.boot_time)
                 else:
                     logk.printl("recovery", f"槽位 {slot} 已经清除了", main.boot_time)
+            
+            # 清除槽位内的pycache文件夹
+            for slot in slots:
+                slot_pycache_path = os.path.join(root_dir, slot, "__pycache__")
+                if os.path.isdir(slot_pycache_path):
+                    shutil.rmtree(slot_pycache_path)
+                    logk.printl("recovery", f"已清除槽位 {slot} 的pycache文件夹: {slot_pycache_path}", main.boot_time)
+                else:
+                    logk.printl("recovery", f"槽位 {slot} 的pycache文件夹已经清除了", main.boot_time)
             
             gc.collect()
             logk.printl("recovery", "清除完成，请重启程序\n", main.boot_time)

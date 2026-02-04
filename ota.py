@@ -348,8 +348,36 @@ def download_and_install_update() -> bool:
         logk.printl("ota", "切换槽位失败", boot_time)
         return False
     
-    logk.printl("ota", "更新已安装，重启后生效", boot_time)
+    logk.printl("ota", "更新已安装，正在重启系统...", boot_time)
+    
+    # 重启系统
+    restart_system()
     return True
+
+# 重启系统
+def restart_system() -> None:
+    import subprocess
+    import sys
+    
+    try:
+        # 获取当前 Python 解释器路径
+        python_exe = sys.executable
+        
+        # 获取根目录中的 main.py 路径
+        main_py = os.path.join(root_dir, "main.py")
+        
+        # 使用新进程启动 main.py
+        subprocess.Popen([python_exe, main_py], cwd=root_dir)
+        
+        # 延迟退出，确保新进程启动
+        import time
+        time.sleep(0.5)
+        
+        # 退出当前进程
+        sys.exit(0)
+    except Exception as e:
+        logk.printl("ota", f"重启失败: {str(e)}", boot_time)
+        printk.error("重启失败，请手动重新启动系统\n")
 
 # 回滚到上一个版本
 def rollback_update() -> bool:

@@ -4,9 +4,9 @@
   "develop_stage": "beta",
   "release_notes": "PySpOS pre_version 3.0.1 更新日志：\n\n- 支持在线 OTA 更新。我花了很久实现了这个功能\n- 重构优化了部分代码。\n- 添加一个猎奇网页。\n\n注意：此版本为测试版，可能存在一些问题，如果你遇到了可以提交到Issues。",
   "download_url": "PySpOS.zip",
-  "sha256": "68839060df91ab40c20a5da29395d96e82be6cfac2530eaa5ed52a4a652ae0be",
+  "sha256": "6d64cdfb06d12563a51ea806944d5dcb5072a6ac3a31122cca03a6dc935779f0",
   "min_version": "3.0.0",
-  "file_size": 66814,
+  "file_size": 75351,
   "changelog": [
     {
       "version": "3.0.1-pre",

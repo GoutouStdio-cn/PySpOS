@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTA 更新 - PySpOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
 </head>
@@ -26,8 +30,8 @@
     <main>
         <section class="ota-header">
             <div class="container">
-                <h1>OTA 系统更新</h1>
-                <p>从云端下载并安装最新的 PySpOS 系统更新</p>
+                <h1>OTA 系统更新下载</h1>
+                <p>从云端下载最新的 PySpOS 系统更新（当然，你也可以用python抓取）</p>
             </div>
         </section>
 
@@ -61,13 +65,13 @@
                 <div id="download-container">
                     <div class="download-buttons">
                         <a href="PySpOS.zip" class="btn btn-primary">
-                            下载 v3.0.1-pre 源代码
+                            下载 v3.0.1-pre 源代码 <i class="fas fa-download"></i>
                         </a>
                         <a href="releases.html" class="btn btn-secondary">
-                            查看所有版本
+                            查看所有版本 <i class="fas fa-list"></i>
                         </a>
                     </div>
-                    <p style="margin-top: 20px; color: #666; font-size: 14px;">
+                    <p style="margin-top: 20px; color: #e5e5e5; font-size: 14px;">
                         文件大小: 62.4 KB<br>
                         SHA256: <code>124ea876d602cb51d9212f9c9b73091d09690b29a17e55607b171605452a7b87</code>
                     </p>
@@ -98,14 +102,14 @@
         <section class="rollback">
             <div class="container">
                 <h2>回滚指南</h2>
-                <p style="margin-bottom: 20px; color: #666;">如果更新后遇到问题，可以回滚到之前的版本：</p>
+                <p style="margin-bottom: 20px; color: #e5e5e5;">如果更新后遇到问题，可以回滚到之前的版本：</p>
                 <ul class="rollback-steps">
                     <li data-step="1">在 PySpOS 中输入 <code>recovery</code> 命令进入恢复模式</li>
                     <li data-step="2">在恢复模式中输入 <code>ota_rollback</code> 命令</li>
                     <li data-step="3">确认回滚操作</li>
                     <li data-step="4">重启 PySpOS 以应用更改</li>
                 </ul>
-                <p style="margin-top: 20px; color: #666; font-size: 14px;">
+                <p style="margin-top: 20px; color: #e5e5e5; font-size: 14px;">
                     注意：回滚操作会切换到另一个槽位，请确保另一个槽位包含有效的系统版本。（如没有文件，系统可能会变砖。）
                 </p>
             </div>
@@ -189,7 +193,7 @@
                         查看所有版本
                     </a>
                 </div>
-                <p style="margin-top: 20px; color: #666; font-size: 14px;">
+                <p style="margin-top: 20px; color: #e5e5e5; font-size: 14px;">
                     文件大小: ${fileSize}<br>
                     SHA256: <code>${sha256}</code>
                 </p>
@@ -209,6 +213,49 @@
 
         // 页面加载完成后加载版本数据
         window.addEventListener('DOMContentLoaded', loadVersionData);
+    </script>
+
+    <script>
+        // 苹果Liquid Glass效果 - 实时鼠标跟踪渲染
+        function initLiquidGlassEffect() {
+            const cards = document.querySelectorAll('.version-card, .contributor, .feature-card, section, .platform-item, .step-content pre, .changelog-item, .compatibility-list li, .rollback-steps li');
+            
+            cards.forEach(card => {
+                let animationFrame;
+                
+                const updateMousePosition = (e) => {
+                    if (animationFrame) {
+                        cancelAnimationFrame(animationFrame);
+                    }
+                    
+                    animationFrame = requestAnimationFrame(() => {
+                        const rect = card.getBoundingClientRect();
+                        const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+                        const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+                        
+                        card.style.setProperty('--mouse-x', `${x}%`);
+                        card.style.setProperty('--mouse-y', `${y}%`);
+                    });
+                };
+                
+                card.addEventListener('mousemove', updateMousePosition);
+                
+                card.addEventListener('mouseenter', (e) => {
+                    updateMousePosition(e);
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    if (animationFrame) {
+                        cancelAnimationFrame(animationFrame);
+                    }
+                    card.style.removeProperty('--mouse-x');
+                    card.style.removeProperty('--mouse-y');
+                });
+            });
+        }
+
+        // 页面加载完成后初始化液态玻璃效果
+        window.addEventListener('DOMContentLoaded', initLiquidGlassEffect);
     </script>
 </body>
 </html>
