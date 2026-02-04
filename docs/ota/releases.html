@@ -45,7 +45,7 @@
                 {
                     "version": "3.0.1-pre",
                     "date": "2026-02-04",
-                    "type": "release",
+                    "type": "beta",
                     "changes": [
                         "支持在线 OTA 更新。我花了很久实现了这个功能",
                         "重构优化了部分代码",
@@ -55,7 +55,7 @@
                 {
                     "version": "3.0.0",
                     "date": "2026-02-04",
-                    "type": "release",
+                    "type": "beta",
                     "changes": [
                         "完善了zzlsb猜数字游戏",
                         "修复若干bug",
@@ -108,14 +108,9 @@
                             </ul>
                         </div>
                         <div class="download-actions">
-                            <a href="https://github.com/GoutouStdio-cn/PySpOS/releases/download/${releaseTag}/PySpOS.zip" 
+                            <a href="${isNew ? 'PySpOS.zip' : `https://github.com/GoutouStdio-cn/PySpOS/releases/download/${releaseTag}/PySpOS.zip`}" 
                                class="btn btn-primary">
                                 下载源代码
-                            </a>
-                            <a href="https://github.com/GoutouStdio-cn/PySpOS/releases/tag/${release.version}" 
-                               target="_blank" 
-                               class="btn btn-secondary">
-                                查看详情
                             </a>
                         </div>
                     </div>

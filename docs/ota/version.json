@@ -3,10 +3,10 @@
   "release_date": "2026-02-04",
   "develop_stage": "beta",
   "release_notes": "PySpOS pre_version 3.0.1 更新日志：\n\n- 支持在线 OTA 更新。我花了很久实现了这个功能\n- 重构优化了部分代码。\n- 添加一个猎奇网页。\n\n注意：此版本为测试版，可能存在一些问题，如果你遇到了可以提交到Issues。",
-  "download_url": "https://github.com/GoutouStdio-cn/PySpOS/releases/download/pre_version/PySpOS.zip",
-  "sha256": "147f070a94d7dea3b9edb28c27f5e6ef780efb838d8a5bc98ec90feb38e66b92",
+  "download_url": "PySpOS.zip",
+  "sha256": "e79ccb7b98af8e48ba0b240a2e2ea9eb03262b6d10fdfbbf6364c933b30870cc",
   "min_version": "3.0.0",
-  "file_size": 42974,
+  "file_size": 64129,
   "changelog": [
     {
       "version": "3.0.1-pre",
