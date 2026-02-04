@@ -37,14 +37,19 @@ bootcfg = btcfg.load_bootcfg()
 rootstate = bool(btcfg.get_bootcfg('rootstate'))
 boot_time = logk.get_boot_time()
 
+# 获取根目录（main.py所在目录的父目录）
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(script_dir) if os.path.basename(script_dir) in ['slot_a', 'slot_b'] else script_dir
+
 # 切换到当前槽位目录
-current_slot_file = "current_slot"
+current_slot_file = os.path.join(root_dir, "current_slot")
 if os.path.exists(current_slot_file):
     try:
         with open(current_slot_file, 'r') as f:
             current_slot = f.read().strip()
-            if os.path.exists(current_slot):
-                os.chdir(current_slot)
+            slot_path = os.path.join(root_dir, current_slot)
+            if os.path.exists(slot_path):
+                os.chdir(slot_path)
                 current_dir = os.getcwd()
                 apps_dir = os.path.join(current_dir, 'apps')
                 sys.path.append(apps_dir)
@@ -190,6 +195,7 @@ def cmd_open(app_name: str):
                 'ValueError': ValueError,
                 'RuntimeError': RuntimeError,
                 'SystemError': SystemError,
+                '__import__': __import__,
             }
         }
         

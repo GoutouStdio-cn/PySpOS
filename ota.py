@@ -20,13 +20,17 @@ import hashlib
 # 获取启动时间
 boot_time = logk.get_boot_time()
 
+# 获取根目录（ota.py所在目录的父目录）
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(script_dir) if os.path.basename(script_dir) in ['slot_a', 'slot_b'] else script_dir
+
 # 槽位定义
 SLOT_A = "slot_a"                           # 槽位A
 SLOT_B = "slot_b"                           # 槽位B
-CURRENT_SLOT_FILE = "current_slot"          # 当前槽位记录文件
+CURRENT_SLOT_FILE = os.path.join(root_dir, "current_slot")          # 当前槽位记录文件
 
 # 更新包相关配置
-OTA_PACKAGE_DIR = "ota"                     # 更新包存放目录
+OTA_PACKAGE_DIR = os.path.join(root_dir, "ota")                     # 更新包存放目录
 OTA_PACKAGE_NAME = "update.zip"             # 更新包文件名
 VERSION_FILE = "version.txt"                # 版本信息文件名
 UPDATE_LOG = "update_log.json"              # 更新日志文件名
@@ -389,7 +393,8 @@ def check_for_update() -> bool:
 
 # 获取指定槽位里的PySpOS版本
 def get_version(slot: str) -> str:
-    version_path = os.path.join(slot, VERSION_FILE)
+    slot_path = os.path.join(root_dir, slot)
+    version_path = os.path.join(slot_path, VERSION_FILE)
     if os.path.exists(version_path):
         with open(version_path, 'r') as f:
             return f.read().strip()
@@ -399,7 +404,8 @@ def get_version(slot: str) -> str:
 def get_current_version() -> str:
     # 首先尝试从当前槽位的version.txt文件中读取版本信息
     current_slot = get_current_slot()
-    slot_version_path = os.path.join(current_slot, VERSION_FILE)
+    slot_path = os.path.join(root_dir, current_slot)
+    slot_version_path = os.path.join(slot_path, VERSION_FILE)
     
     if os.path.exists(slot_version_path):
         try:
@@ -409,7 +415,7 @@ def get_current_version() -> str:
             logk.printl("ota", f"读取槽位版本文件失败: {e}", boot_time)
     
     # 如果槽位版本文件不存在，尝试从根目录读取
-    root_version_file = "version.txt"
+    root_version_file = os.path.join(root_dir, "version.txt")
     if os.path.exists(root_version_file):
         try:
             with open(root_version_file, 'r') as f:
@@ -443,7 +449,7 @@ def install_update() -> bool:
         return False
     
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
-    target_slot = get_other_slot()
+    target_slot = os.path.join(root_dir, get_other_slot())
     current_ver = get_current_version()
     update_ver = get_update_version()
     
@@ -464,14 +470,14 @@ def install_update() -> bool:
     
     try:
         with zipfile.ZipFile(package_path, 'r') as zip_ref:
-            zip_ref.extractall(target_slot)
+            zip_ref.extractall(target_slot) # 解压更新包
         logk.printl("ota", "解压完成", boot_time)
     except Exception as e:
         logk.printl("ota", f"解压失败: {str(e)}", boot_time)
         return False
     
-    # 从根目录复制 etc 目录到目标槽位
-    etc_source = "etc"
+    # 从根目录复制etc到目标槽位（这个用于保留数据）
+    etc_source = os.path.join(root_dir, "etc")
     etc_target = os.path.join(target_slot, "etc")
     if os.path.exists(etc_source):
         try:
@@ -514,6 +520,7 @@ def install_update() -> bool:
 def switch_slot() -> bool:
     current = get_current_slot()
     target = get_other_slot()
+    target_path = os.path.join(root_dir, target)
     
     # 检查目标槽位是否有效
     valid = True
@@ -521,13 +528,13 @@ def switch_slot() -> bool:
     
     # 检查核心文件
     for file in REQUIRED_CORE_FILES:
-        if not os.path.exists(os.path.join(target, file)):
+        if not os.path.exists(os.path.join(target_path, file)):
             missing_items.append(file)
             valid = False
     
     # 检查必要的文件夹
     for directory in REQUIRED_DIRS:
-        if not os.path.exists(os.path.join(target, directory)):
+        if not os.path.exists(os.path.join(target_path, directory)):
             missing_items.append(directory)
             valid = False
     
