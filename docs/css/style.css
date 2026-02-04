@@ -110,12 +110,12 @@ header .container {
     padding: 8px;
 }
 
-nav {
+.nav-menu {
     display: flex;
     gap: 8px;
 }
 
-nav a {
+.nav-menu a {
     color: var(--secondary-color);
     text-decoration: none;
     font-weight: 500;
@@ -125,12 +125,12 @@ nav a {
     font-size: 14px;
 }
 
-nav a:hover {
+.nav-menu a:hover {
     background: rgba(37, 99, 235, 0.05);
     color: var(--primary-color);
 }
 
-nav a.active {
+.nav-menu a.active {
     background: var(--primary-color);
     color: #fff;
 }
@@ -141,7 +141,7 @@ nav a.active {
         display: block;
     }
     
-    nav {
+    .nav-menu {
         position: fixed;
         top: 70px;
         left: 0;
@@ -160,13 +160,13 @@ nav a.active {
         pointer-events: none;
     }
     
-    nav.active {
+    .nav-menu.active {
         transform: translateY(0);
         opacity: 1;
         pointer-events: auto;
     }
     
-    nav a {
+    .nav-menu a {
         width: 90%;
         text-align: center;
         margin: 4px 0;
