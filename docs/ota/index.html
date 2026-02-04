@@ -18,7 +18,10 @@
                 <h1>PySpOS</h1>
                 <span class="version">v3.0.1-pre</span>
             </div>
-            <nav>
+            <div class="nav-toggle" id="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            <nav class="nav-menu" id="nav-menu">
                 <a href="../index.html">首页</a>
                 <a href="index.html" class="active">OTA 更新</a>
                 <a href="releases.html">版本历史</a>
@@ -256,6 +259,24 @@
 
         // 页面加载完成后初始化液态玻璃效果
         window.addEventListener('DOMContentLoaded', initLiquidGlassEffect);
+    </script>
+    
+    <script>
+        // 导航菜单切换
+        const navToggle = document.getElementById('nav-toggle');
+        const navMenu = document.getElementById('nav-menu');
+        
+        navToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+        
+        // 点击菜单项后关闭菜单
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
     </script>
 </body>
 </html>
