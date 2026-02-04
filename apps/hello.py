@@ -5,9 +5,8 @@ import api
 def main():
     print(f"your username is: {api.get_system_username()}")
 
-    for i in range(0, 5):
+    for i in range(5):
         api.api_print("Hello from apps/hello.py!(hello count: %d)" % i)
-        i += 1
 
 if __name__ == "__exec__":
     try:

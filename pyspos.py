@@ -26,7 +26,7 @@ OS_MAJOR_VER = 3
 OS_DEVELOP_STAGE = "beta"
 
 # OS Minor Version. (0~99)
-OS_MINOR_VER = 1
+OS_MINOR_VER = 0
 
 # Full OS Version String.
 OS_VERSION = f"{OS_MAJOR_VER}.{OS_MINOR_VER}"

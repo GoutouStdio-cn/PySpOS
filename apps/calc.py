@@ -9,8 +9,6 @@ def multiply(a, b):
     return api.multiply(a, b)
 def divide(a, b):
     return api.divide(a, b)
-    if b == 0:
-        raise ValueError("Cannot divide by zero.")
 
 def main(num1,num2):
     print(f"{num1} + {num2} = {add(num1,num2)}")

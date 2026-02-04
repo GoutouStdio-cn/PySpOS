@@ -17,7 +17,6 @@ import uuid
 import hashlib
 import random
 import logk
-import gc
 
 # PySpOS ASCII 艺术 Logo   
 ascii_logo = r'''
@@ -35,16 +34,24 @@ PySpOS 模拟操作系统 版本 3
 # 逻辑核心计数
 cores = os.cpu_count()
 
-# 获取系统用户名
+# 获取系统用户名（带缓存）
+_cached_username = None
+
 def get_system_username() -> str:
+    global _cached_username
+    if _cached_username is not None:
+        return _cached_username
+
     username = os.getenv("USER") or os.getenv("USERNAME")
     if username and username.strip():
-        return username.strip()
+        _cached_username = username.strip()
+        return _cached_username
 
     try:
         username = os.getlogin()
         if username.strip():
-            return username.strip()
+            _cached_username = username.strip()
+            return _cached_username
     except OSError:
         pass
 
@@ -59,7 +66,8 @@ def get_system_username() -> str:
         else:
             username = result
         if username.strip():
-            return username.strip()
+            _cached_username = username.strip()
+            return _cached_username
     except (subprocess.CalledProcessError, FileNotFoundError, OSError):
         pass
 
@@ -67,72 +75,49 @@ def get_system_username() -> str:
         try:
             import pwd
             username = pwd.getpwuid(os.getuid()).pw_name
-            return username.strip()
+            _cached_username = username.strip()
+            return _cached_username
         except (ImportError, ModuleNotFoundError):
             pass
     elif sys.platform == "win32":
-        # 通过 pywin32 获取
         try:
             import win32api
             username = win32api.GetUserName()
-            return username.strip()
+            _cached_username = username.strip()
+            return _cached_username
         except (ImportError, ModuleNotFoundError):
             pass
 
-    # 所有方法均失败
     raise RuntimeError("无法获取用户名")
 
 # 生成Unlock Token
 def generate_token():
-    # 基础信息
-    base_info = f"{uuid.getnode()}-{random.randint(1000,9999)}-unlock_token-{get_system_username()}" # 格式为 设备ID--1000~9999随机数-unlock_token-用户名
-    # 生成SHA256哈希作为token
+    base_info = f"{uuid.getnode()}-{random.randint(1000,9999)}-unlock_token-{get_system_username()}"
     token = hashlib.sha256(base_info.encode('utf-8')).hexdigest()
     return token
 
 # unlock token
 token = generate_token()
 
-# Y\N 确认提示
-def confirm(prompt: str) -> bool:
-    while True:
-        # 拼接提示信息，末尾添加 [y/n]
-        user_input = input(f"{prompt} [y/n]: ").strip().lower()
-        if user_input in ["y", "yes"]:
-            return True
-        elif user_input in ["n", "no"]:
-            return False
-        else:
-            # 无效输入时提示重新输入
-            print(f"\033[33m无效输入：{user_input}，请输入 y 或 n\033[0m")
-
-
-
 # 打印提示符
 def print_prompt():
-    # 获取当前目录名称
     current_dir_name = os.path.basename(current_dir)
     username = get_system_username()
-    # 获取格式化的当前时间
     current_time = time.strftime("%H:%M:%S")
 
-    # 基础设置
     if main.rootstate or main.bootcfg.get('rootstate', False):
-        # ROOT用户
         prompt_header = (
             f"┌──\033[91m({username}@PySPOS)─[ROOT]─[\033[93m{current_time}\033[91m]─(\033[94m/%s\033[91m)\033[0m"
             % current_dir_name
         )
-        prompt_line = f"└─\033[91m\033[94m#\033[0m "  # ROOT用#号
+        prompt_line = f"└─\033[91m\033[94m#\033[0m "
     else:
-        # 用户
         prompt_header = (
             f"┌──\033[92m({username}@PySPOS)─[\033[93m{current_time}\033[92m]─(\033[94m/%s\033[92m)\033[0m"
             % current_dir_name
         )
         prompt_line = f"└─\033[92m\033[94m$\033[0m "
 
-    # 双行显示提示符
     print(prompt_header)
     return prompt_line
 
@@ -145,20 +130,16 @@ def screen_clear():
 
 # 内核主循环
 def loop():    
-    screen_clear() # 清屏
+    screen_clear()
     username = get_system_username()
     print(ascii_logo)
 
     logk.printl("kernel", f"你有 {cores} 个 CPU 逻辑核心，Token = {token}", main.boot_time)
     print(f"欢迎使用 PySpOS 操作系统，{username}！")
-    print()  # 打印一个空行
+    print()
     while 1:
-        # 循环执行GC垃圾回收，循环一次就回收两次
-        gc.collect()
-        gc.collect(2)
         try:
             prompt = input(print_prompt())
-            
             main.handle_command(prompt)
 
         except Exception as e:

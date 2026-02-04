@@ -18,8 +18,18 @@ boot_config = r'%s/etc/bootcfg.json' % os.getcwd()
 # 计算配置校验和（排除校验和自身）
 def calculate_checksum(cfg):
     cfg_copy = cfg.copy()
-    cfg_copy.pop('checksum', None)  # 移除旧校验和
+    cfg_copy.pop('checksum', None)
     return hashlib.sha256(json.dumps(cfg_copy, sort_keys=True).encode()).hexdigest()
+
+# 公共异常处理函数
+def _handle_bootcfg_error(error_msg: str, allow_repair: bool = True) -> None:
+    print(f"\033[31m{error_msg}\033[0m")
+    if allow_repair and printk.confirm(f"系统启动失败（原因：{error_msg}），是否尝试自动修复？"):
+        create_bootcfg()
+        print("操作成功完成\n")
+    else:
+        input("按下任意键关闭系统...")
+        sys.exit(0)
 
 # 创建/修复 bootcfg 文件
 def create_bootcfg():
@@ -83,47 +93,16 @@ def load_bootcfg():
         # 校验和验证
         current_checksum = bootcfg.get('checksum')
         if not current_checksum:
-            print("\033[31m配置文件缺少校验和，可能被篡改！\033[0m")
-            if printk.confirm("是否尝试新建一个新的 bootcfg（大概率可解决此问题）？"):
-                create_bootcfg()
-                print("操作成功完成\n")
-            else:
-                exit()
+            _handle_bootcfg_error("配置文件缺少校验和，可能被篡改！")
         
         expected_checksum = calculate_checksum(bootcfg)
         if current_checksum != expected_checksum:
-            print("\033[31m配置文件校验失败，可能被篡改！\033[0m")
-            if printk.confirm("是否尝试新建一个新的 bootcfg（大概率可解决此问题）？"):
-                create_bootcfg()
-                print("操作成功完成\n")
-            else:
-                exit()
+            _handle_bootcfg_error("配置文件校验失败，可能被篡改！")
         
         return bootcfg
     except FileNotFoundError as e:
-        print("\033[31mbootcfg.json 已损坏\033[0m")
-        if printk.confirm(f"系统启动失败（原因：{e}），是否尝试自动修复？"):
-            create_bootcfg()
-            print("操作成功完成\n")
-        else:
-            pass
-        input("按下任意键关闭系统...")
-        sys.exit(0)
+        _handle_bootcfg_error(f"bootcfg.json 已损坏（{e}）")
     except json.JSONDecodeError as e:
-        print("\033[31mbootcfg.json 已损坏\033[0m")
-        if printk.confirm(f"系统启动失败（原因：{e}），是否尝试自动修复？"):
-            create_bootcfg()
-            print("操作成功完成\n")
-        else:
-            pass
-        input("按下任意键关闭系统...")
-        sys.exit(0)
-    except ValueError as e:  # 捕获校验和错误
-        print(f"\033[31m检测到非法修改启动配置，拒绝启动。\033[0m")
-        if printk.confirm("是否尝试自动修复系统？"):
-            create_bootcfg()
-            print("操作成功完成\n")
-        else:
-            pass
-        input("按下任意键关闭系统...")
-        sys.exit(0)
+        _handle_bootcfg_error(f"bootcfg.json 已损坏（{e}）")
+    except ValueError as e:
+        _handle_bootcfg_error(f"检测到非法修改启动配置，拒绝启动。")

@@ -12,17 +12,109 @@ import time
 import printk
 from pathlib import Path
 import json
+import urllib.request
+import urllib.error
+import hashlib
 
 # 槽位定义
 SLOT_A = "slot_a"
 SLOT_B = "slot_b"
-CURRENT_SLOT_FILE = "current_slot"  # 记录当前激活槽位的文件
+CURRENT_SLOT_FILE = "current_slot"
 
 # 更新包相关配置
 OTA_PACKAGE_DIR = "ota"
 OTA_PACKAGE_NAME = "update.zip"
-VERSION_FILE = "version.txt"  # 版本文件
-UPDATE_LOG = "update_log.json"  # 更新日志
+VERSION_FILE = "version.txt"
+UPDATE_LOG = "update_log.json"
+
+# 云端更新服务器配置
+OTA_SERVER_URL = "https://goutoustdio-cn.github.io/PySpOS/ota/"
+REMOTE_VERSION_FILE = "version.json"
+REMOTE_UPDATE_FILE = "update.zip"
+
+# 版本比较函数
+def compare_versions(v1: str, v2: str) -> int:
+    try:
+        parts1 = list(map(int, v1.split('.')))
+        parts2 = list(map(int, v2.split('.')))
+        max_len = max(len(parts1), len(parts2))
+        parts1.extend([0] * (max_len - len(parts1)))
+        parts2.extend([0] * (max_len - len(parts2)))
+        for p1, p2 in zip(parts1, parts2):
+            if p1 > p2:
+                return 1
+            elif p1 < p2:
+                return -1
+        return 0
+    except Exception:
+        return 0
+
+# 从云端获取最新版本信息
+def fetch_remote_version() -> dict:
+    try:
+        url = OTA_SERVER_URL + REMOTE_VERSION_FILE
+        printk.info(f"正在从云端获取版本信息: {url}")
+        
+        with urllib.request.urlopen(url, timeout=10) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            printk.ok("成功获取云端版本信息")
+            return data
+    except urllib.error.URLError as e:
+        printk.error(f"网络错误: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        printk.error(f"版本信息格式错误: {e}")
+        return None
+    except Exception as e:
+        printk.error(f"获取云端版本失败: {e}")
+        return None
+
+# 下载更新包
+def download_update_package(remote_url: str, local_path: str) -> bool:
+    try:
+        printk.info(f"开始下载更新包: {remote_url}")
+        
+        downloaded = [0]
+        def progress_hook(block_num, block_size, total_size):
+            downloaded[0] = block_num * block_size
+            if total_size > 0:
+                percent = min(100, (downloaded[0] / total_size) * 100)
+                print(f"\r下载进度: {percent:.1f}% ({downloaded[0]}/{total_size} bytes)", end='', flush=True)
+        
+        urllib.request.urlretrieve(remote_url, local_path, progress_hook)
+        print()
+        printk.ok("更新包下载完成")
+        return True
+    except urllib.error.URLError as e:
+        printk.error(f"下载失败: {e}")
+        return False
+    except Exception as e:
+        printk.error(f"下载过程中出错: {e}")
+        return False
+
+# 验证更新包完整性
+def verify_update_package(package_path: str, expected_hash: str = None) -> bool:
+    try:
+        if expected_hash:
+            printk.info("正在验证更新包完整性...")
+            sha256_hash = hashlib.sha256()
+            with open(package_path, 'rb') as f:
+                for chunk in iter(lambda: f.read(4096), b''):
+                    sha256_hash.update(chunk)
+            calculated_hash = sha256_hash.hexdigest()
+            
+            if calculated_hash == expected_hash:
+                printk.ok("更新包完整性验证通过")
+                return True
+            else:
+                printk.error("更新包校验和不匹配")
+                return False
+        else:
+            printk.warn("未提供校验和，跳过完整性验证")
+            return True
+    except Exception as e:
+        printk.error(f"验证更新包失败: {e}")
+        return False
 
 # 获取当前的槽位
 def get_current_slot() -> str:
@@ -45,6 +137,106 @@ def set_current_slot(slot: str) -> None:
 # 获取其他槽位
 def get_other_slot() -> str:
     return SLOT_B if get_current_slot() == SLOT_A else SLOT_A
+
+# 验证更新包
+def verify_update_compatibility() -> bool:
+    current_ver = get_current_version()
+    update_ver = get_update_version()
+    
+    comparison = compare_versions(update_ver, current_ver)
+    if comparison > 0:
+        return True
+    elif comparison == 0:
+        printk.warn("更新包版本与当前版本相同")
+        return False
+    else:
+        printk.warn("更新包版本低于当前版本")
+        return False
+
+# 从云端检查更新
+def check_cloud_update() -> dict:
+    remote_info = fetch_remote_version()
+    if not remote_info:
+        return None
+    
+    current_ver = get_current_version()
+    remote_ver = remote_info.get('version', '0.0.0')
+    
+    comparison = compare_versions(remote_ver, current_ver)
+    
+    if comparison > 0:
+        printk.info(f"发现新版本: {remote_ver} (当前: {current_ver})")
+        return {
+            'has_update': True,
+            'current_version': current_ver,
+            'remote_version': remote_ver,
+            'download_url': remote_info.get('download_url', OTA_SERVER_URL + REMOTE_UPDATE_FILE),
+            'sha256': remote_info.get('sha256'),
+            'release_notes': remote_info.get('release_notes', '')
+        }
+    else:
+        printk.info(f"当前已是最新版本: {current_ver}")
+        return {
+            'has_update': False,
+            'current_version': current_ver,
+            'remote_version': remote_ver
+        }
+
+# 从云端下载并安装更新
+def download_and_install_update() -> bool:
+    update_info = check_cloud_update()
+    if not update_info or not update_info['has_update']:
+        printk.info("没有可用的更新")
+        return False
+    
+    if not printk.confirm(f"是否下载并安装版本 {update_info['remote_version']}？"):
+        return False
+    
+    os.makedirs(OTA_PACKAGE_DIR, exist_ok=True)
+    package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
+    
+    if not download_update_package(update_info['download_url'], package_path):
+        return False
+    
+    if not verify_update_package(package_path, update_info.get('sha256')):
+        return False
+    
+    return install_update()
+
+# 回滚到上一个版本
+def rollback_update() -> bool:
+    current = get_current_slot()
+    other = get_other_slot()
+    
+    printk.info(f"当前槽位: {current} ({get_version(current)})")
+    printk.info(f"目标槽位: {other} ({get_version(other)})")
+    
+    if not printk.confirm("是否回滚到上一个版本？"):
+        return False
+    
+    if not switch_slot():
+        printk.error("回滚失败")
+        return False
+    
+    printk.ok("回滚成功，重启后生效")
+    return True
+
+# 查看更新历史
+def view_update_history() -> None:
+    for slot in [SLOT_A, SLOT_B]:
+        log_path = os.path.join(slot, UPDATE_LOG)
+        if os.path.exists(log_path):
+            try:
+                with open(log_path, 'r') as f:
+                    log_data = json.load(f)
+                print(f"\n{slot} 更新历史:")
+                print(f"  从版本: {log_data.get('from_version', '未知')}")
+                print(f"  到版本: {log_data.get('to_version', '未知')}")
+                print(f"  安装时间: {log_data.get('install_time', '未知')}")
+            except Exception as e:
+                printk.error(f"读取更新历史失败: {e}")
+        else:
+            print(f"\n{slot} 无更新历史")
 
 # 检查是否有更新（这个以后可以抓取云端内容检查）
 def check_for_update() -> bool:
@@ -74,20 +266,6 @@ def get_update_version() -> str:
     except Exception as e:
         printk.error(f"读取更新包版本失败: {str(e)}")
     return "未知版本"
-
-# 验证更新包（不太完善这个，这个以后改进）
-def verify_update_compatibility() -> bool:
-    current_ver = get_current_version()
-    update_ver = get_update_version()
-    
-    # 对比版本号
-    try:
-        current_parts = list(map(int, current_ver.split('.')))
-        update_parts = list(map(int, update_ver.split('.')))
-        return update_parts > current_parts
-    except Exception:
-        printk.warn("版本格式不正确！")
-        return False
 
 # 将更新包安装到另一槽位
 def install_update() -> bool:

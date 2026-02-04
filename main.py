@@ -12,7 +12,6 @@ import kernel
 import fs
 import sys
 import btcfg
-import uuid
 import re
 import logk
 import recovery
@@ -36,11 +35,25 @@ bootcfg = btcfg.load_bootcfg()
 rootstate = bool(btcfg.get_bootcfg('rootstate'))
 boot_time = logk.get_boot_time()
 
+# 获取应用路径
+def get_app_path(app_name: str) -> str:
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(root_dir, "apps", app_name)
+
+# 获取spf应用路径
+def get_spf_path(app_name: str) -> str:
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(root_dir, "spfapps", app_name)
+
+# 验证文件名安全性
+def is_safe_filename(filename: str) -> bool:
+    return not (re.search(r'\.\./', filename) or os.path.isabs(filename))
+
 # 主函数
 def main():
     logk.printl("main", "加载 PySpKernel...", boot_time)
     logk.printl("main", f"Bootloader：{"已上锁" if bootcfg['locked'] else "已解锁"}，ROOT 权限：{"未启用" if not bootcfg['rootstate'] else "已启用"}", boot_time)
-    logk.printl("main", f"加载完成，您使用的操作系统为：{sys.platform}, 你的设备id为：{uuid.getnode()}", boot_time)
+    logk.printl("main", f"加载完成，您使用的操作系统为：{sys.platform}", boot_time)
     logk.printl("main",  "ROOT已启用" if rootstate else "ROOT未启用", boot_time)
 
     kernel.loop()
@@ -48,122 +61,163 @@ def main():
 # 打印孙浩博是小可爱
 def print_sunhb():
     cores = kernel.cores
-    print(f"‘shb’程序将打印孙浩博是小可爱！{cores}次。\n")
+    print(f"'shb'程序将打印孙浩博是小可爱！{cores}次。\n")
     print("孙浩博是 " * cores)
     print("小可爱！ " * cores)
     print()
 
+# 命令处理函数
+def cmd_help():
+    print("clear      清屏")
+    print("echo       打印指定的字符串")
+    print("osver      查看系统和Python版本")
+    print("shutdown   关闭PySpOS")
+    print("python     启动Python")
+    print("shb        打印孙浩博是小可爱 n 次（n 指你的CPU逻辑核心数）")
+    print("ls/dir     列出当前目录下的文件和文件夹")
+    print("finfo      查看指定文件的信息")
+    print("testroot   测试ROOT权限")
+    print("open       运行 apps 目录下的指定应用程序\n")
+
+def cmd_echo(text: str):
+    print(f"{text}\n")
+
+def cmd_osver():
+    print(f"PySpOS 版本: {pyspos.OS_VERSION}, 开发阶段: {pyspos.OS_DEVELOP_STAGE}")
+    print(f"Python 版本: {platform.python_version()}\n")
+
+def cmd_shutdown():
+    kernel.exit()
+
+def cmd_clear():
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+
+def cmd_python():
+    os.system("python")
+    print()
+
+def cmd_recovery():
+    recovery.recovery_main("kernel_jump")
+
+def cmd_shb():
+    print_sunhb()
+
+def cmd_ls():
+    items = fs.list_dir()
+    for item in items:
+        print(item)
+    print()
+
+def cmd_finfo(filename: str):
+    info = fs.get_file_info(filename)
+    if info:    
+        print(f"{filename} 的文件信息\n大小: {info['size']} 字节, 修改时间: {info['modified']}, 是否为目录: {info['is_dir']}\n")
+    else:
+        print(f"未找到文件或目录: {filename}\n")
+
+def cmd_testroot():
+    if rootstate:
+        print("当前处于 ROOT 权限状态。")
+        print(f"rootstate 变量值为: {rootstate}\n")
+    else:
+        print("当前未处于 ROOT 权限状态。")
+        print(f"rootstate 变量值为: {rootstate}\n")
+
+def cmd_open(app_name: str):
+    if not app_name.endswith(".py"):
+        app_name += ".py"
+    
+    if not is_safe_filename(app_name):
+        printk.error("错误：文件名不允许包含 ../ 或绝对路径\n")
+        return
+    
+    app_path = get_app_path(app_name)
+    
+    if not os.path.exists(app_path) or not os.path.isfile(app_path):
+        printk.error(f"未找到可执行文件: {app_name}\n")
+        return
+    
+    try:
+        with open(app_path, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        exec_namespace = {
+            '__name__': '__exec__',
+            '__builtins__': {
+                'print': print,
+                'len': len,
+                'str': str,
+                'int': int,
+                'float': float,
+                'range': range,
+                'list': list,
+                'dict': dict,
+                'tuple': tuple,
+                'set': set,
+                'bool': bool,
+                'type': type,
+                'isinstance': isinstance,
+                'Exception': Exception,
+                'ValueError': ValueError,
+                'RuntimeError': RuntimeError,
+                'SystemError': SystemError,
+            }
+        }
+        
+        exec(code, exec_namespace)
+    
+    except Exception as e:
+        printk.error(f"执行 {app_name} 失败: {str(e)}\n")
+
+def cmd_openspf(app_name: str):
+    if not app_name.endswith(".spf"):
+        app_name += ".spf"
+    
+    if not is_safe_filename(app_name):
+        printk.error("错误：文件名不允许包含 ../ 或绝对路径\n")
+        return
+    
+    app_path = get_spf_path(app_name)
+    
+    if not os.path.exists(app_path) or not os.path.isfile(app_path):
+        printk.error(f"未找到可执行文件: {app_name}\n")
+        return
+    
+    try:
+        parse_spf.run_spf(app_path)
+    except Exception as e:
+        printk.error(f"执行 {app_name} 失败: {str(e)}\n")
+
+# 命令映射表
+COMMANDS = {
+    'help': cmd_help,
+    'osver': cmd_osver,
+    'shutdown': cmd_shutdown,
+    'clear': cmd_clear,
+    'python': cmd_python,
+    'recovery': cmd_recovery,
+    'shb': cmd_shb,
+    'ls': cmd_ls,
+    'dir': cmd_ls,
+    'testroot': cmd_testroot,
+    'echo': lambda: print("Usage: echo 指定的字符串\n"),
+}
+
 # 处理命令
 def handle_command(prompt) -> str:
-    if prompt == "help":
-        print("clear      清屏")
-        print("echo       打印指定的字符串")
-        print("osver      查看系统和Python版本")
-        print("shutdown   关闭PySpOS")
-        print("python     启动Python")
-        print("shb        打印孙浩博是小可爱 n 次（n 指你的CPU逻辑核心数）")
-        print("ls/dir     列出当前目录下的文件和文件夹")
-        print("finfo      查看指定文件的信息")
-        print("testroot   测试ROOT权限")
-        print("open       运行 apps 目录下的指定应用程序\n")
+    if prompt in COMMANDS:
+        COMMANDS[prompt]()
     elif prompt.startswith("echo "):
-        text = prompt[5:].strip()
-        print(f"{text}\n")
+        cmd_echo(prompt[5:].strip())
     elif prompt.startswith("open "):
-        text = prompt[5:].strip()
-        # 自动添加 .py 后缀
-        if not text.endswith(".py"):
-            text += ".py"
-        
-        # 路径安全检查
-        if re.search(r'\.\./', text) or os.path.isabs(text):
-            printk.error("错误：文件名不允许包含 ../ 或绝对路径\n")
-            return
-        try:
-            # 获取 main.py 所在目录
-            root_dir = os.path.dirname(os.path.abspath(__file__))
-            app_path = os.path.join(root_dir, "apps", text)
-            
-            # 检查文件是否存在且为文件
-            if not os.path.exists(app_path) or not os.path.isfile(app_path):
-                printk.error(f"未找到可执行文件: {text}\n")
-                return
-            
-            # 读取文件内容
-            with open(app_path, 'r', encoding='utf-8') as f:
-                code = f.read()
-
-            exec_namespace = globals().copy()
-            exec_namespace["__name__"] = "__exec__"  # 自定义的 __name__
-            
-            # 执行代码并传入全局上下文
-            exec(code, exec_namespace)
-        
-        except Exception as e:
-            printk.error(f"执行 {text} 失败: {str(e)}\n")
-
+        cmd_open(prompt[5:].strip())
     elif prompt.startswith("openspf "):
-        text = prompt[8:].strip()
-        # 自动添加spf后缀
-        if not text.endswith(".spf"):
-            text += ".spf"
-        
-        # 路径安全检查
-        if re.search(r'\.\./', text) or os.path.isabs(text):
-            printk.error("错误：文件名不允许包含 ../ 或绝对路径\n")
-            return
-        try:
-            # 根文件所在目录
-            root_dir = os.path.dirname(os.path.abspath(__file__))
-            # app所在目录
-            app_path = os.path.join(root_dir, "spfapps", text)
-            
-            # 检查文件是否存在且为文件
-            if not os.path.exists(app_path) or not os.path.isfile(app_path):
-                printk.error(f"未找到可执行文件: {text}\n")
-                return
-            
-            parse_spf.run_spf(app_path)
-        except Exception as e:
-            printk.error(f"执行 {text} 失败: {str(e)}\n")
-    elif prompt == "echo":
-        print("Usage: echo 指定的字符串\n")
-    elif prompt == "osver":
-        print(f"PySpOS 版本: {pyspos.OS_VERSION}, 开发阶段: {pyspos.OS_DEVELOP_STAGE}")
-        print(f"Python 版本: {platform.python_version()}\n")
-    elif prompt == "shutdown":
-        kernel.exit()
-    elif prompt == "clear":
-        if os.name == "nt":
-            os.system("cls")
-        else:
-            os.system("clear")
-    elif prompt == "python":
-        os.system("python")
-        print()
-    elif prompt == "recovery":
-        recovery.recovery_main("kernel_jump")
-    elif prompt == "shb":
-        print_sunhb()
-    elif prompt in ("ls", "dir"):
-        items = fs.list_dir()
-        for item in items:
-            print(item)
-        print()
+        cmd_openspf(prompt[8:].strip())
     elif prompt.startswith("finfo "):
-        text = prompt[6:].strip()
-        info = fs.get_file_info(text)
-        if info:    
-            print(f"{text} 的文件信息\n大小: {info['size']} 字节, 修改时间: {info['modified']}, 是否为目录: {info['is_dir']}\n")
-        else:
-            print(f"未找到文件或目录: {text}\n")    
-    elif prompt == "testroot":
-        if rootstate:
-            print("当前处于 ROOT 权限状态。")
-            print(f"rootstate 变量值为: {rootstate}\n")
-        else:
-            print("当前未处于 ROOT 权限状态。")
-            print(f"rootstate 变量值为: {rootstate}\n")
+        cmd_finfo(prompt[6:].strip())
     else:
         print(f"'{prompt}' 不是内部或外部命令，也不是可运行的程序或批处理文件。\n")
 
