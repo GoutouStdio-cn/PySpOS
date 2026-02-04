@@ -22,10 +22,13 @@
                 <i class="fas fa-bars"></i>
             </div>
             <nav class="nav-menu" id="nav-menu">
-                <a href="../index.html">首页</a>
-                <a href="index.html" class="active">OTA 更新</a>
-                <a href="releases.html">版本历史</a>
-                <a href="https://github.com/GoutouStdio-cn/PySpOS" target="_blank">GitHub</a>
+                <ul>
+                    <li><a href="../index.html" class="nav-link">首页</a></li>
+                    <li><a href="index.html" class="nav-link active">OTA 更新</a></li>
+                    <li><a href="releases.html" class="nav-link">版本历史</a></li>
+                    <li><a href="https://github.com/GoutouStdio-cn/PySpOS" target="_blank" class="nav-link">GitHub</a></li>
+                </ul>
+                <div class="nav-indicator" id="nav-indicator"></div>
             </nav>
         </div>
     </header>
@@ -262,20 +265,101 @@
     </script>
     
     <script>
-        // 导航菜单切换
-        const navToggle = document.getElementById('nav-toggle');
-        const navMenu = document.getElementById('nav-menu');
-        
-        navToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-        });
-        
-        // 点击菜单项后关闭菜单
-        const navLinks = document.querySelectorAll('.nav-menu a');
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
+        // 导航菜单切换和指示器动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggle = document.getElementById('nav-toggle');
+            const navMenu = document.getElementById('nav-menu');
+            const navIndicator = document.getElementById('nav-indicator');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            let isInitialized = false;
+            
+            // 初始化导航指示器位置
+            function initNavIndicator() {
+                const activeLink = document.querySelector('.nav-link.active');
+                if (activeLink && navIndicator) {
+                    const rect = activeLink.getBoundingClientRect();
+                    const navRect = navMenu.getBoundingClientRect();
+                    const targetWidth = rect.width;
+                    const targetLeft = rect.left - navRect.left;
+                    
+                    // 初始设置，无过渡效果
+                    navIndicator.style.transition = 'none';
+                    navIndicator.style.width = `${targetWidth}px`;
+                    navIndicator.style.transform = `translateX(${targetLeft}px)`;
+                    navIndicator.offsetHeight;
+                    
+                    // 启用过渡效果
+                    navIndicator.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                    isInitialized = true;
+                }
+            }
+            
+            // 更新导航指示器位置
+            function updateNavIndicator(target) {
+                if (target && navIndicator) {
+                    const rect = target.getBoundingClientRect();
+                    const navRect = navMenu.getBoundingClientRect();
+                    const targetWidth = rect.width;
+                    const targetLeft = rect.left - navRect.left;
+                    
+                    // 直接设置到目标位置，保持过渡效果
+                    navIndicator.style.width = `${targetWidth}px`;
+                    navIndicator.style.transform = `translateX(${targetLeft}px)`;
+                }
+            }
+            
+            // 初始化导航指示器
+            initNavIndicator();
+            
+            // 添加导航链接悬停事件
+            navLinks.forEach(link => {
+                link.addEventListener('mouseenter', function() {
+                    updateNavIndicator(this);
+                });
+                
+                link.addEventListener('mouseleave', function() {
+                    const activeLink = document.querySelector('.nav-link.active');
+                    if (activeLink) {
+                        updateNavIndicator(activeLink);
+                    }
+                });
+                
+                link.addEventListener('click', function(e) {
+                    // 移除所有链接的active类
+                    navLinks.forEach(navLink => navLink.classList.remove('active'));
+                    // 添加当前链接的active类
+                    this.classList.add('active');
+                    // 更新导航指示器位置
+                    updateNavIndicator(this);
+                    // 关闭移动菜单
+                    navMenu.classList.remove('active');
+                });
             });
+            
+            // 窗口大小变化时重新初始化导航指示器
+            window.addEventListener('resize', initNavIndicator);
+            
+            if (navToggle && navMenu) {
+                // 添加点击事件监听器
+                navToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    navMenu.classList.toggle('active');
+                });
+                
+                // 添加触摸事件监听器，确保在移动设备上也能响应
+                navToggle.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                    navMenu.classList.toggle('active');
+                });
+                
+                // 点击页面其他地方关闭菜单
+                document.addEventListener('click', function(e) {
+                    if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+                        navMenu.classList.remove('active');
+                    }
+                });
+            }
         });
     </script>
 </body>
