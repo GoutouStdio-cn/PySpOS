@@ -32,6 +32,7 @@ def recovery_main(jumpinfo) -> str:
             print("ota_clean  清理更新包文件")
             print("exit     退出Recovery\n")
         elif prompt == "erase":
+            # 清除bootcfg和pycache信息
             if os.path.isdir("etc"):
                 shutil.rmtree("etc")
             else:
@@ -41,6 +42,16 @@ def recovery_main(jumpinfo) -> str:
                 shutil.rmtree("__pycache__")
             else:
                 logk.printl("recovery", "pycache文件夹已经清除了", main.boot_time)
+            
+            # 清除槽位内容
+            slots = ["slot_a", "slot_b"]
+            for slot in slots:
+                if os.path.isdir(slot):
+                    shutil.rmtree(slot)
+                    logk.printl("recovery", f"槽位 {slot} 已清除", main.boot_time)
+                else:
+                    logk.printl("recovery", f"槽位 {slot} 已经清除了", main.boot_time)
+            
             gc.collect()
             logk.printl("recovery", "清除完成，请重启程序\n", main.boot_time)
         elif prompt == "exit":

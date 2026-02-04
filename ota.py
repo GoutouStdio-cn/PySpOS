@@ -530,5 +530,29 @@ def ota_init() -> bool:
     else:
         logk.printl("ota", "版本文件 version.txt 已存在", boot_time)
     
+    # 复制根目录文件到当前槽位
+    current_slot = get_current_slot()
+    logk.printl("ota", f"正在将根目录文件复制到 {current_slot} 槽位...", boot_time)
+    
+    try:
+        # 获取根目录所有文件和文件夹
+        root_items = [item for item in os.listdir('.') if item not in [SLOT_A, SLOT_B, OTA_PACKAGE_DIR, '__pycache__', '.git']]
+        
+        for item in root_items:
+            src_path = os.path.join('.', item)
+            dest_path = os.path.join(current_slot, item)
+            
+            if os.path.isfile(src_path):
+                shutil.copy2(src_path, dest_path)
+            elif os.path.isdir(src_path):
+                if os.path.exists(dest_path):
+                    shutil.rmtree(dest_path)
+                shutil.copytree(src_path, dest_path)
+        
+        logk.printl("ota", f"根目录文件复制到 {current_slot} 槽位成功", boot_time)
+    except Exception as e:
+        logk.printl("ota", f"复制文件到槽位失败: {str(e)}", boot_time)
+        return False
+    
     logk.printl("ota", "OTA槽位结构初始化完成", boot_time)
     return True
