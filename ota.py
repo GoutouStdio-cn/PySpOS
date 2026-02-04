@@ -32,9 +32,9 @@ VERSION_FILE = "version.txt"                # 版本信息文件名
 UPDATE_LOG = "update_log.json"              # 更新日志文件名
 
 # 云端更新服务器配置
-OTA_SERVER_URL = "https://pyspos.us.ci/ota/" # 加速！！！
+OTA_SERVER_URL = "http://pyspos.us.ci/ota/" # 加速！！！（别改成https）
 REMOTE_VERSION_FILE = "version.json"        # 云端版本信息文件名
-REMOTE_UPDATE_FILE = "update.zip"           # 云端更新包文件名
+REMOTE_UPDATE_FILE = "PySpOS.zip"           # 云端更新包文件名
 
 # 必要的文件
 REQUIRED_CORE_FILES = [
@@ -49,11 +49,41 @@ REQUIRED_DIRS = ["apps", "etc", "spfapps"]
 # 版本比较函数
 def compare_versions(v1: str, v2: str) -> int:
     try:
-        parts1 = list(map(int, v1.split('.')))
-        parts2 = list(map(int, v2.split('.')))
+        # 分离版本号和后缀
+        def parse_version(version: str):
+            # 处理版本后缀（如 pre, beta, rc, alpha）
+            suffix_map = {
+                'pre': -3,
+                'alpha': -2,
+                'beta': -1,
+                'rc': 0,
+            }
+            
+            # 检查是否有后缀
+            for suffix, weight in suffix_map.items():
+                if suffix in version.lower():
+                    # 提取基础版本号
+                    base_version = version.lower().split(suffix)[0].rstrip('-')
+                    # 转换为数字列表
+                    parts = list(map(int, base_version.split('.')))
+                    # 添加后缀权重作为最后一位
+                    parts.append(weight)
+                    return parts
+            
+            # 没有后缀，视为正式版，权重为1
+            parts = list(map(int, version.split('.')))
+            parts.append(1)
+            return parts
+        
+        parts1 = parse_version(v1)
+        parts2 = parse_version(v2)
+        
+        # 确保长度一致
         max_len = max(len(parts1), len(parts2))
         parts1.extend([0] * (max_len - len(parts1)))
         parts2.extend([0] * (max_len - len(parts2)))
+        
+        # 逐位比较
         for p1, p2 in zip(parts1, parts2):
             if p1 > p2:
                 return 1
@@ -266,11 +296,16 @@ def check_cloud_update() -> dict:
     
     if comparison > 0:
         logk.printl("ota", f"发现新版本: {remote_ver}", boot_time)
+        # 处理下载URL，确保是完整的URL
+        download_url = remote_info.get('download_url', OTA_SERVER_URL + REMOTE_UPDATE_FILE)
+        # 如果是相对路径，转换为完整URL
+        if not download_url.startswith('http://') and not download_url.startswith('https://'):
+            download_url = OTA_SERVER_URL + download_url
         return {
             'has_update': True,
             'current_version': current_ver,
             'remote_version': remote_ver,
-            'download_url': remote_info.get('download_url', OTA_SERVER_URL + REMOTE_UPDATE_FILE),
+            'download_url': download_url,
             'sha256': remote_info.get('sha256'),
             'release_notes': remote_info.get('release_notes', '')
         }
@@ -301,7 +336,16 @@ def download_and_install_update() -> bool:
     if not verify_update_package(package_path, update_info.get('sha256')):
         return False
     
-    return install_update()
+    if not install_update():
+        return False
+    
+    # 安装成功后，切换到新槽位
+    if not switch_slot():
+        logk.printl("ota", "切换槽位失败", boot_time)
+        return False
+    
+    logk.printl("ota", "更新已安装，重启后生效", boot_time)
+    return True
 
 # 回滚到上一个版本
 def rollback_update() -> bool:
@@ -353,7 +397,18 @@ def get_version(slot: str) -> str:
 
 # 获取当前槽位里PySpOS版本
 def get_current_version() -> str:
-    # 首先尝试从根目录的version.txt文件中读取版本信息
+    # 首先尝试从当前槽位的version.txt文件中读取版本信息
+    current_slot = get_current_slot()
+    slot_version_path = os.path.join(current_slot, VERSION_FILE)
+    
+    if os.path.exists(slot_version_path):
+        try:
+            with open(slot_version_path, 'r') as f:
+                return f.read().strip()
+        except Exception as e:
+            logk.printl("ota", f"读取槽位版本文件失败: {e}", boot_time)
+    
+    # 如果槽位版本文件不存在，尝试从根目录读取
     root_version_file = "version.txt"
     if os.path.exists(root_version_file):
         try:
@@ -361,11 +416,6 @@ def get_current_version() -> str:
                 return f.read().strip()
         except Exception as e:
             logk.printl("ota", f"读取根目录版本文件失败: {e}", boot_time)
-    
-    # 如果根目录版本文件不存在，尝试从当前槽位中读取
-    slot_version = get_version(get_current_slot())
-    if slot_version != "未知版本":
-        return slot_version
     
     # 如果都失败了，返回一个默认版本
     return "3.0.0"
@@ -420,6 +470,19 @@ def install_update() -> bool:
         logk.printl("ota", f"解压失败: {str(e)}", boot_time)
         return False
     
+    # 从根目录复制 etc 目录到目标槽位
+    etc_source = "etc"
+    etc_target = os.path.join(target_slot, "etc")
+    if os.path.exists(etc_source):
+        try:
+            if os.path.exists(etc_target):
+                shutil.rmtree(etc_target)
+            shutil.copytree(etc_source, etc_target)
+            logk.printl("ota", "已复制 etc 目录", boot_time)
+        except Exception as e:
+            logk.printl("ota", f"复制 etc 目录失败: {str(e)}", boot_time)
+            return False
+    
     try:
         log_path = os.path.join(target_slot, UPDATE_LOG)
         log_data = {
@@ -432,6 +495,16 @@ def install_update() -> bool:
         logk.printl("ota", "日志已记录", boot_time)
     except Exception as e:
         logk.printl("ota", f"记录日志失败: {str(e)}", boot_time)
+    
+    # 确保version.txt文件存在
+    version_path = os.path.join(target_slot, VERSION_FILE)
+    if not os.path.exists(version_path):
+        try:
+            with open(version_path, 'w') as f:
+                f.write(update_ver)
+            logk.printl("ota", f"已创建版本文件: {version_path}", boot_time)
+        except Exception as e:
+            logk.printl("ota", f"创建版本文件失败: {str(e)}", boot_time)
     
     end_time = time.time()
     logk.printl("ota", f"安装完成: {end_time - start_time:.2f}秒", boot_time)

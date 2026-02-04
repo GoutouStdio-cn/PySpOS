@@ -37,6 +37,25 @@ bootcfg = btcfg.load_bootcfg()
 rootstate = bool(btcfg.get_bootcfg('rootstate'))
 boot_time = logk.get_boot_time()
 
+# 切换到当前槽位目录
+current_slot_file = "current_slot"
+if os.path.exists(current_slot_file):
+    try:
+        with open(current_slot_file, 'r') as f:
+            current_slot = f.read().strip()
+            if os.path.exists(current_slot):
+                os.chdir(current_slot)
+                current_dir = os.getcwd()
+                apps_dir = os.path.join(current_dir, 'apps')
+                sys.path.append(apps_dir)
+                logk.printl("main", f"已切换到槽位: {current_slot}", boot_time)
+            else:
+                logk.printl("main", f"槽位 {current_slot} 不存在，使用根目录", boot_time)
+    except Exception as e:
+        logk.printl("main", f"读取槽位文件失败: {e}，使用根目录", boot_time)
+else:
+    logk.printl("main", "未找到槽位文件，使用根目录", boot_time)
+
 # 获取应用路径
 def get_app_path(app_name: str) -> str:
     root_dir = os.path.dirname(os.path.abspath(__file__))
