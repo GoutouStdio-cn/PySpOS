@@ -19,16 +19,16 @@ import subprocess
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(script_dir) if os.path.basename(script_dir) in ['slot_a', 'slot_b'] else script_dir
 
+# 确保在根目录下运行
 def ensure_root_directory():
-    """确保在根目录下运行"""
     current_dir = os.getcwd()
     if current_dir != root_dir:
         logk.printl("recovery", f"切换到根目录: {root_dir}", main.boot_time)
         os.chdir(root_dir)
         logk.printl("recovery", f"当前目录已切换到: {os.getcwd()}", main.boot_time)
 
+# 查找并终止 main 进程
 def check_and_terminate_main_process():
-    """检查并终止可能存在的 main 进程"""
     try:
         # 使用系统命令查找可能正在运行的 main.py 进程
         if os.name == 'nt':  # Windows
