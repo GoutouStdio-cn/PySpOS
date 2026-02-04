@@ -642,38 +642,272 @@ footer p {
     color: #fff;
 }
 
+/* 手机端响应式设计 */
 @media (max-width: 768px) {
-    .hero h2 {
-        font-size: 28px;
+    .container {
+        padding: 0 15px;
     }
     
-    .hero .subtitle {
-        font-size: 14px;
-    }
-    
-    .feature-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .platform-list {
-        flex-direction: column;
-    }
-    
-    .contributor-list {
-        grid-template-columns: 1fr;
+    header {
+        padding: 10px 0;
     }
     
     header .container {
         flex-direction: column;
         gap: 15px;
+        text-align: center;
+    }
+    
+    .logo h1 {
+        font-size: 20px;
+    }
+    
+    .logo .version {
+        font-size: 11px;
+        padding: 2px 8px;
     }
     
     nav {
         width: 100%;
         justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    nav a {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+    
+    main {
+        padding: 20px 15px;
+    }
+    
+    section {
+        margin: 0 auto 30px;
+        padding: 15px;
+        border-radius: 8px;
+    }
+    
+    .hero {
+        padding: 40px 15px;
+    }
+    
+    .hero h2 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    
+    .hero .subtitle {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .hero-buttons {
+        gap: 10px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    section h2 {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+    
+    .features,
+    .platforms,
+    .quickstart,
+    .contributors,
+    .version-info,
+    .download-section,
+    .changelog,
+    .compatibility,
+    .rollback {
+        padding: 20px;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .feature-card {
+        padding: 20px;
+    }
+    
+    .feature-card h3 {
+        font-size: 16px;
+    }
+    
+    .platform-list {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .platform-item {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    .step {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .step-number {
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
+    }
+    
+    .step-content pre {
+        padding: 10px;
+        font-size: 12px;
+    }
+    
+    .contributor-list {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .contributor {
+        padding: 15px;
+    }
+    
+    .contributor-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .ota-header {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+    }
+    
+    .ota-header h1 {
+        font-size: 22px;
     }
     
     .version-cards {
         grid-template-columns: 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .version-card {
+        padding: 15px;
+    }
+    
+    .version-card .version {
+        font-size: 20px;
+    }
+    
+    .download-buttons {
+        gap: 10px;
+    }
+    
+    .changelog-item {
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .compatibility-list li {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+    
+    .rollback-steps li {
+        padding: 10px 15px 10px 45px;
+        font-size: 13px;
+    }
+    
+    .rollback-steps li::before {
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+    }
+}
+
+/* 超小屏幕设备（手机竖屏） */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 10px;
+    }
+    
+    main {
+        padding: 15px 10px;
+    }
+    
+    section {
+        padding: 12px;
+        margin: 0 auto 20px;
+    }
+    
+    .hero {
+        padding: 30px 10px;
+    }
+    
+    .hero h2 {
+        font-size: 20px;
+    }
+    
+    .hero .subtitle {
+        font-size: 13px;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 100%;
+        max-width: 200px;
+        text-align: center;
+    }
+    
+    section h2 {
+        font-size: 20px;
+    }
+    
+    nav {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    nav a {
+        width: 100%;
+        max-width: 150px;
+        text-align: center;
+    }
+    
+    .feature-card h3 {
+        font-size: 15px;
+    }
+    
+    .feature-card p {
+        font-size: 13px;
+    }
+    
+    .step-content pre {
+        font-size: 11px;
+    }
+    
+    .version-card .version {
+        font-size: 18px;
+    }
+    
+    .download-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .download-buttons .btn {
+        width: 100%;
+        max-width: 200px;
     }
 }

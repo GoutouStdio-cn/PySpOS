@@ -16,6 +16,8 @@ import re
 import logk
 import recovery
 import pyspos
+import ota
+
 if pyspos.SPF_ENABLED:
     import parse_spf
 else:
@@ -77,7 +79,12 @@ def cmd_help():
     print("ls/dir     列出当前目录下的文件和文件夹")
     print("finfo      查看指定文件的信息")
     print("testroot   测试ROOT权限")
-    print("open       运行 apps 目录下的指定应用程序\n")
+    print("open       运行 apps 目录下的指定应用程序")
+    print("ota_check  检查是否有可用的更新")
+    print("ota_update 下载并安装更新")
+    print("ota_status 查看OTA更新状态")
+    print("ota_rollback 回滚到上一个版本")
+    print("ota_clean  清理更新包文件\n")
 
 def cmd_echo(text: str):
     print(f"{text}\n")
@@ -191,6 +198,51 @@ def cmd_openspf(app_name: str):
     except Exception as e:
         printk.error(f"执行 {app_name} 失败: {str(e)}\n")
 
+def cmd_ota_check():
+    """检查是否有可用的更新"""
+    update_info = ota.check_cloud_update()
+    if update_info:
+        if update_info['has_update']:
+            print(f"发现新版本: {update_info['remote_version']}")
+            print(f"当前版本: {update_info['current_version']}")
+            print(f"更新内容: {update_info['release_notes']}")
+        else:
+            print(f"当前已是最新版本: {update_info['current_version']}")
+    print()
+
+def cmd_ota_update():
+    """下载并安装更新"""
+    result = ota.download_and_install_update()
+    if result:
+        print("更新已成功安装，重启后生效\n")
+    else:
+        print("更新失败\n")
+
+def cmd_ota_status():
+    """查看OTA更新状态"""
+    status = ota.get_ota_status()
+    print(f"当前槽位: {status['current_slot']}")
+    print(f"当前版本: {status['current_version']}")
+    print(f"其他槽位: {status['other_slot']}")
+    print(f"其他版本: {status['other_version']}")
+    print(f"是否有更新: {'是' if status['has_update'] else '否'}")
+    if status['update_version']:
+        print(f"更新版本: {status['update_version']}")
+    print()
+
+def cmd_ota_rollback():
+    """回滚到上一个版本"""
+    result = ota.rollback_update()
+    if result:
+        print("回滚成功，重启后生效\n")
+    else:
+        print("回滚失败\n")
+
+def cmd_ota_clean():
+    """清理更新包文件"""
+    ota.clean_update_package()
+    print()
+
 # 命令映射表
 COMMANDS = {
     'help': cmd_help,
@@ -204,6 +256,11 @@ COMMANDS = {
     'dir': cmd_ls,
     'testroot': cmd_testroot,
     'echo': lambda: print("Usage: echo 指定的字符串\n"),
+    'ota_check': cmd_ota_check,
+    'ota_update': cmd_ota_update,
+    'ota_status': cmd_ota_status,
+    'ota_rollback': cmd_ota_rollback,
+    'ota_clean': cmd_ota_clean,
 }
 
 # 处理命令

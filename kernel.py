@@ -17,6 +17,7 @@ import uuid
 import hashlib
 import random
 import logk
+import ota
 
 # PySpOS ASCII 艺术 Logo   
 ascii_logo = r'''
@@ -133,6 +134,8 @@ def loop():
     screen_clear()
     username = get_system_username()
     print(ascii_logo)
+
+    ota.ota_init() # 初始化ota 
 
     logk.printl("kernel", f"你有 {cores} 个 CPU 逻辑核心，Token = {token}", main.boot_time)
     print(f"欢迎使用 PySpOS 操作系统，{username}！")

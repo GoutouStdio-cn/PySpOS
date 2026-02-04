@@ -84,8 +84,7 @@
                     <li>Python 3.7 或更高版本</li>
                     <li>Windows 7 及以上 / Linux / macOS</li>
                     <li>至少 50MB 可用磁盘空间</li>
-                    <li>支持双槽位更新（A/B 槽位）</li>
-                    <li>需要网络连接用于 OTA 更新</li>
+                    <li>request库（用于抓取云端ota内容）</li>
                 </ul>
             </div>
         </section>
@@ -101,7 +100,7 @@
                     <li data-step="4">重启 PySpOS 以应用更改</li>
                 </ul>
                 <p style="margin-top: 20px; color: #666; font-size: 14px;">
-                    注意：回滚操作会切换到另一个槽位，请确保另一个槽位包含有效的系统版本。
+                    注意：回滚操作会切换到另一个槽位，请确保另一个槽位包含有效的系统版本。（如没有文件，系统可能会变砖。）
                 </p>
             </div>
         </section>
@@ -110,7 +109,7 @@
     <footer>
         <div class="container">
             <p>&copy; 2022~2026 GoutouStdio. 保留所有权利。</p>
-            <p>PySpOS 模拟操作系统 - 让新手理解操作系统基本操作</p>
+            <p>PySpOS 模拟操作系统，版本 3</p>
         </div>
     </footer>
 </body>

@@ -10,27 +10,41 @@ import shutil
 import zipfile
 import time
 import printk
+import logk
 from pathlib import Path
 import json
 import urllib.request
 import urllib.error
 import hashlib
 
+# 获取启动时间
+boot_time = logk.get_boot_time()
+
 # 槽位定义
-SLOT_A = "slot_a"
-SLOT_B = "slot_b"
-CURRENT_SLOT_FILE = "current_slot"
+SLOT_A = "slot_a"                           # 槽位A
+SLOT_B = "slot_b"                           # 槽位B
+CURRENT_SLOT_FILE = "current_slot"          # 当前槽位记录文件
 
 # 更新包相关配置
-OTA_PACKAGE_DIR = "ota"
-OTA_PACKAGE_NAME = "update.zip"
-VERSION_FILE = "version.txt"
-UPDATE_LOG = "update_log.json"
+OTA_PACKAGE_DIR = "ota"                     # 更新包存放目录
+OTA_PACKAGE_NAME = "update.zip"             # 更新包文件名
+VERSION_FILE = "version.txt"                # 版本信息文件名
+UPDATE_LOG = "update_log.json"              # 更新日志文件名
 
 # 云端更新服务器配置
-OTA_SERVER_URL = "https://goutoustdio-cn.github.io/PySpOS/ota/"
-REMOTE_VERSION_FILE = "version.json"
-REMOTE_UPDATE_FILE = "update.zip"
+OTA_SERVER_URL = "https://pyspos.us.ci/ota/" # 加速！！！
+REMOTE_VERSION_FILE = "version.json"        # 云端版本信息文件名
+REMOTE_UPDATE_FILE = "update.zip"           # 云端更新包文件名
+
+# 必要的文件
+REQUIRED_CORE_FILES = [
+    "kernel.py", "main.py", "fs.py", "printk.py", "logk.py", 
+    "recovery.py", "ota.py", "btcfg.py", "pyspos.py", "parse_spf.py",
+    "version.txt", "current_slot"
+]
+
+# 必要的文件夹
+REQUIRED_DIRS = ["apps", "etc", "spfapps"]
 
 # 版本比较函数
 def compare_versions(v1: str, v2: str) -> int:
@@ -51,69 +65,152 @@ def compare_versions(v1: str, v2: str) -> int:
 
 # 从云端获取最新版本信息
 def fetch_remote_version() -> dict:
-    try:
-        url = OTA_SERVER_URL + REMOTE_VERSION_FILE
-        printk.info(f"正在从云端获取版本信息: {url}")
-        
-        with urllib.request.urlopen(url, timeout=10) as response:
-            data = json.loads(response.read().decode('utf-8'))
-            printk.ok("成功获取云端版本信息")
+    max_retries = 3
+    retry_interval = 1
+    
+    logk.printl("ota", "检查更新...", boot_time)
+    
+    methods = [
+        ("requests", _fetch_with_requests),
+        ("urllib", _fetch_with_urllib),
+        ("curl", _fetch_with_curl),
+    ]
+    
+    for method_name, method_func in methods:
+        logk.printl("ota", f"使用 {method_name} 获取版本", boot_time)
+        for attempt in range(max_retries):
+            try:
+                url = OTA_SERVER_URL + REMOTE_VERSION_FILE
+                logk.printl("ota", f"连接服务器 ({attempt + 1}/{max_retries})", boot_time)
+                
+                start_time = time.time()
+                data = method_func(url)
+                end_time = time.time()
+                
+                response_size = len(str(data))
+                logk.printl("ota", f"获取版本耗时: {end_time - start_time:.2f}秒, 大小: {response_size} bytes", boot_time)
+                
+                if data:
+                    logk.printl("ota", f"{method_name} 获取成功", boot_time)
+                    return data
+            except Exception as e:
+                logk.printl("ota", f"{method_name} 错误: {e}", boot_time)
+                if attempt < max_retries - 1:
+                    logk.printl("ota", f"{retry_interval}秒后重试", boot_time)
+                    time.sleep(retry_interval)
+                else:
+                    logk.printl("ota", f"{method_name} 重试失败", boot_time)
+                    break
+    
+    logk.printl("ota", "网络失败，使用本地版本", boot_time)
+    local_version_file = os.path.join("docs", "ota", "version.json")
+    if os.path.exists(local_version_file):
+        try:
+            with open(local_version_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            logk.printl("ota", "加载本地版本成功", boot_time)
             return data
-    except urllib.error.URLError as e:
-        printk.error(f"网络错误: {e}")
+        except Exception as e:
+            logk.printl("ota", f"加载本地版本失败: {e}", boot_time)
+            return None
+    else:
+        logk.printl("ota", "本地版本文件不存在", boot_time)
         return None
-    except json.JSONDecodeError as e:
-        printk.error(f"版本信息格式错误: {e}")
-        return None
+
+# 使用requests库获取云端文件
+def _fetch_with_requests(url: str) -> dict:
+    try:
+        import requests
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()  # 检查HTTP错误
+        return response.json()
+    except ImportError:
+        raise Exception("requests库未安装")
     except Exception as e:
-        printk.error(f"获取云端版本失败: {e}")
-        return None
+        raise
+
+# 使用urllib获取云端文件
+def _fetch_with_urllib(url: str) -> dict:
+    import urllib.request
+    with urllib.request.urlopen(url, timeout=5) as response:
+        data = json.loads(response.read().decode('utf-8'))
+        return data
+
+# 使用curl命令获取云端文件
+def _fetch_with_curl(url: str) -> dict:
+    import subprocess
+    import json
+    result = subprocess.run(
+        ['curl', '-s', url],
+        capture_output=True,
+        text=True,
+        timeout=5
+    )
+    if result.returncode == 0:
+        return json.loads(result.stdout)
+    else:
+        raise Exception(f"curl命令失败: {result.stderr}")
 
 # 下载更新包
 def download_update_package(remote_url: str, local_path: str) -> bool:
     try:
-        printk.info(f"开始下载更新包: {remote_url}")
+        logk.printl("ota", f"下载更新包: {remote_url}", boot_time)
         
         downloaded = [0]
+        start_time = time.time()
+        
         def progress_hook(block_num, block_size, total_size):
             downloaded[0] = block_num * block_size
             if total_size > 0:
                 percent = min(100, (downloaded[0] / total_size) * 100)
-                print(f"\r下载进度: {percent:.1f}% ({downloaded[0]}/{total_size} bytes)", end='', flush=True)
+                if int(percent) % 5 == 0:
+                    print(f"\r下载进度: {percent:.1f}% ({downloaded[0]}/{total_size} bytes)", end='', flush=True)
         
         urllib.request.urlretrieve(remote_url, local_path, progress_hook)
         print()
-        printk.ok("更新包下载完成")
+        end_time = time.time()
+        
+        if os.path.exists(local_path):
+            file_size = os.path.getsize(local_path)
+            logk.printl("ota", f"下载完成,耗时: {end_time - start_time:.2f}秒, 大小: {file_size} bytes", boot_time)
+        else:
+            logk.printl("ota", f"下载完成,耗时: {end_time - start_time:.2f}秒", boot_time)
+        
         return True
     except urllib.error.URLError as e:
-        printk.error(f"下载失败: {e}")
+        logk.printl("ota", f"下载失败: {e}", boot_time)
         return False
     except Exception as e:
-        printk.error(f"下载过程中出错: {e}")
+        logk.printl("ota", f"下载错误: {e}", boot_time)
         return False
 
 # 验证更新包完整性
 def verify_update_package(package_path: str, expected_hash: str = None) -> bool:
     try:
         if expected_hash:
-            printk.info("正在验证更新包完整性...")
+            logk.printl("ota", "验证更新包", boot_time)
             sha256_hash = hashlib.sha256()
+            
+            start_time = time.time()
             with open(package_path, 'rb') as f:
-                for chunk in iter(lambda: f.read(4096), b''):
+                for chunk in iter(lambda: f.read(8192), b''):
                     sha256_hash.update(chunk)
             calculated_hash = sha256_hash.hexdigest()
+            end_time = time.time()
+            
+            logk.printl("ota", f"验证耗时: {end_time - start_time:.2f}秒", boot_time)
             
             if calculated_hash == expected_hash:
-                printk.ok("更新包完整性验证通过")
+                logk.printl("ota", "验证通过", boot_time)
                 return True
             else:
-                printk.error("更新包校验和不匹配")
+                logk.printl("ota", "校验和不匹配", boot_time)
                 return False
         else:
-            printk.warn("未提供校验和，跳过完整性验证")
+            logk.printl("ota", "跳过验证", boot_time)
             return True
     except Exception as e:
-        printk.error(f"验证更新包失败: {e}")
+        logk.printl("ota", f"验证失败: {e}", boot_time)
         return False
 
 # 获取当前的槽位
@@ -132,7 +229,7 @@ def set_current_slot(slot: str) -> None:
     if slot in [SLOT_A, SLOT_B]:
         with open(CURRENT_SLOT_FILE, 'w') as f:
             f.write(slot)
-        printk.info(f"已设置当前槽位为: {slot}")
+        logk.printl("ota", f"已设置当前槽位为: {slot}", boot_time)
 
 # 获取其他槽位
 def get_other_slot() -> str:
@@ -147,25 +244,28 @@ def verify_update_compatibility() -> bool:
     if comparison > 0:
         return True
     elif comparison == 0:
-        printk.warn("更新包版本与当前版本相同")
+        logk.printl("ota", "更新包版本与当前版本相同", boot_time)
         return False
     else:
-        printk.warn("更新包版本低于当前版本")
+        logk.printl("ota", "更新包版本低于当前版本", boot_time)
         return False
 
 # 从云端检查更新
 def check_cloud_update() -> dict:
+    logk.printl("ota", "检查云端更新", boot_time)
     remote_info = fetch_remote_version()
     if not remote_info:
+        logk.printl("ota", "获取云端版本失败", boot_time)
         return None
     
     current_ver = get_current_version()
     remote_ver = remote_info.get('version', '0.0.0')
     
+    logk.printl("ota", f"当前: {current_ver}, 云端: {remote_ver}", boot_time)
     comparison = compare_versions(remote_ver, current_ver)
     
     if comparison > 0:
-        printk.info(f"发现新版本: {remote_ver} (当前: {current_ver})")
+        logk.printl("ota", f"发现新版本: {remote_ver}", boot_time)
         return {
             'has_update': True,
             'current_version': current_ver,
@@ -175,7 +275,7 @@ def check_cloud_update() -> dict:
             'release_notes': remote_info.get('release_notes', '')
         }
     else:
-        printk.info(f"当前已是最新版本: {current_ver}")
+        logk.printl("ota", "已是最新版本", boot_time)
         return {
             'has_update': False,
             'current_version': current_ver,
@@ -186,7 +286,7 @@ def check_cloud_update() -> dict:
 def download_and_install_update() -> bool:
     update_info = check_cloud_update()
     if not update_info or not update_info['has_update']:
-        printk.info("没有可用的更新")
+        logk.printl("ota", "无可用更新", boot_time)
         return False
     
     if not printk.confirm(f"是否下载并安装版本 {update_info['remote_version']}？"):
@@ -208,17 +308,17 @@ def rollback_update() -> bool:
     current = get_current_slot()
     other = get_other_slot()
     
-    printk.info(f"当前槽位: {current} ({get_version(current)})")
-    printk.info(f"目标槽位: {other} ({get_version(other)})")
+    logk.printl("ota", f"当前槽位: {current} ({get_version(current)})", boot_time)
+    logk.printl("ota", f"目标槽位: {other} ({get_version(other)})", boot_time)
     
     if not printk.confirm("是否回滚到上一个版本？"):
         return False
     
     if not switch_slot():
-        printk.error("回滚失败")
+        logk.printl("ota", "回滚失败", boot_time)
         return False
     
-    printk.ok("回滚成功，重启后生效")
+    logk.printl("ota", "回滚成功，重启后生效", boot_time)
     return True
 
 # 查看更新历史
@@ -234,7 +334,7 @@ def view_update_history() -> None:
                 print(f"  到版本: {log_data.get('to_version', '未知')}")
                 print(f"  安装时间: {log_data.get('install_time', '未知')}")
             except Exception as e:
-                printk.error(f"读取更新历史失败: {e}")
+                logk.printl("ota", f"读取更新历史失败: {e}", boot_time)
         else:
             print(f"\n{slot} 无更新历史")
 
@@ -253,7 +353,22 @@ def get_version(slot: str) -> str:
 
 # 获取当前槽位里PySpOS版本
 def get_current_version() -> str:
-    return get_version(get_current_slot())
+    # 首先尝试从根目录的version.txt文件中读取版本信息
+    root_version_file = "version.txt"
+    if os.path.exists(root_version_file):
+        try:
+            with open(root_version_file, 'r') as f:
+                return f.read().strip()
+        except Exception as e:
+            logk.printl("ota", f"读取根目录版本文件失败: {e}", boot_time)
+    
+    # 如果根目录版本文件不存在，尝试从当前槽位中读取
+    slot_version = get_version(get_current_slot())
+    if slot_version != "未知版本":
+        return slot_version
+    
+    # 如果都失败了，返回一个默认版本
+    return "3.0.0"
 
 # 获取更新包版本
 def get_update_version() -> str:
@@ -264,18 +379,17 @@ def get_update_version() -> str:
                 with zip_ref.open(VERSION_FILE) as f:
                     return f.read().decode().strip()
     except Exception as e:
-        printk.error(f"读取更新包版本失败: {str(e)}")
+        logk.printl("ota", f"读取更新包版本失败: {str(e)}", boot_time)
     return "未知版本"
 
 # 将更新包安装到另一槽位
 def install_update() -> bool:
     if not check_for_update():
-        printk.error("未找到更新包")
+        logk.printl("ota", "未找到更新包", boot_time)
         return False
     
-    # 版本兼容性检查
     if not verify_update_compatibility():
-        printk.error("更新包版本不兼容（低于或等于当前版本）")
+        logk.printl("ota", "版本不兼容", boot_time)
         return False
     
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
@@ -283,31 +397,29 @@ def install_update() -> bool:
     current_ver = get_current_version()
     update_ver = get_update_version()
     
-    printk.info(f"开始安装更新: {current_ver} -> {update_ver}")
-    printk.info(f"目标槽位: {target_slot}")
+    logk.printl("ota", f"安装更新: {current_ver} -> {update_ver}", boot_time)
+    logk.printl("ota", f"目标槽位: {target_slot}", boot_time)
     
-    # 清空目标槽位
+    start_time = time.time()
+    
     if os.path.exists(target_slot):
         try:
             shutil.rmtree(target_slot)
-            printk.info(f"已清空目标槽位 {target_slot}")
+            logk.printl("ota", f"清空槽位 {target_slot}", boot_time)
         except Exception as e:
-            printk.error(f"清空目标槽位失败: {str(e)}")
+            logk.printl("ota", f"清空槽位失败: {str(e)}", boot_time)
             return False
     
-    # 创建目标槽位目录
     os.makedirs(target_slot, exist_ok=True)
     
-    # 解压更新包到目标槽位
     try:
         with zipfile.ZipFile(package_path, 'r') as zip_ref:
             zip_ref.extractall(target_slot)
-        printk.info("更新包解压完成")
+        logk.printl("ota", "解压完成", boot_time)
     except Exception as e:
-        printk.error(f"解压更新包失败: {str(e)}")
+        logk.printl("ota", f"解压失败: {str(e)}", boot_time)
         return False
     
-    # 记录更新日志
     try:
         log_path = os.path.join(target_slot, UPDATE_LOG)
         log_data = {
@@ -317,11 +429,12 @@ def install_update() -> bool:
         }
         with open(log_path, 'w') as f:
             json.dump(log_data, f, indent=2)
-        printk.info("更新日志已记录")
+        logk.printl("ota", "日志已记录", boot_time)
     except Exception as e:
-        printk.warn(f"记录更新日志失败: {str(e)}")
+        logk.printl("ota", f"记录日志失败: {str(e)}", boot_time)
     
-    printk.ok(f"更新已成功安装到 {target_slot}")
+    end_time = time.time()
+    logk.printl("ota", f"安装完成: {end_time - start_time:.2f}秒", boot_time)
     return True
 
 # 切换槽位
@@ -329,20 +442,28 @@ def switch_slot() -> bool:
     current = get_current_slot()
     target = get_other_slot()
     
-    # 检查目标槽位是否有效（至少包含核心文件）
-    required_files = ["kernel.py", "main.py", "fs.py"]
+    # 检查目标槽位是否有效
     valid = True
-    for file in required_files:
+    missing_items = []
+    
+    # 检查核心文件
+    for file in REQUIRED_CORE_FILES:
         if not os.path.exists(os.path.join(target, file)):
-            printk.error(f"目标槽位 {target} 缺少核心文件: {file}")
+            missing_items.append(file)
+            valid = False
+    
+    # 检查必要的文件夹
+    for directory in REQUIRED_DIRS:
+        if not os.path.exists(os.path.join(target, directory)):
+            missing_items.append(directory)
             valid = False
     
     if not valid:
-        printk.error("槽位切换失败：目标槽位不完整")
+        logk.printl("ota", f"槽位切换失败：目标槽位 {target} 缺少: {', '.join(missing_items)}", boot_time)
         return False
     
     set_current_slot(target)
-    printk.ok(f"槽位已切换至 {target}，重启后生效")
+    logk.printl("ota", f"槽位已切换至 {target}", boot_time)
     return True
 
 # 获取OTA更新状态
@@ -362,8 +483,52 @@ def clean_update_package() -> None:
     if os.path.exists(package_path):
         try:
             os.remove(package_path)
-            printk.ok("已删除更新包文件")
+            logk.printl("ota", "已删除更新包文件", boot_time)
         except Exception as e:
-            printk.error(f"删除更新包失败: {str(e)}")
+            logk.printl("ota", f"删除更新包失败: {str(e)}", boot_time)
     else:
-        printk.info("无更新包可清理")
+        logk.printl("ota", "无更新包可清理", boot_time)
+
+# 初始化OTA
+def ota_init() -> bool:
+    logk.printl("ota", "正在初始化OTA槽位结构...", boot_time)
+    
+    # 创建槽位文件夹
+    slots = [SLOT_A, SLOT_B]
+    for slot in slots:
+        if not os.path.exists(slot):
+            try:
+                os.makedirs(slot)
+                logk.printl("ota", f"创建槽位文件夹 {slot} 成功", boot_time)
+            except Exception as e:
+                logk.printl("ota", f"创建槽位文件夹 {slot} 失败: {str(e)}", boot_time)
+                return False
+        else:
+            logk.printl("ota", f"槽位文件夹 {slot} 已存在", boot_time)
+    
+    # 确保当前槽位文件存在
+    if not os.path.exists(CURRENT_SLOT_FILE):
+        try:
+            set_current_slot(SLOT_A)
+            logk.printl("ota", "设置默认当前槽位为 SLOT_A", boot_time)
+        except Exception as e:
+            logk.printl("ota", f"设置当前槽位失败: {str(e)}", boot_time)
+            return False
+    else:
+        current_slot = get_current_slot()
+        logk.printl("ota", f"当前槽位已设置为: {current_slot}", boot_time)
+    
+    # 确保版本文件存在
+    if not os.path.exists("version.txt"):
+        try:
+            with open("version.txt", "w") as f:
+                f.write("3.0.0")
+            logk.printl("ota", "创建版本文件 version.txt 成功", boot_time)
+        except Exception as e:
+            logk.printl("ota", f"创建版本文件失败: {str(e)}", boot_time)
+            return False
+    else:
+        logk.printl("ota", "版本文件 version.txt 已存在", boot_time)
+    
+    logk.printl("ota", "OTA槽位结构初始化完成", boot_time)
+    return True
