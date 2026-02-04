@@ -3,20 +3,20 @@
 
 ## 当前版本
 
-- 📦 **版本**: v3.0.0 (测试版)
+- 📦 **版本**: v3.0.1-pre (预发布测试版)
 - 📅 **发布日期**: 2026-02-04
-- ⚠️ **注意**: 此release为测试版，可能会出现bug，你可以将bug提交到Issues.
+- ⚠️ **注意**: 此版本为测试版，可能存在一些问题，如果你遇到了可以提交到Issues。
 
 ## 更新内容
 
-- 完善了zzlsb猜数字游戏
-- 修复若干bug
-- 实现了简易的recovery和日志处理
+- 支持在线 OTA 更新。我花了很久实现了这个功能
+- 重构优化了部分代码。
+- 添加一个猎奇网页。
 
 ## 在线访问
 
-- 🌐 **官方网站**: [https://goutoustdio-cn.github.io/PySpOS/](https://goutoustdio-cn.github.io/PySpOS/)
-- 📦 **OTA 更新**: [https://goutoustdio-cn.github.io/PySpOS/ota/](https://goutoustdio-cn.github.io/PySpOS/ota/)
+- 🌐 **官方网站**: [https://pyspos.us.ci](https://pyspos.us.ci)
+- 📦 **OTA 更新地址**: [https://pyspos.us.ci/ota/](https://pyspos.us.ci/ota/)
 
 ## 支持系统：
 

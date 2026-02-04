@@ -524,6 +524,74 @@ footer p {
     margin-bottom: 5px;
 }
 
+#changelog-content {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+#changelog-content h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #1a1a1a;
+}
+
+#changelog-content h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #1a1a1a;
+}
+
+#changelog-content h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #1a1a1a;
+}
+
+#changelog-content p {
+    color: #4a4a4a;
+    line-height: 1.8;
+    margin-bottom: 12px;
+}
+
+#changelog-content ul {
+    list-style: disc;
+    padding-left: 25px;
+    margin-bottom: 12px;
+}
+
+#changelog-content li {
+    color: #4a4a4a;
+    line-height: 1.8;
+    margin-bottom: 8px;
+}
+
+#changelog-content code {
+    background: rgba(240, 240, 240, 0.8);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #1a1a1a;
+}
+
+#changelog-content strong {
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+#changelog-content em {
+    font-style: italic;
+    color: #6a6a6a;
+}
+
 .compatibility {
     border-radius: 12px;
     padding: 30px;

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本历史 - PySpOS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="http://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>PySpOS</h1>
+                <span class="version">v3.0.1-pre</span>
+            </div>
+            <nav>
+                <a href="../index.html">首页</a>
+                <a href="index.html">OTA 更新</a>
+                <a href="releases.html" class="active">版本历史</a>
+                <a href="https://github.com/GoutouStdio-cn/PySpOS" target="_blank">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="version-info">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 30px;">版本历史</h2>
+                <div id="version-history"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 PySpOS. All rights reserved.</p>
+            <p>使用 Python 构建的模拟操作系统</p>
+        </div>
+    </footer>
+
+    <script>
+        const fallbackVersionData = {
+            "changelog": [
+                {
+                    "version": "3.0.1-pre",
+                    "date": "2026-02-04",
+                    "type": "release",
+                    "changes": [
+                        "支持在线 OTA 更新。我花了很久实现了这个功能",
+                        "重构优化了部分代码",
+                        "添加一个猎奇网页"
+                    ]
+                },
+                {
+                    "version": "3.0.0",
+                    "date": "2026-02-04",
+                    "type": "release",
+                    "changes": [
+                        "完善了zzlsb猜数字游戏",
+                        "修复若干bug",
+                        "实现了简易的recovery和日志处理"
+                    ]
+                }
+            ]
+        };
+
+        async function loadVersionData() {
+            try {
+                console.log('开始加载版本数据...');
+                const response = await fetch('version.json');
+                console.log('响应状态:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const versionData = await response.json();
+                console.log('版本数据加载成功:', versionData);
+                renderVersionHistory(versionData);
+            } catch (error) {
+                console.error('加载版本数据失败:', error);
+                console.error('错误详情:', error.message);
+                console.log('使用备用数据...');
+                renderVersionHistory(fallbackVersionData);
+            }
+        }
+
+        function renderVersionHistory(versionData) {
+            const container = document.getElementById('version-history');
+            let html = '';
+
+            versionData.changelog.forEach((release, index) => {
+                const isNew = index === 0;
+                const badgeClass = release.type === 'release' ? 'badge-stable' : 'badge-beta';
+                const badgeText = release.type === 'release' ? '正式版' : '测试版';
+                const newBadge = isNew ? '<span class="badge badge-new">NEW</span>' : '';
+                const releaseTag = release.version === '3.0.1-pre' ? 'pre_version' : 'beta_version';
+
+                html += `
+                    <div class="version-card ${isNew ? 'latest' : ''}">
+                        <h3>v${release.version} ${newBadge}</h3>
+                        <div class="date">${release.date}</div>
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        <div class="changes">
+                            <h4>更新内容</h4>
+                            <ul>
+                                ${release.changes.map(change => `<li>${change}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="download-actions">
+                            <a href="https://github.com/GoutouStdio-cn/PySpOS/releases/download/${releaseTag}/PySpOS.zip" 
+                               class="btn btn-primary" 
+                               style="display: inline-block; margin-right: 10px;">
+                                下载源代码
+                            </a>
+                            <a href="https://github.com/GoutouStdio-cn/PySpOS/releases/tag/${release.version}" 
+                               target="_blank" 
+                               class="btn btn-secondary"
+                               style="display: inline-block;">
+                                查看详情
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        loadVersionData();
+    </script>
+</body>
+</html>

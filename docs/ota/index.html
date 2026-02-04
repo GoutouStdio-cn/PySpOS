@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTA 更新 - PySpOS</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
 </head>
 <body>
     <header>
         <div class="container">
             <div class="logo">
                 <h1>PySpOS</h1>
-                <span class="version">v3.0.0</span>
+                <span class="version">v3.0.1-pre</span>
             </div>
             <nav>
                 <a href="../index.html">首页</a>
@@ -35,13 +37,13 @@
                 <div class="version-cards">
                     <div class="version-card current">
                         <h3>当前版本</h3>
-                        <div class="version">3.0.0</div>
+                        <div class="version">3.0.1-pre</div>
                         <div class="date">发布日期: 2026-02-04</div>
                         <span class="badge badge-beta">测试版</span>
                     </div>
                     <div class="version-card latest">
                         <h3>最新版本 <span class="badge badge-new">NEW</span></h3>
-                        <div class="version">3.0.0</div>
+                        <div class="version">3.0.1-pre</div>
                         <div class="date">发布日期: 2026-02-04</div>
                         <span class="badge badge-beta">测试版</span>
                     </div>
@@ -53,10 +55,10 @@
             <div class="container">
                 <h2>下载更新包</h2>
                 <div class="download-buttons">
-                    <a href="https://github.com/GoutouStdio-cn/PySpOS/releases/download/beta_version/PySpOS.zip" class="btn btn-primary">
-                        下载 v3.0.0 源代码
+                    <a href="https://github.com/GoutouStdio-cn/PySpOS/releases/download/pre_version/PySpOS.zip" class="btn btn-primary">
+                        下载 v3.0.1-pre 源代码
                     </a>
-                    <a href="https://github.com/GoutouStdio-cn/PySpOS/releases" target="_blank" class="btn btn-secondary">
+                    <a href="releases.html" class="btn btn-secondary">
                         查看所有版本
                     </a>
                 </div>
@@ -69,13 +71,21 @@
         <section class="changelog">
             <div class="container">
                 <h2>更新日志</h2>
-                <div class="changelog-item">
-                    <div class="date">v3.0.0 - 2026-02-04</div>
-                    <h4>PySpOS 3.0.0 测试版</h4>
-                    <p>• 完善了zzlsb猜数字游戏<br>• 修复若干bug<br>• 实现了简易的recovery和日志处理<br>⚠ 此release为测试版，可能会出现bug，你可以将bug提交到Issues.</p>
-                </div>
+                <div id="changelog-content"></div>
             </div>
         </section>
+        
+        <script>
+            const releaseNotes = `PySpOS pre_version 3.0.1 更新日志：
+
+- 支持在线 OTA 更新。我花了很久实现了这个功能
+- 重构优化了部分代码。
+- 添加一个猎奇网页。
+
+注意：此版本为测试版，可能存在一些问题，如果你遇到了可以提交到Issues。`;
+
+            document.getElementById('changelog-content').innerHTML = marked.parse(releaseNotes);
+        </script>
 
         <section class="compatibility">
             <div class="container">
@@ -95,7 +105,7 @@
                 <p style="margin-bottom: 20px; color: #666;">如果更新后遇到问题，可以回滚到之前的版本：</p>
                 <ul class="rollback-steps">
                     <li data-step="1">在 PySpOS 中输入 <code>recovery</code> 命令进入恢复模式</li>
-                    <li data-step="2">在恢复模式中输入 <code>rollback</code> 命令</li>
+                    <li data-step="2">在恢复模式中输入 <code>ota_rollback</code> 命令</li>
                     <li data-step="3">确认回滚操作</li>
                     <li data-step="4">重启 PySpOS 以应用更改</li>
                 </ul>
