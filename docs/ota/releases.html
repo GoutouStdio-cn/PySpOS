@@ -416,48 +416,36 @@
             // 规范化URL，处理相对路径和绝对路径
             function normalizeUrl(url) {
                 try {
-                    // 硬编码处理所有内部链接，防止404错误
+                    // 硬编码处理特定的问题URL，防止404错误
                     const hardcodedMappings = {
-                        // 主页相关
-                        '../index.html': '/index.html',
-                        'index.html': '/index.html',
-                        '/index.html': '/index.html',
-                        
-                        // OTA更新页面相关
-                        'index.html': '/ota/index.html',
-                        '/ota/index.html': '/ota/index.html',
-                        
-                        // 版本历史页面相关
-                        'releases.html': '/ota/releases.html',
-                        '/ota/releases.html': '/ota/releases.html',
-                        
-                        // 处理可能的重复路径
+                        // 处理重复路径问题
                         'ota/ota/index.html': '/ota/index.html',
                         'ota/ota/releases.html': '/ota/releases.html',
                         
-                        // 完整URL处理
-                        'pyspos.us.ci/index.html': '/index.html',
-                        'pyspos.us.ci/ota/index.html': '/ota/index.html',
-                        'pyspos.us.ci/ota/releases.html': '/ota/releases.html',
+                        // 处理可能的多次重复
+                        'ota/ota/ota/index.html': '/ota/index.html',
+                        'ota/ota/ota/releases.html': '/ota/releases.html',
+                        
+                        // 处理完整URL中的重复路径
                         'pyspos.us.ci/ota/ota/index.html': '/ota/index.html',
                         'pyspos.us.ci/ota/ota/releases.html': '/ota/releases.html',
                         
                         // HTTPS版本
-                        'https://pyspos.us.ci/index.html': '/index.html',
-                        'https://pyspos.us.ci/ota/index.html': '/ota/index.html',
-                        'https://pyspos.us.ci/ota/releases.html': '/ota/releases.html',
                         'https://pyspos.us.ci/ota/ota/index.html': '/ota/index.html',
                         'https://pyspos.us.ci/ota/ota/releases.html': '/ota/releases.html',
                         
                         // HTTP版本
-                        'http://pyspos.us.ci/index.html': '/index.html',
-                        'http://pyspos.us.ci/ota/index.html': '/ota/index.html',
-                        'http://pyspos.us.ci/ota/releases.html': '/ota/releases.html',
                         'http://pyspos.us.ci/ota/ota/index.html': '/ota/index.html',
                         'http://pyspos.us.ci/ota/ota/releases.html': '/ota/releases.html',
+                        
+                        // 处理localhost的重复路径
+                        'localhost:8000/ota/ota/index.html': '/ota/index.html',
+                        'localhost:8000/ota/ota/releases.html': '/ota/releases.html',
+                        'localhost:8080/ota/ota/index.html': '/ota/index.html',
+                        'localhost:8080/ota/ota/releases.html': '/ota/releases.html',
                     };
                     
-                    // 检查是否匹配硬编码映射
+                    // 检查是否匹配硬编码映射（只处理重复路径问题）
                     for (const [key, value] of Object.entries(hardcodedMappings)) {
                         if (url.includes(key)) {
                             return value;
@@ -507,6 +495,35 @@
                 const scripts = doc.querySelectorAll('script');
                 
                 scripts.forEach(oldScript => {
+                    // 跳过导航相关的脚本
+                    const scriptContent = oldScript.textContent;
+                    if (scriptContent && (
+                        scriptContent.includes('function loadPageContent') ||
+                        scriptContent.includes('function normalizeUrl') ||
+                        scriptContent.includes('function isSamePage') ||
+                        scriptContent.includes('function executePageScripts') ||
+                        scriptContent.includes('function initNavIndicator') ||
+                        scriptContent.includes('function updateNavIndicator') ||
+                        scriptContent.includes('function checkAndRedirectUrl') ||
+                        scriptContent.includes('function toggleMenu') ||
+                        scriptContent.includes('let isNavigating') ||
+                        scriptContent.includes('let currentFetchController') ||
+                        scriptContent.includes('let navigationQueue') ||
+                        scriptContent.includes('let isInitialized') ||
+                        scriptContent.includes('let resizeTimeout') ||
+                        scriptContent.includes('const navLinks') ||
+                        scriptContent.includes('const navMenu') ||
+                        scriptContent.includes('const navIndicator') ||
+                        scriptContent.includes('const navToggle') ||
+                        scriptContent.includes("addEventListener('click'") ||
+                        scriptContent.includes("addEventListener('popstate'") ||
+                        scriptContent.includes("addEventListener('resize'") ||
+                        scriptContent.includes('window.history.pushState') ||
+                        scriptContent.includes('window.history.replaceState')
+                    )) {
+                        return;
+                    }
+                    
                     if (oldScript.src) {
                         // 外部脚本 - 创建新的script标签
                         const newScript = document.createElement('script');
