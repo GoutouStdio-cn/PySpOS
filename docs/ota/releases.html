@@ -169,13 +169,46 @@
                 const badgeClass = release.type === 'release' ? 'badge-stable' : 'badge-beta';
                 const badgeText = release.type === 'release' ? '正式版' : '测试版';
                 const newBadge = isNew ? '<span class="badge badge-new">NEW</span>' : '';
-                const releaseTag = release.version === '3.0.1-pre' ? 'pre_version' : 'beta_version';
                 
-                // 使用实时获取的文件大小
-                const fileSize = isNew ? latestFileSize : '64.8 KB';
+                // 判断是否是重构建版本（文件名格式为PySpOS-版本-日期.zip）
+                const isRebuild = release.download_url && release.download_url.match(/PySpOS-[\d.]+-[\d]+\.zip/);
+                
+                // 确定下载链接
+                let downloadUrl;
+                if (release.download_url) {
+                    // 如果download_url是新的文件名格式，使用它
+                    if (isRebuild) {
+                        downloadUrl = release.download_url;
+                    } else if (release.download_url === 'PySpOS.zip') {
+                        // 如果是PySpOS.zip，从服务器下载
+                        downloadUrl = 'PySpOS.zip';
+                    } else {
+                        // 否则使用download_url
+                        downloadUrl = release.download_url;
+                    }
+                } else {
+                    // 如果没有download_url，使用默认逻辑
+                    const releaseTag = release.version === '3.0.1-pre' ? 'pre_version' : 'beta_version';
+                    downloadUrl = isNew ? 'PySpOS.zip' : `https://github.com/GoutouStdio-cn/PySpOS/releases/download/${releaseTag}/PySpOS.zip`;
+                }
                 
                 // 使用对应的SHA256值，v3.0.0版本不需要SHA256
-                const sha256 = release.version === '3.0.0' ? '此版本的 SHA256 校验和未知' : (isNew ? versionData.sha256 : '124ea876d602cb51d9212f9c9b73091d09690b29a17e55607b171605452a7b87');
+                const sha256 = release.version === '3.0.0' ? '此版本的 SHA256 校验和未知' : (release.sha256 || (isNew ? versionData.sha256 : '此版本的 SHA256 校验和未知'));
+                
+                // 动态获取文件大小
+                let fileSize;
+                if (release.file_size) {
+                    const size = release.file_size;
+                    if (size < 1024) {
+                        fileSize = `${size} B`;
+                    } else if (size < 1024 * 1024) {
+                        fileSize = `${(size / 1024).toFixed(1)} KB`;
+                    } else {
+                        fileSize = `${(size / (1024 * 1024)).toFixed(1)} MB`;
+                    }
+                } else {
+                    fileSize = await getFileSize(downloadUrl);
+                }
 
                 html += `
                     <div class="version-card ${isNew ? 'latest' : ''}">
@@ -195,7 +228,7 @@
                             <code>${sha256}</code>
                         </div>
                         <div class="download-actions">
-                            <a href="${isNew ? 'PySpOS.zip' : `https://github.com/GoutouStdio-cn/PySpOS/releases/download/${releaseTag}/PySpOS.zip`}" 
+                            <a href="${downloadUrl}" 
                                class="btn btn-primary">
                                 下载源代码 <i class="fas fa-download"></i>
                             </a>
@@ -425,7 +458,6 @@
                 
                 // 比较路径
                 return path1 === path2;
-            }
             }
             
             // 执行页面特定的JavaScript

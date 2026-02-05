@@ -169,6 +169,27 @@
             const badgeClass = isBeta ? 'badge-beta' : 'badge-stable';
             const badgeText = isBeta ? '测试版' : '正式版';
 
+            // 确定下载链接
+            let downloadUrl;
+            if (versionData.download_url) {
+                // 判断是否是重构建版本（文件名格式为PySpOS-版本-日期.zip）
+                const isRebuild = versionData.download_url.match(/PySpOS-[\d.]+-[\d]+\.zip/);
+                
+                if (isRebuild) {
+                    // 如果是重构建版本，使用新的文件名
+                    downloadUrl = versionData.download_url;
+                } else if (versionData.download_url === 'PySpOS.zip') {
+                    // 如果是PySpOS.zip，从服务器下载
+                    downloadUrl = 'PySpOS.zip';
+                } else {
+                    // 否则使用download_url
+                    downloadUrl = versionData.download_url;
+                }
+            } else {
+                // 如果没有download_url，使用默认的PySpOS.zip
+                downloadUrl = 'PySpOS.zip';
+            }
+
             // 更新版本信息部分
             const versionInfoContainer = document.getElementById('version-info-container');
             versionInfoContainer.innerHTML = `
@@ -196,7 +217,7 @@
             const downloadContainer = document.getElementById('download-container');
             downloadContainer.innerHTML = `
                 <div class="download-buttons">
-                    <a href="PySpOS.zip" class="btn btn-primary">
+                    <a href="${downloadUrl}" class="btn btn-primary">
                         下载 v${latestVersion} 源代码
                     </a>
                     <a href="/ota/releases.html" class="btn btn-secondary">
