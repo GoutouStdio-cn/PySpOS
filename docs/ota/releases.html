@@ -10,33 +10,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
-    <!-- 液态玻璃效果 SVG 滤镜 -->
-    <svg width="0" height="0" style="position: absolute;">
-        <filter id="glass-distortion">
-            <!-- 生成分形噪声 -->
-            <feTurbulence type="fractalNoise" baseFrequency="0.001 0.004" numOctaves="1" seed="17" result="turbulence"/>
-            <!-- 高斯模糊软化边缘 -->
-            <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap"/>
-            <!-- 镜面反射光照效果 -->
-            <feSpecularLighting in="softMap" surfaceScale="5" specularConstant="1" specularExponent="100">
-                <fePointLight x="-200" y="-200" z="300"/>
-            </feSpecularLighting>
-            <!-- 位移映射实现扭曲 -->
-            <feDisplacementMap in="SourceGraphic" in2="softMap" scale="100"/>
-        </filter>
-        <filter id="glass-distortion-strong">
-            <!-- 生成分形噪声 -->
-            <feTurbulence type="fractalNoise" baseFrequency="0.001 0.006" numOctaves="1" seed="23" result="turbulence"/>
-            <!-- 高斯模糊软化边缘 -->
-            <feGaussianBlur in="turbulence" stdDeviation="4" result="softMap"/>
-            <!-- 镜面反射光照效果 -->
-            <feSpecularLighting in="softMap" surfaceScale="8" specularConstant="1" specularExponent="150">
-                <fePointLight x="-200" y="-200" z="300"/>
-            </feSpecularLighting>
-            <!-- 位移映射实现扭曲 -->
-            <feDisplacementMap in="SourceGraphic" in2="softMap" scale="120"/>
-        </filter>
-    </svg>
 </head>
 <body>
     <header>
