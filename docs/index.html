@@ -166,49 +166,6 @@
     </footer>
 
     <script>
-        // 苹果Liquid Glass效果 - 实时鼠标跟踪渲染
-        function initLiquidGlassEffect() {
-            const cards = document.querySelectorAll('.version-card, .contributor, .feature-card, section, .platform-item, .step-content pre, .changelog-item, .compatibility-list li, .rollback-steps li');
-            
-            cards.forEach(card => {
-                let animationFrame;
-                
-                const updateMousePosition = (e) => {
-                    if (animationFrame) {
-                        cancelAnimationFrame(animationFrame);
-                    }
-                    
-                    animationFrame = requestAnimationFrame(() => {
-                        const rect = card.getBoundingClientRect();
-                        const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-                        const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
-                        
-                        card.style.setProperty('--mouse-x', `${x}%`);
-                        card.style.setProperty('--mouse-y', `${y}%`);
-                    });
-                };
-                
-                card.addEventListener('mousemove', updateMousePosition);
-                
-                card.addEventListener('mouseenter', (e) => {
-                    updateMousePosition(e);
-                });
-                
-                card.addEventListener('mouseleave', () => {
-                    if (animationFrame) {
-                        cancelAnimationFrame(animationFrame);
-                    }
-                    card.style.removeProperty('--mouse-x');
-                    card.style.removeProperty('--mouse-y');
-                });
-            });
-        }
-
-        // 页面加载完成后初始化液态玻璃效果
-        window.addEventListener('DOMContentLoaded', initLiquidGlassEffect);
-    </script>
-    
-    <script>
         // 导航菜单切换和指示器动画
         document.addEventListener('DOMContentLoaded', function() {
             const navToggle = document.getElementById('nav-toggle');
