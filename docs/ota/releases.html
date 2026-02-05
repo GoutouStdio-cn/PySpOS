@@ -271,7 +271,7 @@
                         const distanceFactor = Math.min(distance / 150, 0.5); // 距离因子（限制最大影响）
                         const transitionDuration = `${baseDuration + (distanceFactor * 0.15)}s`;
                         
-                        // 使用超丝滑的贝塞尔曲线（模仿iOS系统动画）
+                        // 使用超丝滑~的贝塞尔曲线
                         const easing = 'cubic-bezier(0.25, 0.1, 0.25, 1)';
                         
                         // 设置动画属性（分别控制transform和width）
@@ -297,20 +297,75 @@
                 }
             }
             
-            // SPA导航：加载页面内容
+            // 全局变量：用于控制请求和动画
+            let currentFetchController = null;
+            let isNavigating = false;
+            let navigationQueue = [];
+            let lastNavigationTime = 0;
+            let isAnimating = false;
+            
+            // 防抖函数：避免频繁触发
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+            
+            // 节流函数：控制执行频率
+            function throttle(func, limit) {
+                let inThrottle;
+                return function(...args) {
+                    if (!inThrottle) {
+                        func.apply(this, args);
+                        inThrottle = true;
+                        setTimeout(() => inThrottle = false, limit);
+                    }
+                };
+            }
+            
+            // SPA导航加载页面内容
             function loadPageContent(url) {
-                // 显示加载状态
-                const main = document.querySelector('main');
-                main.style.opacity = '0.7';
-                
                 // 规范化目标URL，避免路径重复叠加
                 const normalizedUrl = normalizeUrl(url);
+                
+                // 如果正在导航，将请求加入队列
+                if (isNavigating) {
+                    // 取消当前请求
+                    if (currentFetchController) {
+                        currentFetchController.abort();
+                        currentFetchController = null;
+                    }
+                    
+                    // 清空队列，只保留最新的请求
+                    navigationQueue = [normalizedUrl];
+                    return;
+                }
+                
+                // 设置导航状态
+                isNavigating = true;
+                
+                // 显示加载状态（使用requestAnimationFrame优化性能）
+                requestAnimationFrame(() => {
+                    const main = document.querySelector('main');
+                    main.style.opacity = '0.7';
+                    main.style.transition = 'opacity 0.2s ease';
+                });
+                
+                // 创建新的AbortController用于取消请求
+                const controller = new AbortController();
+                currentFetchController = controller;
                 
                 // 处理相对路径
                 const fullUrl = new URL(normalizedUrl, window.location.origin).href;
                 
                 // 使用fetch API加载页面
-                fetch(fullUrl)
+                fetch(fullUrl, { signal: controller.signal })
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
@@ -318,33 +373,73 @@
                         return response.text();
                     })
                     .then(html => {
+                        // 如果请求已被取消，直接返回
+                        if (controller.signal.aborted) {
+                            return;
+                        }
+                        
                         // 解析HTML并提取主要内容
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
                         const newMain = doc.querySelector('main');
                         
                         if (newMain) {
-                            // 替换主要内容
-                            main.innerHTML = newMain.innerHTML;
-                            
-                            // 更新页面标题
-                            const newTitle = doc.querySelector('title');
-                            if (newTitle) {
-                                document.title = newTitle.textContent;
-                            }
-                            
-                            // 重新执行页面特定的JavaScript
-                            executePageScripts(doc, normalizedUrl);
-                            
-                            // 更新URL（使用规范化后的路径，避免重复叠加）
-                            window.history.pushState({}, '', normalizedUrl);
+                            // 使用requestAnimationFrame优化DOM操作
+                            requestAnimationFrame(() => {
+                                // 替换主要内容（使用更高效的方式）
+                                const fragment = document.createDocumentFragment();
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = newMain.innerHTML;
+                                while (tempDiv.firstChild) {
+                                    fragment.appendChild(tempDiv.firstChild);
+                                }
+                                
+                                main.innerHTML = '';
+                                main.appendChild(fragment);
+                                
+                                // 更新页面标题
+                                const newTitle = doc.querySelector('title');
+                                if (newTitle) {
+                                    document.title = newTitle.textContent;
+                                }
+                                
+                                // 重新执行页面特定的JavaScript
+                                executePageScripts(doc, normalizedUrl);
+                                
+                                // 更新URL（使用规范化后的路径，避免重复叠加）
+                                window.history.pushState({}, '', normalizedUrl);
+                                
+                                // 恢复透明度（使用requestAnimationFrame）
+                                requestAnimationFrame(() => {
+                                    main.style.opacity = '1';
+                                    main.style.transition = 'opacity 0.3s ease';
+                                });
+                            });
                         }
                         
-                        // 恢复透明度
-                        main.style.opacity = '1';
+                        // 完成导航
+                        isNavigating = false;
+                        currentFetchController = null;
+                        
+                        // 处理队列中的下一个请求
+                        if (navigationQueue.length > 0) {
+                            const nextUrl = navigationQueue.shift();
+                            setTimeout(() => loadPageContent(nextUrl), 50); // 延迟执行，避免卡顿
+                        }
                     })
                     .catch(error => {
+                        // 如果是取消请求的错误，忽略
+                        if (error.name === 'AbortError') {
+                            console.log('请求已取消:', normalizedUrl);
+                            return;
+                        }
+                        
                         console.error('加载页面失败:', error);
+                        
+                        // 完成导航（即使失败）
+                        isNavigating = false;
+                        currentFetchController = null;
+                        
                         // 如果AJAX失败，回退到传统导航
                         window.location.href = normalizedUrl;
                     });
@@ -435,7 +530,7 @@
                     // 鼠标离开时发光效果会自动移除
                 }, { passive: true });
                 
-                link.addEventListener('click', function(e) {
+                link.addEventListener('click', debounce(function(e) {
                     // 阻止默认的链接跳转行为
                     e.preventDefault();
                     
@@ -450,24 +545,30 @@
                     const currentUrl = window.location.pathname;
                     const isCurrentPage = isSamePage(currentUrl, targetUrl);
                     
-                    // 更新导航状态
-                    navLinks.forEach(navLink => navLink.classList.remove('active'));
-                    this.classList.add('active');
-                    updateNavIndicator(this, false);
-                    if (navMenu.classList.contains('active')) {
-                        navMenu.classList.remove('active');
-                    }
+                    // 更新导航状态（使用requestAnimationFrame优化性能）
+                    requestAnimationFrame(() => {
+                        navLinks.forEach(navLink => navLink.classList.remove('active'));
+                        this.classList.add('active');
+                        updateNavIndicator(this, false);
+                        if (navMenu.classList.contains('active')) {
+                            navMenu.classList.remove('active');
+                        }
+                    });
                     
                     // 如果点击的是返回首页的链接，设置返回状态
                     if (this.getAttribute('href') === '../index.html') {
                         sessionStorage.setItem('returningFromOtherPage', 'true');
                     }
                     
-                    // 如果不是当前页面，才执行SPA导航
+                    // 如果不是当前页面，才执行SPA导航（使用节流控制）
                     if (!isCurrentPage) {
-                        loadPageContent(targetUrl);
+                        const now = Date.now();
+                        if (now - lastNavigationTime > 300) { // 300ms节流
+                            lastNavigationTime = now;
+                            loadPageContent(targetUrl);
+                        }
                     }
-                }, { passive: false });
+                }, 100), { passive: false });
             });
             
             // 窗口大小变化时重新初始化导航指示器（防抖）
