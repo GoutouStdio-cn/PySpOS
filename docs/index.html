@@ -6,7 +6,7 @@
     <title>PySpOS - Python 模拟操作系统</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
@@ -174,6 +174,7 @@
             const navLinks = document.querySelectorAll('.nav-link');
             
             let isInitialized = false;
+            let resizeTimeout;
             
             // 初始化导航指示器位置
             function initNavIndicator() {
@@ -199,14 +200,15 @@
             // 更新导航指示器位置
             function updateNavIndicator(target) {
                 if (target && navIndicator) {
-                    const rect = target.getBoundingClientRect();
-                    const navRect = navMenu.getBoundingClientRect();
-                    const targetWidth = rect.width;
-                    const targetLeft = rect.left - navRect.left;
-                    
-                    // 直接设置到目标位置，保持过渡效果
-                    navIndicator.style.width = `${targetWidth}px`;
-                    navIndicator.style.transform = `translateX(${targetLeft}px)`;
+                    requestAnimationFrame(() => {
+                        const rect = target.getBoundingClientRect();
+                        const navRect = navMenu.getBoundingClientRect();
+                        const targetWidth = rect.width;
+                        const targetLeft = rect.left - navRect.left;
+                        
+                        navIndicator.style.width = `${targetWidth}px`;
+                        navIndicator.style.transform = `translateX(${targetLeft}px)`;
+                    });
                 }
             }
             
@@ -217,29 +219,32 @@
             navLinks.forEach(link => {
                 link.addEventListener('mouseenter', function() {
                     updateNavIndicator(this);
-                });
+                }, { passive: true });
                 
                 link.addEventListener('mouseleave', function() {
                     const activeLink = document.querySelector('.nav-link.active');
                     if (activeLink) {
                         updateNavIndicator(activeLink);
                     }
-                });
+                }, { passive: true });
                 
                 link.addEventListener('click', function(e) {
-                    // 移除所有链接的active类
                     navLinks.forEach(navLink => navLink.classList.remove('active'));
-                    // 添加当前链接的active类
                     this.classList.add('active');
-                    // 更新导航指示器位置
                     updateNavIndicator(this);
-                    // 关闭移动菜单
-                    navMenu.classList.remove('active');
-                });
+                    if (navMenu.classList.contains('active')) {
+                        navMenu.classList.remove('active');
+                    }
+                }, { passive: true });
             });
             
-            // 窗口大小变化时重新初始化导航指示器
-            window.addEventListener('resize', initNavIndicator);
+            // 窗口大小变化时重新初始化导航指示器（防抖）
+            window.addEventListener('resize', function() {
+                if (resizeTimeout) {
+                    clearTimeout(resizeTimeout);
+                }
+                resizeTimeout = setTimeout(initNavIndicator, 100);
+            }, { passive: true });
             
             if (navToggle && navMenu) {
                 let isMenuOpen = false;
@@ -266,17 +271,17 @@
                 }
                 
                 // 添加点击事件监听器
-                navToggle.addEventListener('click', toggleMenu);
+                navToggle.addEventListener('click', toggleMenu, { passive: false });
                 
                 // 添加触摸事件监听器，确保在移动设备上也能响应
                 navToggle.addEventListener('touchstart', function(e) {
                     e.preventDefault();
                     toggleMenu(e);
-                });
+                }, { passive: false });
                 
                 // 点击菜单项后关闭菜单
                 navLinks.forEach(link => {
-                    link.addEventListener('click', closeMenu);
+                    link.addEventListener('click', closeMenu, { passive: true });
                 });
                 
                 // 点击页面其他地方关闭菜单
@@ -284,14 +289,14 @@
                     if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
                         closeMenu();
                     }
-                });
+                }, { passive: true });
                 
                 // ESC键关闭菜单
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape' && isMenuOpen) {
                         closeMenu();
                     }
-                });
+                }, { passive: true });
             }
         });
     </script>

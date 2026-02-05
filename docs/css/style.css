@@ -288,6 +288,11 @@ header .container {
 @media (max-width: 480px) {
     .nav-toggle {
         display: block;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
     }
     
     .nav-menu {
@@ -306,12 +311,16 @@ header .container {
         padding: 16px 0;
         transform: translateY(-100%);
         opacity: 0;
-        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
         pointer-events: none;
         z-index: 99;
         height: auto;
         max-height: calc(100vh - 70px);
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        will-change: transform, opacity;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
     }
     
     .nav-menu.active {
@@ -324,17 +333,35 @@ header .container {
         flex-direction: column;
         width: 100%;
         gap: 0;
+        padding: 0;
+        margin: 0;
     }
     
     .nav-menu li {
         width: 100%;
         text-align: center;
+        margin: 0;
+        padding: 0;
     }
     
     .nav-menu a {
         width: 90%;
         text-align: center;
         margin: 4px auto;
+        padding: 12px 16px;
+        font-size: 16px;
+        -webkit-tap-highlight-color: transparent;
+        will-change: transform;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+    
+    .nav-menu a:hover {
+        transform: translateY(-2px);
+    }
+    
+    .nav-indicator {
+        display: none;
     }
 }
 
@@ -418,6 +445,11 @@ section:hover {
     .version-card .meta-info {
         gap: 16px;
         flex-direction: column;
+    }
+    
+    .version-card .sha256-info code {
+        font-size: 11px;
+        padding: 10px 12px;
     }
     
     .version-card .download-actions .btn {
@@ -689,13 +721,31 @@ section:hover {
     -moz-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
     color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-family: 'Fira Code', 'JetBrains Mono', 'Source Code Pro', 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 14px;
     overflow-x: auto;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.step-content pre:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(0,0,0,0.4);
+    -o-box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(0,0,0,0.4);
+    -webkit-box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(0,0,0,0.4);
+    -moz-box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(0,0,0,0.4);
+    transform: translateY(-2px);
 }
 
 .step-content code {
     font-family: inherit;
+    background: rgba(0,0,0,0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.4);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    -o-box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    -webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    -moz-box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 贡献者样式 */
@@ -939,6 +989,26 @@ footer p:last-child {
     margin-left: 8px;
 }
 
+.version-card .sha256-info {
+    margin-bottom: 24px;
+}
+
+.version-card .sha256-info h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.version-card .sha256-info code {
+    display: block;
+    word-break: break-all;
+    font-size: 13px;
+    padding: 12px 16px;
+    margin: 0;
+}
+
 .version-card .download-actions {
     margin-top: 24px;
     text-align: left;
@@ -1112,14 +1182,51 @@ footer p:last-child {
 }
 
 #changelog-content code {
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.3);
     padding: 4px 8px;
     border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    border: 1px solid rgba(0,0,0,0.5);
+    font-family: 'Fira Code', 'JetBrains Mono', 'Source Code Pro', 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 15px;
     color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    -o-box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    -webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    -moz-box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#changelog-content code:hover {
+    background: rgba(0,0,0,0.4);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
+    -o-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
+    -webkit-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
+    -moz-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
+}
+
+code {
+    background: rgba(0,0,0,0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.5);
+    font-family: 'Fira Code', 'JetBrains Mono', 'Source Code Pro', 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    -o-box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    -webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    -moz-box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.2), inset 0 5px rgba(255,255,255,0.1), inset 0 5px 10px rgba(255,255,255,0.15), inset 0 -8px 20px rgba(0,0,0,0.2);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+code:hover {
+    background: rgba(0,0,0,0.4);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
+    -o-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
+    -webkit-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
+    -moz-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
 }
 
 #changelog-content strong {
