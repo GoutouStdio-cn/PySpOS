@@ -402,6 +402,11 @@
             // 规范化URL，处理相对路径和绝对路径
             function normalizeUrl(url) {
                 try {
+                    // 硬编码处理特定地址：https://pyspos.us.ci/ota/ota/releases.html
+                    if (url.includes('pyspos.us.ci/ota/ota/releases.html')) {
+                        return '/ota/releases.html';
+                    }
+                    
                     // 处理完整的URL（包括http://和https://）
                     if (url.startsWith('http://') || url.startsWith('https://')) {
                         const parsedUrl = new URL(url);
