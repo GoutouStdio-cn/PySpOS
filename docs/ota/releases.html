@@ -222,6 +222,14 @@
             let isInitialized = false;
             let resizeTimeout;
             
+            // 检查并纠正当前URL中的重复路径
+            const currentPath = window.location.pathname;
+            const normalizedPath = normalizeUrl(currentPath);
+            if (currentPath !== normalizedPath) {
+                // 如果URL包含重复路径，立即纠正
+                window.history.replaceState({}, '', normalizedPath);
+            }
+            
             // 初始化导航指示器位置
             function initNavIndicator() {
                 const activeLink = document.querySelector('.nav-link.active');
@@ -416,39 +424,44 @@
             // 规范化URL，处理相对路径和绝对路径
             function normalizeUrl(url) {
                 try {
-                    // 硬编码处理特定的问题URL，防止404错误
-                    const hardcodedMappings = {
-                        // 处理重复路径问题
-                        'ota/ota/index.html': '/ota/index.html',
-                        'ota/ota/releases.html': '/ota/releases.html',
-                        
-                        // 处理可能的多次重复
-                        'ota/ota/ota/index.html': '/ota/index.html',
-                        'ota/ota/ota/releases.html': '/ota/releases.html',
-                        
-                        // 处理完整URL中的重复路径
-                        'pyspos.us.ci/ota/ota/index.html': '/ota/index.html',
-                        'pyspos.us.ci/ota/ota/releases.html': '/ota/releases.html',
-                        
-                        // HTTPS版本
-                        'https://pyspos.us.ci/ota/ota/index.html': '/ota/index.html',
-                        'https://pyspos.us.ci/ota/ota/releases.html': '/ota/releases.html',
-                        
-                        // HTTP版本
-                        'http://pyspos.us.ci/ota/ota/index.html': '/ota/index.html',
-                        'http://pyspos.us.ci/ota/ota/releases.html': '/ota/releases.html',
-                        
-                        // 处理localhost的重复路径
-                        'localhost:8000/ota/ota/index.html': '/ota/index.html',
-                        'localhost:8000/ota/ota/releases.html': '/ota/releases.html',
-                        'localhost:8080/ota/ota/index.html': '/ota/index.html',
-                        'localhost:8080/ota/ota/releases.html': '/ota/releases.html',
-                    };
+                    // 使用正则表达式精确处理重复路径问题
+                    const duplicatePathPatterns = [
+                        // 匹配 ota/ota/index.html 或 ota/ota/releases.html
+                        /\/ota\/ota\/(index|releases)\.html/,
+                        // 匹配多次重复的 ota 路径
+                        /\/ota(?:\/ota)+\/(index|releases)\.html/,
+                        // 匹配完整URL中的重复路径
+                        /https?:\/\/[^\/]+\/ota\/ota\/(index|releases)\.html/,
+                        // 匹配 localhost 的重复路径
+                        /localhost:\d+\/ota\/ota\/(index|releases)\.html/,
+                    ];
                     
-                    // 检查是否匹配硬编码映射（只处理重复路径问题）
-                    for (const [key, value] of Object.entries(hardcodedMappings)) {
-                        if (url.includes(key)) {
-                            return value;
+                    // 检查是否匹配重复路径模式
+                    for (const pattern of duplicatePathPatterns) {
+                        const match = url.match(pattern);
+                        if (match) {
+                            // 提取文件名并返回正确的路径
+                            const filename = match[1];
+                            return `/ota/${filename}.html`;
+                        }
+                    }
+                    
+                    // 处理缺少 ota/ 前缀的情况
+                    const missingOtaPatterns = [
+                        // 只匹配 /releases.html（因为releases.html在ota目录下）
+                        /^\/releases\.html$/,
+                        // 匹配完整URL中缺少 ota/ 的情况（只处理releases.html）
+                        /https?:\/\/[^\/]+\/releases\.html$/,
+                        // 匹配 localhost 缺少 ota/ 的情况（只处理releases.html）
+                        /localhost:\d+\/releases\.html$/,
+                    ];
+                    
+                    // 检查是否匹配缺少 ota/ 前缀的模式
+                    for (const pattern of missingOtaPatterns) {
+                        const match = url.match(pattern);
+                        if (match) {
+                            // releases.html 需要添加 ota/ 前缀
+                            return `/ota/releases.html`;
                         }
                     }
                     
@@ -459,8 +472,26 @@
                         if (parsedUrl.hostname !== window.location.hostname) {
                             return url;
                         }
-                        // 如果是内部链接，返回pathname
-                        return parsedUrl.pathname;
+                        // 如果是内部链接，对pathname进行规范化处理
+                        const pathname = parsedUrl.pathname;
+                        
+                        // 检查pathname是否需要纠正
+                        // 处理缺少 ota/ 前缀的情况（只处理releases.html）
+                        const missingOtaPatterns = [
+                            // 只匹配 /releases.html（因为releases.html在ota目录下）
+                            /^\/releases\.html$/,
+                        ];
+                        
+                        for (const pattern of missingOtaPatterns) {
+                            const match = pathname.match(pattern);
+                            if (match) {
+                                // releases.html 需要添加 ota/ 前缀
+                                return `/ota/releases.html`;
+                            }
+                        }
+                        
+                        // 如果不需要纠正，返回pathname
+                        return pathname;
                     }
                     
                     // 处理绝对路径
