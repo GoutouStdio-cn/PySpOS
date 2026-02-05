@@ -793,3 +793,133 @@ function normalizeUrl(url) {
 - 导航链接必须使用正确的绝对路径
 - 如果URL不正确，将直接导致404错误
 - 用户需要确保所有链接都指向正确的路径
+
+---
+
+## releases.html 备用硬编码数据（2026-02-05）
+
+在将版本历史页面改为完全动态化之前，`releases.html`中包含以下备用硬编码数据：
+
+```javascript
+const fallbackVersionData = { 
+    "changelog": [
+        {
+            "version": "3.0.1-pre",
+            "date": "2026-02-04",
+            "type": "beta",
+            "changes": [
+                "支持在线 OTA 更新。我花了很久实现了这个功能",
+                "重构优化了部分代码",
+                "添加一个猎奇网页"
+            ]
+        },
+        {
+            "version": "3.0.0",
+            "date": "2026-01-24",
+            "type": "beta",
+            "changes": [
+                "完善了zzlsb猜数字游戏",
+                "修复若干bug",
+                "实现了简易的recovery和日志处理"
+            ]
+        }
+    ]
+};
+```
+
+### 使用场景
+
+当`version.json`加载失败时，会使用这个备用数据：
+
+```javascript
+async function loadVersionData() {
+    try {
+        const response = await fetch('version.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const versionData = await response.json();
+        renderVersionHistory(versionData);
+    } catch (error) {
+        console.error('加载版本数据失败:', error);
+        console.log('使用备用数据...');
+        renderVersionHistory(fallbackVersionData);
+    }
+}
+```
+
+### 删除原因
+
+为了实现完全动态化，删除了备用数据，改为显示错误提示：
+
+```javascript
+async function loadVersionData() {
+    try {
+        const response = await fetch('version.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const versionData = await response.json();
+        renderVersionHistory(versionData);
+    } catch (error) {
+        console.error('加载版本数据失败:', error);
+        const container = document.getElementById('version-history');
+        container.innerHTML = '<p style="text-align: center; color: #ff6b6b;">加载版本数据失败，请刷新页面重试。</p>';
+    }
+}
+```
+
+### 硬编码的其他内容
+
+除了备用数据，还删除了以下硬编码内容：
+
+1. **硬编码的版本判断**：
+   ```javascript
+   const releaseTag = release.version === '3.0.1-pre' ? 'pre_version' : 'beta_version';
+   ```
+
+2. **硬编码的文件大小**：
+   ```javascript
+   const fileSize = isNew ? latestFileSize : '64.8 KB';
+   ```
+
+3. **硬编码的SHA256值**：
+   ```javascript
+   const sha256 = release.version === '3.0.0' 
+       ? '此版本的 SHA256 校验和未知' 
+       : (isNew ? versionData.sha256 : '124ea876d602cb51d9212f9c9b73091d09690b29a17e55607b171605452a7b87');
+   ```
+
+4. **硬编码的下载URL**：
+   ```javascript
+   const downloadUrl = isNew 
+       ? 'PySpOS.zip' 
+       : `https://github.com/GoutouStdio-cn/PySpOS/releases/download/${releaseTag}/PySpOS.zip`;
+   ```
+
+### 改进后的动态化逻辑
+
+所有硬编码内容都已改为从`version.json`动态获取：
+
+```javascript
+// 动态获取文件大小
+let fileSize;
+if (release.file_size) {
+    const size = release.file_size;
+    if (size < 1024) {
+        fileSize = `${size} B`;
+    } else if (size < 1024 * 1024) {
+        fileSize = `${(size / 1024).toFixed(1)} KB`;
+    } else {
+        fileSize = `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+} else {
+    fileSize = await getFileSize(release.download_url);
+}
+
+// 动态获取SHA256值
+const sha256 = release.sha256 ? release.sha256 : '此版本的 SHA256 校验和未知';
+
+// 动态获取下载URL
+const downloadUrl = release.download_url || `https://github.com/GoutouStdio-cn/PySpOS/releases/download/${release.version}/PySpOS.zip`;
+```

@@ -1,17 +1,33 @@
 {
-  "version": "3.0.1-pre",
-  "release_date": "2026-02-04",
+  "version": "3.0.1-pre(重构建)",
+  "release_date": "2026-02-05",
   "develop_stage": "beta",
-  "release_notes": "PySpOS pre_version 3.0.1 更新日志：\n\n- 支持在线 OTA 更新。我花了很久实现了这个功能\n- 重构优化了部分代码。\n- 添加一个猎奇网页。\n\n注意：此版本为测试版，可能存在一些问题，如果你遇到了可以提交到Issues。",
-  "download_url": "PySpOS.zip",
+  "release_notes": "优化项目结构。\n优化网页。\n优化OTA策略。",
+  "download_url": "PySpOS-3.0.1-pre-20260205.zip",
   "sha256": "64e8cd09f351fa37b18eb0c8adab2e8603262628bec6b6ec2487b449bd203298",
   "min_version": "3.0.0",
   "file_size": 37849,
   "changelog": [
     {
+      "version": "3.0.1-pre(重构建)",
+      "date": "2026-02-05",
+      "type": "beta",
+      "download_url": "PySpOS-3.0.1-pre-20260205.zip",
+      "sha256": "64e8cd09f351fa37b18eb0c8adab2e8603262628bec6b6ec2487b449bd203298",
+      "file_size": 37849,
+      "changes": [
+        "优化项目结构。",
+        "优化网页。",
+        "优化OTA策略。"
+      ]
+    },
+    {
       "version": "3.0.1-pre",
       "date": "2026-02-04",
       "type": "beta",
+      "download_url": "PySpOS.zip",
+      "sha256": "64e8cd09f351fa37b18eb0c8adab2e8603262628bec6b6ec2487b449bd203298",
+      "file_size": 79218,
       "changes": [
         "支持在线 OTA 更新。我花了很久实现了这个功能",
         "重构优化了部分代码",
@@ -22,6 +38,9 @@
       "version": "3.0.0",
       "date": "2026-01-24",
       "type": "beta",
+      "download_url": "https://github.com/GoutouStdio-cn/PySpOS/releases/download/beta_version/PySpOS.zip",
+      "sha256": null,
+      "file_size": null,
       "changes": [
         "完善了zzlsb猜数字游戏",
         "修复若干bug",
