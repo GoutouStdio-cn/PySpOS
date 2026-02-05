@@ -10,6 +10,19 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
+    <!-- 液态玻璃效果 SVG 滤镜 -->
+    <svg width="0" height="0" style="position: absolute;">
+        <filter id="glass-distortion">
+            <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="2" seed="1" result="noise"/>
+            <feGaussianBlur in="noise" stdDeviation="2" result="blurred-noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="blurred-noise" scale="100" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="glass-distortion-strong">
+            <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" seed="2" result="noise"/>
+            <feGaussianBlur in="noise" stdDeviation="3" result="blurred-noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="blurred-noise" scale="120" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+    </svg>
 </head>
 <body>
     <header>
@@ -285,22 +298,54 @@
             window.addEventListener('resize', initNavIndicator);
             
             if (navToggle && navMenu) {
+                let isMenuOpen = false;
+                
+                // 切换菜单函数
+                function toggleMenu(e) {
+                    if (e) {
+                        e.stopPropagation();
+                    }
+                    isMenuOpen = !isMenuOpen;
+                    if (isMenuOpen) {
+                        navMenu.classList.add('active');
+                    } else {
+                        navMenu.classList.remove('active');
+                    }
+                }
+                
+                // 关闭菜单函数
+                function closeMenu() {
+                    if (isMenuOpen) {
+                        isMenuOpen = false;
+                        navMenu.classList.remove('active');
+                    }
+                }
+                
                 // 添加点击事件监听器
-                navToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    navMenu.classList.toggle('active');
-                });
+                navToggle.addEventListener('click', toggleMenu);
                 
                 // 添加触摸事件监听器，确保在移动设备上也能响应
                 navToggle.addEventListener('touchstart', function(e) {
-                    e.stopPropagation();
-                    navMenu.classList.toggle('active');
+                    e.preventDefault();
+                    toggleMenu(e);
+                });
+                
+                // 点击菜单项后关闭菜单
+                navLinks.forEach(link => {
+                    link.addEventListener('click', closeMenu);
                 });
                 
                 // 点击页面其他地方关闭菜单
                 document.addEventListener('click', function(e) {
                     if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                        navMenu.classList.remove('active');
+                        closeMenu();
+                    }
+                });
+                
+                // ESC键关闭菜单
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && isMenuOpen) {
+                        closeMenu();
                     }
                 });
             }
