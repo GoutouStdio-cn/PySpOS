@@ -47,18 +47,20 @@
                 <div id="version-info-container">
                     <div class="version-cards">
                         <div class="version-card current">
-                            <h3>当前版本</h3>
+                            <h3>当前版本 <span class="badge badge-beta">测试版</span></h3>
                             <div class="version">3.0.1-pre</div>
-                            <div class="date">发布日期: 2026-02-04</div>
-                            <div class="file-size">文件大小: 62.4 KB</div>
-                            <span class="badge badge-beta">测试版</span>
+                            <div class="meta-info">
+                                <div class="date">2026-02-04</div>
+                                <div class="file-size">62.4 KB</div>
+                            </div>
                         </div>
                         <div class="version-card latest">
-                            <h3>最新版本 <span class="badge badge-new">NEW</span></h3>
+                            <h3>最新版本 <span class="badge badge-new">NEW</span> <span class="badge badge-beta">测试版</span></h3>
                             <div class="version">3.0.1-pre</div>
-                            <div class="date">发布日期: 2026-02-04</div>
-                            <div class="file-size">文件大小: 62.4 KB</div>
-                            <span class="badge badge-beta">测试版</span>
+                            <div class="meta-info">
+                                <div class="date">2026-02-04</div>
+                                <div class="file-size">62.4 KB</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -172,18 +174,20 @@
             versionInfoContainer.innerHTML = `
                 <div class="version-cards">
                     <div class="version-card current">
-                        <h3>当前版本</h3>
+                        <h3>当前版本 <span class="badge ${badgeClass}">${badgeText}</span></h3>
                         <div class="version">${latestVersion}</div>
-                        <div class="date">发布日期: ${releaseDate}</div>
-                        <div class="file-size">文件大小: ${fileSize}</div>
-                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        <div class="meta-info">
+                            <div class="date">${releaseDate}</div>
+                            <div class="file-size">${fileSize}</div>
+                        </div>
                     </div>
                     <div class="version-card latest">
-                        <h3>最新版本 <span class="badge badge-new">NEW</span></h3>
+                        <h3>最新版本 <span class="badge badge-new">NEW</span> <span class="badge ${badgeClass}">${badgeText}</span></h3>
                         <div class="version">${latestVersion}</div>
-                        <div class="date">发布日期: ${releaseDate}</div>
-                        <div class="file-size">文件大小: ${fileSize}</div>
-                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        <div class="meta-info">
+                            <div class="date">${releaseDate}</div>
+                            <div class="file-size">${fileSize}</div>
+                        </div>
                     </div>
                 </div>
             `;

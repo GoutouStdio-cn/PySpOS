@@ -215,8 +215,10 @@
                 html += `
                     <div class="version-card ${isNew ? 'latest' : ''}">
                         <h3>v${release.version} ${newBadge} <span class="badge ${badgeClass}">${badgeText}</span></h3>
-                        <div class="date">${release.date}</div>
-                        <div class="file-size">文件大小: ${fileSize}</div>
+                        <div class="meta-info">
+                            <div class="date">${release.date}</div>
+                            <div class="file-size">${fileSize}</div>
+                        </div>
                         <div class="changes">
                             <h4>更新内容</h4>
                             <ul>
