@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
 </head>
-<body>
+<body class="home-page">
     <header>
         <div class="container">
             <div class="logo">
@@ -166,6 +166,21 @@
     </footer>
 
     <script>
+        // 检查是否是从其他页面返回的
+        function isReturningFromOtherPage() {
+            return sessionStorage.getItem('returningFromOtherPage') === 'true';
+        }
+
+        // 设置返回状态
+        function setReturningFromOtherPage() {
+            sessionStorage.setItem('returningFromOtherPage', 'true');
+        }
+
+        // 清除返回状态
+        function clearReturningFromOtherPage() {
+            sessionStorage.removeItem('returningFromOtherPage');
+        }
+
         // 导航菜单切换和指示器动画
         document.addEventListener('DOMContentLoaded', function() {
             const navToggle = document.getElementById('nav-toggle');
@@ -175,6 +190,15 @@
             
             let isInitialized = false;
             let resizeTimeout;
+
+            // 检查是否是从其他页面返回的，如果是则移除header动画
+            if (isReturningFromOtherPage()) {
+                const header = document.querySelector('header');
+                if (header) {
+                    header.style.animation = 'none';
+                }
+                clearReturningFromOtherPage();
+            }
             
             // 初始化导航指示器位置
             function initNavIndicator() {
@@ -192,13 +216,22 @@
                     navIndicator.offsetHeight;
                     
                     // 启用过渡效果
-                    navIndicator.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                    navIndicator.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
                     isInitialized = true;
                 }
             }
             
-            // 更新导航指示器位置
-            function updateNavIndicator(target) {
+            // 获取当前指示器位置
+            function getCurrentIndicatorPosition() {
+                if (!navIndicator) return { left: 0, width: 0 };
+                const transform = navIndicator.style.transform;
+                const width = parseInt(navIndicator.style.width) || 0;
+                const left = transform ? parseInt(transform.match(/translateX\((\d+)px\)/)?.[1]) || 0 : 0;
+                return { left, width };
+            }
+            
+            // 更新导航指示器位置（超丝滑动画）
+            function updateNavIndicator(target, isHover = false) {
                 if (target && navIndicator) {
                     requestAnimationFrame(() => {
                         const rect = target.getBoundingClientRect();
@@ -206,36 +239,210 @@
                         const targetWidth = rect.width;
                         const targetLeft = rect.left - navRect.left;
                         
+                        const currentPos = getCurrentIndicatorPosition();
+                        
+                        // 计算移动距离和方向
+                        const distance = Math.abs(targetLeft - currentPos.left);
+                        const isMovingRight = targetLeft > currentPos.left;
+                        const isMovingLeft = targetLeft < currentPos.left;
+                        
+                        // 优化动画时长：短距离快速，长距离稍慢但保持流畅
+                        const baseDuration = 0.35; // 基础时长（更短更灵敏）
+                        const distanceFactor = Math.min(distance / 150, 0.5); // 距离因子（限制最大影响）
+                        const transitionDuration = `${baseDuration + (distanceFactor * 0.15)}s`;
+                        
+                        // 使用超丝滑的贝塞尔曲线（模仿iOS系统动画）
+                        const easing = 'cubic-bezier(0.25, 0.1, 0.25, 1)';
+                        
+                        // 设置动画属性（分别控制transform和width）
+                        navIndicator.style.transition = `transform ${transitionDuration} ${easing}, width ${transitionDuration} ${easing}`;
+                        
+                        // 应用新的位置和宽度
                         navIndicator.style.width = `${targetWidth}px`;
                         navIndicator.style.transform = `translateX(${targetLeft}px)`;
+                        
+                        // 优化移动方向的视觉反馈
+                        if (isMovingRight) {
+                            navIndicator.style.background = 'linear-gradient(90deg, var(--primary-color), #3b82f6)';
+                        } else if (isMovingLeft) {
+                            navIndicator.style.background = 'linear-gradient(90deg, #3b82f6, var(--primary-color))';
+                        }
+                        
+                        // 添加微妙的缩放效果增强视觉流畅度
+                        navIndicator.style.transform += ' scaleY(1.1)';
+                        setTimeout(() => {
+                            navIndicator.style.transform = `translateX(${targetLeft}px) scaleY(1)`;
+                        }, 100);
                     });
+                }
+            }
+            
+            // SPA导航：加载页面内容
+            function loadPageContent(url) {
+                // 显示加载状态
+                const main = document.querySelector('main');
+                main.style.opacity = '0.7';
+                
+                // 规范化目标URL，避免路径重复叠加
+                const normalizedUrl = normalizeUrl(url);
+                
+                // 处理相对路径
+                const fullUrl = new URL(normalizedUrl, window.location.origin).href;
+                
+                // 使用fetch API加载页面
+                fetch(fullUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        // 解析HTML并提取主要内容
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const newMain = doc.querySelector('main');
+                        
+                        if (newMain) {
+                            // 替换主要内容
+                            main.innerHTML = newMain.innerHTML;
+                            
+                            // 更新页面标题
+                            const newTitle = doc.querySelector('title');
+                            if (newTitle) {
+                                document.title = newTitle.textContent;
+                            }
+                            
+                            // 重新执行页面特定的JavaScript
+                            executePageScripts(doc, normalizedUrl);
+                            
+                            // 更新URL（使用规范化后的路径，避免重复叠加）
+                            window.history.pushState({}, '', normalizedUrl);
+                        }
+                        
+                        // 恢复透明度
+                        main.style.opacity = '1';
+                    })
+                    .catch(error => {
+                        console.error('加载页面失败:', error);
+                        // 如果AJAX失败，回退到传统导航
+                        window.location.href = normalizedUrl;
+                    });
+            }
+            
+            // 规范化URL，处理相对路径和绝对路径
+            function normalizeUrl(url) {
+                try {
+                    // 处理完整的URL（包括http://和https://）
+                    if (url.startsWith('http://') || url.startsWith('https://')) {
+                        return new URL(url).pathname;
+                    }
+                    // 处理相对路径
+                    const baseUrl = window.location.origin;
+                    return new URL(url, baseUrl).pathname;
+                } catch (error) {
+                    console.warn('URL规范化失败:', error);
+                    return url; // 返回原始URL作为备选
+                }
+            }
+            
+            // 检查两个URL是否指向同一页面
+            function isSamePage(url1, url2) {
+                const normalizedUrl1 = normalizeUrl(url1);
+                const normalizedUrl2 = normalizeUrl(url2);
+                
+                // 比较规范化后的路径
+                return normalizedUrl1 === normalizedUrl2;
+            }
+            
+            // 执行页面特定的JavaScript
+            function executePageScripts(doc, url) {
+                // 获取页面中的所有script标签
+                const scripts = doc.querySelectorAll('script');
+                
+                scripts.forEach(oldScript => {
+                    if (oldScript.src) {
+                        // 外部脚本 - 创建新的script标签
+                        const newScript = document.createElement('script');
+                        newScript.src = oldScript.src;
+                        if (oldScript.type) newScript.type = oldScript.type;
+                        if (oldScript.async) newScript.async = oldScript.async;
+                        if (oldScript.defer) newScript.defer = oldScript.defer;
+                        document.head.appendChild(newScript);
+                    } else if (oldScript.textContent.trim()) {
+                        // 内联脚本 - 使用eval执行（注意安全）
+                        try {
+                            eval(oldScript.textContent);
+                        } catch (e) {
+                            console.warn('执行内联脚本时出错:', e);
+                        }
+                    }
+                });
+            }
+            
+            // 处理浏览器前进后退按钮
+            window.addEventListener('popstate', function() {
+                // 当用户点击前进后退按钮时，重新加载当前页面内容
+                // 使用规范化后的URL，避免路径重复叠加
+                const currentPath = normalizeUrl(window.location.pathname);
+                loadPageContent(currentPath);
+            });
+            
+            // 检查当前URL是否正确，如果不正确则重定向
+            function checkAndRedirectUrl() {
+                const currentPath = window.location.pathname;
+                const correctPath = '/index.html';
+                
+                // 如果当前路径不正确，重定向到正确路径
+                if (currentPath !== correctPath && currentPath.endsWith('/index.html') && !currentPath.includes('ota')) {
+                    window.history.replaceState({}, '', correctPath);
                 }
             }
             
             // 初始化导航指示器
             initNavIndicator();
             
-            // 添加导航链接悬停事件
+            // 检查并重定向URL
+            checkAndRedirectUrl();
+            
+            // 添加导航链接悬停事件（只添加绿色发光效果，不移动指示器）
             navLinks.forEach(link => {
                 link.addEventListener('mouseenter', function() {
-                    updateNavIndicator(this);
+                    // 鼠标悬停时只添加绿色发光效果，不移动指示器
                 }, { passive: true });
                 
                 link.addEventListener('mouseleave', function() {
-                    const activeLink = document.querySelector('.nav-link.active');
-                    if (activeLink) {
-                        updateNavIndicator(activeLink);
-                    }
+                    // 鼠标离开时发光效果会自动移除
                 }, { passive: true });
                 
                 link.addEventListener('click', function(e) {
+                    // 阻止默认的链接跳转行为
+                    e.preventDefault();
+                    
+                    // 如果是外部链接（如GitHub），直接跳转
+                    if (this.getAttribute('target') === '_blank' || this.href.includes('github.com')) {
+                        window.open(this.href, '_blank');
+                        return;
+                    }
+                    
+                    // 检查是否已经是当前页面
+                    const targetUrl = this.getAttribute('href');
+                    const currentUrl = window.location.pathname;
+                    const isCurrentPage = isSamePage(currentUrl, targetUrl);
+                    
+                    // 更新导航状态
                     navLinks.forEach(navLink => navLink.classList.remove('active'));
                     this.classList.add('active');
-                    updateNavIndicator(this);
+                    updateNavIndicator(this, false);
                     if (navMenu.classList.contains('active')) {
                         navMenu.classList.remove('active');
                     }
-                }, { passive: true });
+                    
+                    // 如果不是当前页面，才执行SPA导航
+                    if (!isCurrentPage) {
+                        loadPageContent(targetUrl);
+                    }
+                }, { passive: false });
             });
             
             // 窗口大小变化时重新初始化导航指示器（防抖）

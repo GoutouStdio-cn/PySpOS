@@ -37,6 +37,9 @@ body {
     -moz-osx-font-smoothing: grayscale;
     position: relative;
     animation: backgroundZoom 30s ease-in-out infinite alternate;
+    will-change: background-size;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 @keyframes backgroundZoom {
@@ -44,7 +47,7 @@ body {
         background-size: 100%;
     }
     100% {
-        background-size: 110%;
+        background-size: 115%;
     }
 }
 
@@ -142,8 +145,11 @@ header {
     -o-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
     -webkit-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
     -moz-box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.3), inset 0 10px rgba(255,255,255,0.2), inset 0 10px 20px rgba(255,255,255,0.25), inset 0 -15px 30px rgba(0,0,0,0.3);
-    animation: headerSlideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     position: relative;
+}
+
+.home-page header {
+    animation: headerSlideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 header:hover {
@@ -257,12 +263,13 @@ header .container {
 }
 
 .nav-menu a:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(0,0,0,0.4);
-    -o-box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(0,0,0,0.4);
-    -webkit-box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(0,0,0,0.4);
-    -moz-box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(16, 185, 129, 0.4);
+    -o-box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(16, 185, 129, 0.4);
+    -webkit-box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(16, 185, 129, 0.4);
+    -moz-box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(16, 185, 129, 0.4);
     transform: translateY(-2px);
     color: #fff;
+    transition: all 0.3s ease;
 }
 
 .nav-menu a.active {
@@ -278,10 +285,16 @@ header .container {
     bottom: 0;
     left: 0;
     height: 3px;
-    background: var(--primary-color);
+    background: linear-gradient(90deg, var(--primary-color), #3b82f6);
     border-radius: 3px;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), width 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
     z-index: 1;
+    box-shadow: 0 2px 12px rgba(37, 99, 235, 0.6);
+    will-change: transform, width;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.3));
+    transform-origin: left center;
 }
 
 /* 响应式导航 */
@@ -357,8 +370,13 @@ header .container {
     }
     
     .nav-menu a:hover {
-        transform: translateY(-2px);
-    }
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(16, 185, 129, 0.4);
+    -o-box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(16, 185, 129, 0.4);
+    -webkit-box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(16, 185, 129, 0.4);
+    -moz-box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), inset 0 1px rgba(255,255,255,0.4), inset 0 10px rgba(255,255,255,0.3), inset 0 10px 20px rgba(255,255,255,0.35), inset 0 -15px 30px rgba(16, 185, 129, 0.4);
+    transition: all 0.3s ease;
+}
     
     .nav-indicator {
         display: none;
