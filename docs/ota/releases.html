@@ -23,9 +23,9 @@
             </div>
             <nav class="nav-menu" id="nav-menu">
                 <ul>
-                    <li><a href="../index.html" class="nav-link">首页</a></li>
-                    <li><a href="index.html" class="nav-link">OTA 更新</a></li>
-                    <li><a href="releases.html" class="nav-link active">版本历史</a></li>
+                    <li><a href="/index.html" class="nav-link">首页</a></li>
+                    <li><a href="/ota/index.html" class="nav-link">OTA 更新</a></li>
+                    <li><a href="/ota/releases.html" class="nav-link active">版本历史</a></li>
                     <li><a href="https://github.com/GoutouStdio-cn/PySpOS" target="_blank" class="nav-link">GitHub</a></li>
                 </ul>
                 <div class="nav-indicator" id="nav-indicator"></div>
@@ -222,14 +222,6 @@
             let isInitialized = false;
             let resizeTimeout;
             
-            // 检查并纠正当前URL中的重复路径
-            const currentPath = window.location.pathname;
-            const normalizedPath = normalizeUrl(currentPath);
-            if (currentPath !== normalizedPath) {
-                // 如果URL包含重复路径，立即纠正
-                window.history.replaceState({}, '', normalizedPath);
-            }
-            
             // 初始化导航指示器位置
             function initNavIndicator() {
                 const activeLink = document.querySelector('.nav-link.active');
@@ -312,9 +304,6 @@
             
             // SPA导航加载页面内容
             function loadPageContent(url) {
-                // 规范化目标URL，避免路径重复叠加
-                const normalizedUrl = normalizeUrl(url);
-                
                 // 如果正在导航，将请求加入队列
                 if (isNavigating) {
                     // 取消当前请求
@@ -324,7 +313,7 @@
                     }
                     
                     // 清空队列，只保留最新的请求
-                    navigationQueue = [normalizedUrl];
+                    navigationQueue = [url];
                     return;
                 }
                 
@@ -343,7 +332,7 @@
                 currentFetchController = controller;
                 
                 // 处理相对路径
-                const fullUrl = new URL(normalizedUrl, window.location.origin).href;
+                const fullUrl = new URL(url, window.location.origin).href;
                 
                 // 使用fetch API加载页面
                 fetch(fullUrl, { signal: controller.signal })
@@ -384,11 +373,11 @@
                                 
                                 // 延迟执行页面脚本，避免阻塞UI
                                 setTimeout(() => {
-                                    executePageScripts(doc, normalizedUrl);
+                                    executePageScripts(doc, url);
                                 }, 50);
                                 
-                                // 更新URL（使用规范化后的路径，避免重复叠加）
-                                window.history.pushState({}, '', normalizedUrl);
+                                // 更新URL
+                                window.history.pushState({}, '', url);
                             });
                         }
                         
@@ -406,7 +395,7 @@
                     .catch(error => {
                         // 如果是取消请求的错误，忽略
                         if (error.name === 'AbortError') {
-                            console.log('请求已取消:', normalizedUrl);
+                            console.log('请求已取消:', url);
                             return;
                         }
                         
@@ -417,107 +406,26 @@
                         currentFetchController = null;
                         
                         // 如果AJAX失败，回退到传统导航
-                        window.location.href = normalizedUrl;
+                        window.location.href = url;
                     });
-            }
-            
-            // 规范化URL，处理相对路径和绝对路径
-            function normalizeUrl(url) {
-                try {
-                    // 使用正则表达式精确处理重复路径问题
-                    const duplicatePathPatterns = [
-                        // 匹配 ota/ota/index.html 或 ota/ota/releases.html
-                        /\/ota\/ota\/(index|releases)\.html/,
-                        // 匹配多次重复的 ota 路径
-                        /\/ota(?:\/ota)+\/(index|releases)\.html/,
-                        // 匹配完整URL中的重复路径
-                        /https?:\/\/[^\/]+\/ota\/ota\/(index|releases)\.html/,
-                        // 匹配 localhost 的重复路径
-                        /localhost:\d+\/ota\/ota\/(index|releases)\.html/,
-                    ];
-                    
-                    // 检查是否匹配重复路径模式
-                    for (const pattern of duplicatePathPatterns) {
-                        const match = url.match(pattern);
-                        if (match) {
-                            // 提取文件名并返回正确的路径
-                            const filename = match[1];
-                            return `/ota/${filename}.html`;
-                        }
-                    }
-                    
-                    // 处理缺少 ota/ 前缀的情况
-                    const missingOtaPatterns = [
-                        // 只匹配 /releases.html（因为releases.html在ota目录下）
-                        /^\/releases\.html$/,
-                        // 匹配完整URL中缺少 ota/ 的情况（只处理releases.html）
-                        /https?:\/\/[^\/]+\/releases\.html$/,
-                        // 匹配 localhost 缺少 ota/ 的情况（只处理releases.html）
-                        /localhost:\d+\/releases\.html$/,
-                    ];
-                    
-                    // 检查是否匹配缺少 ota/ 前缀的模式
-                    for (const pattern of missingOtaPatterns) {
-                        const match = url.match(pattern);
-                        if (match) {
-                            // releases.html 需要添加 ota/ 前缀
-                            return `/ota/releases.html`;
-                        }
-                    }
-                    
-                    // 处理完整的URL（包括http://和https://）
-                    if (url.startsWith('http://') || url.startsWith('https://')) {
-                        const parsedUrl = new URL(url);
-                        // 如果是外部链接（不是当前域名），直接返回原URL
-                        if (parsedUrl.hostname !== window.location.hostname) {
-                            return url;
-                        }
-                        // 如果是内部链接，对pathname进行规范化处理
-                        const pathname = parsedUrl.pathname;
-                        
-                        // 检查pathname是否需要纠正
-                        // 处理缺少 ota/ 前缀的情况（只处理releases.html）
-                        const missingOtaPatterns = [
-                            // 只匹配 /releases.html（因为releases.html在ota目录下）
-                            /^\/releases\.html$/,
-                        ];
-                        
-                        for (const pattern of missingOtaPatterns) {
-                            const match = pathname.match(pattern);
-                            if (match) {
-                                // releases.html 需要添加 ota/ 前缀
-                                return `/ota/releases.html`;
-                            }
-                        }
-                        
-                        // 如果不需要纠正，返回pathname
-                        return pathname;
-                    }
-                    
-                    // 处理绝对路径
-                    if (url.startsWith('/')) {
-                        return url;
-                    }
-                    
-                    // 处理相对路径
-                    const baseUrl = window.location.origin + window.location.pathname;
-                    const resolvedUrl = new URL(url, baseUrl);
-                    
-                    return resolvedUrl.pathname;
-                } catch (error) {
-                    console.warn('URL规范化失败:', error, url);
-                    // 返回原始URL作为备选
-                    return url;
-                }
             }
             
             // 检查两个URL是否指向同一页面
             function isSamePage(url1, url2) {
-                const normalizedUrl1 = normalizeUrl(url1);
-                const normalizedUrl2 = normalizeUrl(url2);
+                // 处理完整的URL（包括http://和https://）
+                const getPath = (url) => {
+                    if (url.startsWith('http://') || url.startsWith('https://')) {
+                        return new URL(url).pathname;
+                    }
+                    return url;
+                };
                 
-                // 比较规范化后的路径
-                return normalizedUrl1 === normalizedUrl2;
+                const path1 = getPath(url1);
+                const path2 = getPath(url2);
+                
+                // 比较路径
+                return path1 === path2;
+            }
             }
             
             // 执行页面特定的JavaScript
@@ -530,12 +438,10 @@
                     const scriptContent = oldScript.textContent;
                     if (scriptContent && (
                         scriptContent.includes('function loadPageContent') ||
-                        scriptContent.includes('function normalizeUrl') ||
                         scriptContent.includes('function isSamePage') ||
                         scriptContent.includes('function executePageScripts') ||
                         scriptContent.includes('function initNavIndicator') ||
                         scriptContent.includes('function updateNavIndicator') ||
-                        scriptContent.includes('function checkAndRedirectUrl') ||
                         scriptContent.includes('function toggleMenu') ||
                         scriptContent.includes('let isNavigating') ||
                         scriptContent.includes('let currentFetchController') ||
@@ -577,21 +483,9 @@
             // 处理浏览器前进后退按钮
             window.addEventListener('popstate', function() {
                 // 当用户点击前进后退按钮时，重新加载当前页面内容
-                // 使用规范化后的URL，避免路径重复叠加
-                const currentPath = normalizeUrl(window.location.pathname);
+                const currentPath = window.location.pathname;
                 loadPageContent(currentPath);
             });
-            
-            // 检查当前URL是否正确，如果不正确则重定向
-            function checkAndRedirectUrl() {
-                const currentPath = window.location.pathname;
-                const correctPath = '/ota/releases.html';
-                
-                // 如果当前路径不正确，重定向到正确路径
-                if (currentPath !== correctPath && currentPath.endsWith('/releases.html')) {
-                    window.history.replaceState({}, '', correctPath);
-                }
-            }
             
             // 初始化导航指示器
             initNavIndicator();

@@ -719,3 +719,77 @@ function normalizeUrl(url) {
    - `https://pyspos.us.ci/releases.html` → `/ota/releases.html`（正确）
    - `http://localhost:8080/index.html` → `/index.html`（正确）
    - `http://localhost:8080/releases.html` → `/ota/releases.html`（正确）
+
+---
+
+## URL规范化代码已完全删除（2026-02-05）
+
+由于URL规范化逻辑过于复杂，且仍然无法完全解决重复路径问题（如`https://pyspos.us.ci/ota/ota/releases.html`），决定完全删除所有URL规范化相关代码。
+
+### 删除的内容
+
+1. **normalizeUrl函数**（所有版本）
+   - 处理重复路径的正则表达式
+   - 处理缺少`ota/`前缀的逻辑
+   - 处理完整URL的逻辑
+   - 处理相对路径的逻辑
+
+2. **checkAndRedirectUrl函数**
+   - 页面初始化时的URL纠正逻辑
+   - 根目录和ota目录的路径纠正
+
+3. **所有对normalizeUrl的调用**
+   - loadPageContent函数中的URL规范化
+   - popstate事件处理中的URL规范化
+   - 页面初始化时的URL规范化
+   - isSamePage函数中的URL规范化
+
+### 简化后的逻辑
+
+1. **isSamePage函数**：简化为只提取pathname进行比较
+   ```javascript
+   function isSamePage(url1, url2) {
+       const getPath = (url) => {
+           if (url.startsWith('http://') || url.startsWith('https://')) {
+               return new URL(url).pathname;
+           }
+           return url;
+       };
+       
+       const path1 = getPath(url1);
+       const path2 = getPath(url2);
+       
+       return path1 === path2;
+   }
+   ```
+
+2. **loadPageContent函数**：直接使用原始URL，不进行规范化
+   ```javascript
+   function loadPageContent(url) {
+       // 直接使用url，不进行normalizeUrl处理
+       const fullUrl = new URL(url, window.location.origin).href;
+       // ...
+   }
+   ```
+
+3. **popstate事件处理**：直接使用window.location.pathname
+   ```javascript
+   window.addEventListener('popstate', function() {
+       const currentPath = window.location.pathname;
+       loadPageContent(currentPath);
+   });
+   ```
+
+### 影响的文件
+
+- [docs/index.html](file:///c:/Users/gouto/Documents/PySpOS/docs/index.html)
+- [docs/ota/index.html](file:///c:/Users/gouto/Documents/PySpOS/docs/ota/index.html)
+- [docs/ota/releases.html](file:///c:/Users/gouto/Documents/PySpOS/docs/ota/releases.html)
+
+### 注意事项
+
+- 不再自动纠正URL中的重复路径
+- 不再自动添加或删除`ota/`前缀
+- 导航链接必须使用正确的绝对路径
+- 如果URL不正确，将直接导致404错误
+- 用户需要确保所有链接都指向正确的路径
