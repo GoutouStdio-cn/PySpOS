@@ -430,12 +430,55 @@
             // 规范化URL，处理相对路径和绝对路径
             function normalizeUrl(url) {
                 try {
-                    // 硬编码处理特定地址：https://pyspos.us.ci/ota/ota/releases.html
-                    if (url.includes('pyspos.us.ci/ota/ota/releases.html')) {
-                        return '/ota/releases.html';
+                    // 硬编码处理所有内部链接，防止404错误
+                    const hardcodedMappings = {
+                        // 主页相关
+                        '../index.html': '/index.html',
+                        'index.html': '/index.html',
+                        '/index.html': '/index.html',
+                        
+                        // OTA更新页面相关
+                        'index.html': '/ota/index.html',
+                        '/ota/index.html': '/ota/index.html',
+                        
+                        // 版本历史页面相关
+                        'releases.html': '/ota/releases.html',
+                        '/ota/releases.html': '/ota/releases.html',
+                        
+                        // 处理可能的重复路径
+                        'ota/ota/index.html': '/ota/index.html',
+                        'ota/ota/releases.html': '/ota/releases.html',
+                        
+                        // 完整URL处理
+                        'pyspos.us.ci/index.html': '/index.html',
+                        'pyspos.us.ci/ota/index.html': '/ota/index.html',
+                        'pyspos.us.ci/ota/releases.html': '/ota/releases.html',
+                        'pyspos.us.ci/ota/ota/index.html': '/ota/index.html',
+                        'pyspos.us.ci/ota/ota/releases.html': '/ota/releases.html',
+                        
+                        // HTTPS版本
+                        'https://pyspos.us.ci/index.html': '/index.html',
+                        'https://pyspos.us.ci/ota/index.html': '/ota/index.html',
+                        'https://pyspos.us.ci/ota/releases.html': '/ota/releases.html',
+                        'https://pyspos.us.ci/ota/ota/index.html': '/ota/index.html',
+                        'https://pyspos.us.ci/ota/ota/releases.html': '/ota/releases.html',
+                        
+                        // HTTP版本
+                        'http://pyspos.us.ci/index.html': '/index.html',
+                        'http://pyspos.us.ci/ota/index.html': '/ota/index.html',
+                        'http://pyspos.us.ci/ota/releases.html': '/ota/releases.html',
+                        'http://pyspos.us.ci/ota/ota/index.html': '/ota/index.html',
+                        'http://pyspos.us.ci/ota/ota/releases.html': '/ota/releases.html',
+                    };
+                    
+                    // 检查是否匹配硬编码映射
+                    for (const [key, value] of Object.entries(hardcodedMappings)) {
+                        if (url.includes(key)) {
+                            return value;
+                        }
                     }
                     
-                    // 处理完整的URL（包括http://和https://）
+                    // 处理完整的URL（包括http://和https://），到这里硬编码可能失效了
                     if (url.startsWith('http://') || url.startsWith('https://')) {
                         const parsedUrl = new URL(url);
                         // 如果是外部链接（不是当前域名），直接返回原URL
