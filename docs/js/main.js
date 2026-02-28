@@ -4,10 +4,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const navMenu = document.getElementById('nav-menu');
     const navLinks = document.querySelectorAll('.nav-link');
     const navIndicator = document.getElementById('nav-indicator');
+    const body = document.body;
 
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
+            const isActive = navMenu.classList.toggle('active');
+            navToggle.classList.toggle('active', isActive);
+            
+            // 防止背景滚动
+            if (isActive) {
+                body.style.overflow = 'hidden';
+            } else {
+                body.style.overflow = '';
+            }
         });
     }
 
@@ -18,8 +27,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 navLinks.forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
                 
+                // 在移动端点击链接后关闭菜单
                 if (navMenu.classList.contains('active')) {
                     navMenu.classList.remove('active');
+                    navToggle.classList.remove('active');
+                    body.style.overflow = '';
                 }
             });
         });

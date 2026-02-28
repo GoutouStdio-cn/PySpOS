@@ -129,6 +129,26 @@ header .container {
     font-size: 24px;
     color: #fff;
     padding: 8px;
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+
+.nav-toggle:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+/* 汉堡菜单动画 */
+.nav-toggle.active .fa-bars {
+    display: none;
+}
+
+.nav-toggle.active .fa-times {
+    display: block;
+}
+
+.nav-toggle .fa-times {
+    display: none;
 }
 
 .nav-menu {
@@ -1401,47 +1421,7 @@ footer {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .hero-title {
-        font-size: 32px;
-    }
-    
-    .hero-subtitle {
-        font-size: 16px;
-    }
-    
-    .product-hero-title {
-        font-size: 36px;
-    }
-    
-    section {
-        padding: 32px 20px;
-    }
-    
-    .product-grid, .feature-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .intro-content {
-        grid-template-columns: 1fr;
-    }
-    
-    .footer-content {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    
-    .footer-links {
-        flex-direction: column;
-        align-items: center;
-        gap: 24px;
-    }
-    
-    .timeline-item {
-        flex-direction: column;
-        text-align: center;
-    }
-    
+    /* 导航栏优化 */
     .nav-toggle {
         display: block;
     }
@@ -1456,13 +1436,17 @@ footer {
         padding: 24px;
         transform: translateY(-100%);
         opacity: 0;
+        visibility: hidden;
         transition: all 0.3s ease;
         border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+        max-height: calc(100vh - 72px);
+        overflow-y: auto;
     }
     
     .nav-menu.active {
         transform: translateY(0);
         opacity: 1;
+        visibility: visible;
     }
     
     .nav-menu ul {
@@ -1474,30 +1458,255 @@ footer {
     .nav-menu a {
         width: 100%;
         justify-content: center;
-        padding: 12px 20px;
+        padding: 14px 20px;
+        font-size: 15px;
     }
     
     .nav-indicator {
         display: none;
     }
-}
-
-@media (max-width: 480px) {
+    
+    /* 布局优化 */
+    .container {
+        padding: 0 16px;
+    }
+    
+    section {
+        padding: 40px 16px;
+    }
+    
     .hero-title {
         font-size: 28px;
+        margin-bottom: 16px;
+    }
+    
+    .hero-subtitle {
+        font-size: 15px;
+        padding: 0;
     }
     
     .product-hero-title {
-        font-size: 28px;
+        font-size: 32px;
+    }
+    
+    .product-hero-subtitle {
+        font-size: 15px;
+    }
+    
+    .section-title {
+        font-size: 24px;
+        margin-bottom: 24px;
+    }
+    
+    /* 卡片网格优化 */
+    .product-grid, 
+    .feature-grid,
+    .technical-grid,
+    .compatibility-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .intro-content {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    
+    /* 时间线优化 */
+    .timeline-item {
+        flex-direction: column;
+        text-align: center;
+        padding-left: 0;
+    }
+    
+    .timeline-item::before {
+        display: none;
+    }
+    
+    .timeline-badge {
+        position: static;
+        margin-bottom: 12px;
+    }
+    
+    /* 页脚优化 */
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 24px;
+    }
+    
+    .footer-logo {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        width: 100%;
+    }
+    
+    .footer-column {
+        text-align: center;
+        width: 100%;
+    }
+    
+    .footer-column ul {
+        align-items: center;
+    }
+    
+    /* 按钮优化 */
+    .btn {
+        padding: 12px 20px;
+        font-size: 14px;
+        width: 100%;
+        justify-content: center;
     }
     
     .btn-lg {
-        padding: 12px 24px;
+        padding: 14px 24px;
+        font-size: 15px;
+    }
+    
+    /* 联系卡片优化 */
+    .contact-info {
+        gap: 16px;
+    }
+    
+    .contact-item {
+        padding: 20px;
+    }
+    
+    /* 版本卡片优化 */
+    .version-cards {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    
+    .version-card {
+        padding: 24px;
+    }
+    
+    /* 统计卡片优化 */
+    .intro-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .stat-card {
+        padding: 16px;
+    }
+    
+    .stat-number {
+        font-size: 24px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+    }
+    
+    /* 特性卡片优化 */
+    .feature-card {
+        padding: 24px;
+    }
+    
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    /* 技术卡片优化 */
+    .tech-card {
+        padding: 20px;
+    }
+    
+    .tech-card code {
+        font-size: 12px;
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* 更小屏幕优化 */
+    .hero-title {
+        font-size: 24px;
+    }
+    
+    .product-hero-title {
+        font-size: 26px;
+    }
+    
+    .product-hero-subtitle {
         font-size: 14px;
     }
     
     .section-title {
-        font-size: 22px;
+        font-size: 20px;
+    }
+    
+    .btn-lg {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    /* Logo 优化 */
+    .logo-icon {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .logo h1 {
+        font-size: 18px;
+    }
+    
+    .logo .subtitle {
+        font-size: 10px;
+    }
+    
+    /* 统计卡片单列显示 */
+    .intro-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    /* 联系卡片图标调整 */
+    .contact-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    /* 页脚字体调整 */
+    .footer-bottom p {
+        font-size: 12px;
+    }
+    
+    .footer-column a {
+        font-size: 13px;
+    }
+}
+
+/* 平板优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        max-width: 95%;
+    }
+    
+    .product-grid,
+    .feature-grid,
+    .technical-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .hero-title {
+        font-size: 40px;
+    }
+    
+    .product-hero-title {
+        font-size: 42px;
     }
 }
 
