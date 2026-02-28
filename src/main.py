@@ -136,9 +136,11 @@ def cmd_help():
     print("ota_rollback 回滚到上一个版本")
     print("ota_clean  清理更新包文件\n")
 
+# 打印指定字符串
 def cmd_echo(text: str):
     print(f"{text}\n")
 
+# 显示PySpOS版本
 def cmd_osver():
     print(f"PySpOS 版本: {pyspos.OS_VERSION}, 开发阶段: {pyspos.OS_DEVELOP_STAGE}")
     print(f"Python 版本: {platform.python_version()}\n")
@@ -161,6 +163,14 @@ def cmd_recovery():
 
 def cmd_shb():
     print_sunhb()
+    char = '你'
+    print(f"字符：{char}")
+    print(f"十六进制编码：U+{ord(char):04X}")  # 输出 U+AFAF
+    print(f"十进制编码：{ord(char)}")          # 输出 44975
+
+    # 2. 反向：从编码找字符
+    code = ord(char)
+    print(f"编码0x{code:04X}对应的字符：{chr(code)}")  # 输出 你
 
 def cmd_ls():
     items = fs.list_dir()
@@ -169,7 +179,7 @@ def cmd_ls():
     print()
 
 def cmd_finfo(filename: str):
-    info = fs.get_file_info(filename)
+    info = fs.get_file_info(filename) # 获取文件信息
     if info:    
         print(f"{filename} 的文件信息\n大小: {info['size']} 字节, 修改时间: {info['modified']}, 是否为目录: {info['is_dir']}\n")
     else:
@@ -201,7 +211,7 @@ def cmd_open(app_name: str):
         with open(app_path, 'r', encoding='utf-8') as f:
             code = f.read()
 
-        exec_namespace = {
+        exec_namespace = { # 执行命名空间
             '__name__': '__exec__',
             '__builtins__': {
                 'print': print,

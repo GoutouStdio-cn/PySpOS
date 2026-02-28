@@ -1,12 +1,12 @@
 {
-  "version": "3.0.1-pre(重构建)",
-  "release_date": "2026-02-05",
+  "version": "3.0.1-pre",
+  "release_date": "2026-02-28",
   "develop_stage": "beta",
-  "release_notes": "优化项目结构。\n优化网页。\n优化OTA策略。",
-  "download_url": "PySpOS-3.0.1-pre-20260205.zip",
-  "sha256": "64e8cd09f351fa37b18eb0c8adab2e8603262628bec6b6ec2487b449bd203298",
+  "release_notes": "PySpOS 更新包",
+  "download_url": "PySpOS-3.0.1-pre-20260228.zip",
+  "sha256": "7549405d5c585a41836b5b77d2ad265a3555f9689ad8e987c099ba214778a76b",
   "min_version": "3.0.0",
-  "file_size": 37849,
+  "file_size": 38542,
   "changelog": [
     {
       "version": "3.0.1-pre(重构建)",
@@ -25,9 +25,9 @@
       "version": "3.0.1-pre",
       "date": "2026-02-04",
       "type": "beta",
-      "download_url": "PySpOS.zip",
-      "sha256": "64e8cd09f351fa37b18eb0c8adab2e8603262628bec6b6ec2487b449bd203298",
-      "file_size": 79218,
+      "download_url": "PySpOS-3.0.1-pre-20260228.zip",
+      "sha256": "7549405d5c585a41836b5b77d2ad265a3555f9689ad8e987c099ba214778a76b",
+      "file_size": 38542,
       "changes": [
         "支持在线 OTA 更新。我花了很久实现了这个功能",
         "重构优化了部分代码",

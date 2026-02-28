@@ -50,7 +50,7 @@ SPC_ENABLED = False # SpaceConfig is disabled for now, because it is not develop
 SPC_VERSION = NULL # SpaceConfig is not developed yet, so we think its version is NULL
 
 # Select whether to enable Space User Interface.
-SPUI_ENABLED = False # SUI2 is disabled for now, because it is not developed yet.
+SPUI_ENABLED = False # SPUI2 is disabled for now, because it is not developed yet.
 
 # SPUI Version.
 SPUI_VERSION = NULL # SPUI is not developed yet, so we think its version is NULL

@@ -146,7 +146,7 @@ def loop():
             main.handle_command(prompt)
 
         except Exception as e:
-            printk.error(f"{e}")
+            print(f"error: {e}")
 
 # 退出PySpOS
 def exit():

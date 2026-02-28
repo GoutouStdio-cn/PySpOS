@@ -17,6 +17,7 @@ import urllib.request
 import urllib.error
 import hashlib
 import platform
+import re
 
 # 获取启动时间
 boot_time = logk.get_boot_time()
@@ -74,11 +75,14 @@ def compare_versions(v1: str, v2: str) -> int:
                 'rc': 0,
             }
             
+            # 移除版本号中的额外文本（如"(重构建)"）
+            clean_version = version.split('(')[0].strip()
+            
             # 检查是否有后缀
             for suffix, weight in suffix_map.items():
-                if suffix in version.lower():
+                if suffix in clean_version.lower():
                     # 提取基础版本号
-                    base_version = version.lower().split(suffix)[0].rstrip('-')
+                    base_version = clean_version.lower().split(suffix)[0].rstrip('-')
                     # 转换为数字列表
                     parts = list(map(int, base_version.split('.')))
                     # 添加后缀权重作为最后一位
@@ -86,7 +90,7 @@ def compare_versions(v1: str, v2: str) -> int:
                     return parts
             
             # 没有后缀，视为正式版，权重为1
-            parts = list(map(int, version.split('.')))
+            parts = list(map(int, clean_version.split('.')))
             parts.append(1)
             return parts
         
@@ -105,7 +109,8 @@ def compare_versions(v1: str, v2: str) -> int:
             elif p1 < p2:
                 return -1
         return 0
-    except Exception:
+    except Exception as e:
+        logk.printl("ota", f"版本比较失败: {e}", boot_time)
         return 0
 
 # 从云端获取最新版本信息
@@ -368,14 +373,20 @@ def check_cloud_update() -> dict:
         logk.printl("ota", f"发现新版本: {remote_ver}", boot_time)
         # 处理下载URL，确保是完整的URL
         download_url = remote_info.get('download_url', OTA_SERVER_URL + REMOTE_UPDATE_FILE)
+        
+        # 判断是否是重构版（文件名格式为PySpOS-版本-日期.zip）
+        is_rebuild = download_url and re.match(r'PySpOS-[\d.]+-[\d]+\.zip', download_url)
+        
         # 如果是相对路径，转换为完整URL
         if not download_url.startswith('http://') and not download_url.startswith('https://'):
             download_url = OTA_SERVER_URL + download_url
+        
         return {
             'has_update': True,
             'current_version': current_ver,
             'remote_version': remote_ver,
             'download_url': download_url,
+            'is_rebuild': bool(is_rebuild),
             'sha256': remote_info.get('sha256'),
             'release_notes': remote_info.get('release_notes', '')
         }
@@ -398,7 +409,18 @@ def download_and_install_update() -> bool:
         return False
     
     os.makedirs(OTA_PACKAGE_DIR, exist_ok=True)
-    package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
+    
+    # 判断是否是重构版，使用对应的文件名
+    is_rebuild = update_info.get('is_rebuild', False)
+    if is_rebuild:
+        # 如果是重构版，使用version.json中的文件名
+        package_name = update_info['download_url'].split('/')[-1]
+        logk.printl("ota", f"检测到重构版，使用文件名: {package_name}", boot_time)
+    else:
+        # 否则使用默认的update.zip
+        package_name = OTA_PACKAGE_NAME
+    
+    package_path = os.path.join(OTA_PACKAGE_DIR, package_name)
     
     if not download_update_package(update_info['download_url'], package_path):
         return False
@@ -582,32 +604,58 @@ def view_update_history() -> None:
 
 # 检查是否有更新（这个以后可以抓取云端内容检查）
 def check_for_update() -> bool:
+    # 首先检查默认的更新包
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
-    return os.path.exists(package_path) and os.path.isfile(package_path)
+    if os.path.exists(package_path) and os.path.isfile(package_path):
+        return True
+    
+    # 如果默认更新包不存在，检查是否有其他zip文件（如重构版）
+    if os.path.exists(OTA_PACKAGE_DIR):
+        try:
+            for filename in os.listdir(OTA_PACKAGE_DIR):
+                if filename.endswith('.zip'):
+                    return True
+        except Exception as e:
+            logk.printl("ota", f"检查更新包失败: {str(e)}", boot_time)
+    
+    return False
 
 # 清除更新包
 def cleanup_update_package() -> bool:
+    # 首先尝试删除默认的更新包
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
+    deleted = False
+    
     try:
         if os.path.exists(package_path):
             os.remove(package_path)
             logk.printl("ota", f"已删除更新包: {package_path}", boot_time)
-            
-            # 尝试删除整个ota目录（如果为空）
-            try:
-                if os.path.exists(OTA_PACKAGE_DIR) and not os.listdir(OTA_PACKAGE_DIR):
-                    os.rmdir(OTA_PACKAGE_DIR)
-                    logk.printl("ota", "已删除空的ota目录", boot_time)
-            except Exception:
-                pass  # 忽略删除目录的错误
-            
-            return True
-        else:
-            logk.printl("ota", "更新包不存在，无需清除", boot_time)
-            return True
+            deleted = True
     except Exception as e:
-        logk.printl("ota", f"清除更新包失败: {str(e)}", boot_time)
-        return False
+        logk.printl("ota", f"删除更新包失败: {str(e)}", boot_time)
+    
+    # 如果默认更新包不存在，尝试删除其他zip文件（如重构版）
+    if not deleted and os.path.exists(OTA_PACKAGE_DIR):
+        try:
+            for filename in os.listdir(OTA_PACKAGE_DIR):
+                if filename.endswith('.zip'):
+                    package_path = os.path.join(OTA_PACKAGE_DIR, filename)
+                    os.remove(package_path)
+                    logk.printl("ota", f"已删除更新包: {package_path}", boot_time)
+                    deleted = True
+                    break
+        except Exception as e:
+            logk.printl("ota", f"删除更新包失败: {str(e)}", boot_time)
+    
+    # 尝试删除整个ota目录（如果为空）
+    try:
+        if os.path.exists(OTA_PACKAGE_DIR) and not os.listdir(OTA_PACKAGE_DIR):
+            os.rmdir(OTA_PACKAGE_DIR)
+            logk.printl("ota", "已删除空的ota目录", boot_time)
+    except Exception:
+        pass  # 忽略删除目录的错误
+    
+    return deleted
 
 # 获取指定槽位里的PySpOS版本
 def get_version(slot: str) -> str:
@@ -646,7 +694,20 @@ def get_current_version() -> str:
 
 # 获取更新包版本
 def get_update_version() -> str:
+    # 首先尝试默认的更新包
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
+    
+    # 如果默认更新包不存在，查找其他可能的更新包（如重构版）
+    if not os.path.exists(package_path):
+        # 查找OTA_PACKAGE_DIR中的所有zip文件
+        try:
+            for filename in os.listdir(OTA_PACKAGE_DIR):
+                if filename.endswith('.zip'):
+                    package_path = os.path.join(OTA_PACKAGE_DIR, filename)
+                    break
+        except Exception as e:
+            logk.printl("ota", f"查找更新包失败: {str(e)}", boot_time)
+    
     try:
         with zipfile.ZipFile(package_path, 'r') as zip_ref:
             if VERSION_FILE in zip_ref.namelist():
@@ -666,7 +727,19 @@ def install_update() -> bool:
         logk.printl("ota", "版本不兼容", boot_time)
         return False
     
+    # 查找更新包（support do重构版）
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
+    if not os.path.exists(package_path):
+        # 查找OTA_PACKAGE_DIR中的所有zip文件
+        try:
+            for filename in os.listdir(OTA_PACKAGE_DIR):
+                if filename.endswith('.zip'):
+                    package_path = os.path.join(OTA_PACKAGE_DIR, filename)
+                    logk.printl("ota", f"找到更新包: {filename}", boot_time)
+                    break
+        except Exception as e:
+            logk.printl("ota", f"查找更新包失败: {str(e)}", boot_time)
+    
     target_slot = os.path.join(root_dir, get_other_slot())
     current_ver = get_current_version()
     update_ver = get_update_version()

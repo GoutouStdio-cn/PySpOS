@@ -3,30 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PySpOS - Python 模拟操作系统</title>
+    <title>GoutouStdio - 科技创新工作室</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>
 </head>
 <body class="home-page">
     <header>
         <div class="container">
             <div class="logo">
-                <h1>PySpOS</h1>
-                <span class="version">v3.0.1-pre</span>
+                <div class="logo-icon">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <div>
+                    <h1>GoutouStdio</h1>
+                    <span class="subtitle">科技创新工作室</span>
+                </div>
             </div>
             <div class="nav-toggle" id="nav-toggle">
                 <i class="fas fa-bars"></i>
             </div>
             <nav class="nav-menu" id="nav-menu">
                 <ul>
-                    <li><a href="/index.html" class="nav-link active">首页</a></li>
-                    <li><a href="/ota/index.html" class="nav-link">OTA 更新</a></li>
-                    <li><a href="/ota/releases.html" class="nav-link">版本历史</a></li>
-                    <li><a href="https://github.com/GoutouStdio-cn/PySpOS" target="_blank" class="nav-link">GitHub</a></li>
+                    <li><a href="#home" class="nav-link active">首页</a></li>
+                    <li><a href="pyspos.html" class="nav-link">PySpOS</a></li>
+                    <li><a href="spaceos6.html" class="nav-link">SpaceOS 6</a></li>
+                    <li><a href="spaceos7.html" class="nav-link">SpaceOS 7</a></li>
+                    <li><a href="#history" class="nav-link">发展历程</a></li>
+                    <li><a href="#about" class="nav-link">关于我们</a></li>
+                    <li><a href="#contact" class="nav-link">联系我们</a></li>
+                    <li><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
                 </ul>
                 <div class="nav-indicator" id="nav-indicator"></div>
             </nav>
@@ -34,551 +43,218 @@
     </header>
 
     <main>
-        <section class="hero">
+        <section class="hero" id="home">
             <div class="container">
-                <h2>欢迎使用 PySpOS</h2>
-                <p class="subtitle">一个使用 Python 制作的模拟操作系统，方便让新手理解操作系统基本操作</p>
-                <div class="hero-buttons">
-                    <a href="/ota/index.html" class="btn btn-primary">下载更新 <i class="fas fa-download"></i></a>
-                    <a href="https://github.com/GoutouStdio-cn/PySpOS/releases/download/pre_version/PySpOS.zip" class="btn btn-secondary">下载源代码 <i class="fas fa-code"></i></a>
+                <div class="hero-content">
+                    <h1 class="hero-title">构建未来操作系统</h1>
+                    <p class="hero-subtitle">我们致力于研发下一代高性能、高安全性的操作系统解决方案。从 MP4 架构到混合内核，我们不断突破技术边界。</p>
+                    <div class="hero-buttons">
+                        <a href="pyspos.html" class="btn btn-primary btn-lg">
+                            <i class="fas fa-python"></i>
+                            PySpOS
+                        </a>
+                        <a href="spaceos6.html" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-space-shuttle"></i>
+                            SpaceOS 6
+                        </a>
+                        <a href="spaceos7.html" class="btn btn-primary btn-lg">
+                            <i class="fas fa-rocket"></i>
+                            SpaceOS 7
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section class="features">
+        <section class="history" id="history">
             <div class="container">
-                <h2>系统特性</h2>
+                <h2 class="section-title">发展历程</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-year">2022</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">
+                                <i class="fas fa-microchip"></i> "MP4"操作系统：狗头OS
+                            </div>
+                            <p>（以下我指JiTianYu）GoutouStdio 工作室正式创立，我看到网上的狗头os项目，正式开始了"研发"，最后得到5000粉丝</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2023</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">
+                                <i class="fas fa-code"></i> 抄袭与合作
+                            </div>
+                            <p>开始抄袭别人的代码，不过我抄的代码的那个创作者不知道咋的就认识了，然后我俩就开始互相学习（</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2024</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">
+                                <i class="fas fa-rocket"></i> VimdropOS诞生，成功被激励
+                            </div>
+                            <p>VimdropOS（由 ViudiraTech 打造）正式发布，我们基于它制作了第一版 SpaceOS，开启了新的篇章。</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2025</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">
+                                <i class="fas fa-memory"></i> UEFI 研究与 PySpOS
+                            </div>
+                            <p>开始深入研究 UEFI，同时利用 ViudiraTech 的 Uinxed-Kernel 项目，正式开始研发 PySpOS。</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2026</div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">
+                                <i class="fas fa-crown"></i> 自研操作系统
+                            </div>
+                            <p>UEFI 终于完全理解，开始完全自研操作系统。目前项目已完成约二分之一，正在稳步推进中。（用户态没做好）</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features" id="about">
+            <div class="container">
+                <h2 class="section-title">技术优势</h2>
                 <div class="feature-grid">
                     <div class="feature-card">
-                        <h3>跨平台支持</h3>
-                        <p>支持 Windows 7 及以上、Linux 和 MacOS 系统</p>
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h3>高性能内核</h3>
+                        <p>从 PySpOS 的 Python 模拟到 SpaceOS 系列的混合内核架构，我们始终坚持高性能设计原则，确保系统流畅运行。</p>
                     </div>
                     <div class="feature-card">
-                        <h3>OTA 更新</h3>
-                        <p>支持从云端下载和安装系统更新</p>
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>高安全性</h3>
+                        <p>Ring 0-3 分层权限管理，结合自研文件系统与安全引导机制，全方位保障系统安全。</p>
                     </div>
                     <div class="feature-card">
-                        <h3>Bootloader 管理</h3>
-                        <p>支持 Bootloader 锁定/解锁和 ROOT 权限管理</p>
+                        <div class="feature-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3>模块化设计</h3>
+                        <p>清晰的模块划分与接口定义，支持 OTA 在线更新，方便功能扩展与维护。</p>
                     </div>
                     <div class="feature-card">
-                        <h3>双槽位系统</h3>
-                        <p>A/B 槽位设计，支持安全更新和回滚</p>
+                        <div class="feature-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3>开源精神</h3>
+                        <p>我们致力于开源社区建设，所有核心代码均在 GitHub 开源，欢迎开发者共同参与。</p>
                     </div>
                     <div class="feature-card">
-                        <h3>应用系统</h3>
-                        <p>支持运行自定义 Python 应用和 SPF 可执行文件</p>
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3>持续创新</h3>
+                        <p>从 SPF 文件格式到 SPFS 文件系统，我们不断探索操作系统技术前沿。</p>
                     </div>
                     <div class="feature-card">
-                        <h3>恢复模式</h3>
-                        <p>内置恢复模式，可修复系统问题</p>
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>社区驱动</h3>
+                        <p>由 GoutouStdio 工作室主导，社区开发者共同维护，打造真正属于开发者的操作系统。</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="platforms">
+        <section class="contact" id="contact">
             <div class="container">
-                <h2>支持平台</h2>
-                <div class="platform-list">
-                    <div class="platform-item">
-                        <i class="fa-brands fa-windows"></i>
-                        <span>Windows 7 及以上</span>
-                        <span class="recommended">推荐</span>
-                    </div>
-                    <div class="platform-item">
-                        <i class="fa-brands fa-linux"></i>
-                        <span>Linux</span>
-                    </div>
-                    <div class="platform-item">
-                        <i class="fa-brands fa-apple"></i>
-                        <span>MacOS</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="quickstart">
-            <div class="container">
-                <h2>快速开始</h2>
-                <p style="margin-bottom: 20px; color: #e5e5e5;">注意：克隆项目需要良好的网络环境。如果遇到网络问题，请尝试使用代理。</p>
-                <div class="step-list">
-                    <div class="step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <h3>克隆仓库</h3>
-                            <pre><code>git clone https://github.com/GoutouStdio-cn/PySpOS.git</code></pre>
+                <h2 class="section-title">联系我们</h2>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>邮箱</h4>
+                            <div class="email-primary">
+                                <a href="mailto:goutoustdio@outlook.com">goutoustdio@outlook.com</a>
+                            </div>
+                            <div class="email-secondary">
+                                <a href="mailto:goutougroup8888@outlook.com">goutougroup8888@outlook.com</a>
+                            </div>
                         </div>
                     </div>
-                    <div class="step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <h3>进入目录</h3>
-                            <pre><code>cd PySpOS</code></pre>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fab fa-github"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>GitHub</h4>
+                            <p><a href="https://github.com/GoutouStdio-cn" target="_blank">github.com/GoutouStdio-cn</a></p>
                         </div>
                     </div>
-                    <div class="step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <h3>运行系统</h3>
-                            <pre><code>python main.py</code></pre>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>官方网站</h4>
+                            <p><a href="https://pyspos.us.ci" target="_blank">pyspos.us.ci</a></p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="contributors">
+        <footer>
             <div class="container">
-                <h2>贡献者</h2>
-                <div class="contributor-list">
-                    <div class="contributor">
-                        <div class="contributor-avatar">G</div>
-                        <div class="contributor-info">
-                            <h4>GoutouStdio-cn</h4>
-                            <p>项目创建者和主要开发者</p>
+                <div class="footer-content">
+                    <div class="footer-logo">
+                        <div class="logo-icon">
+                            <i class="fas fa-cube"></i>
+                        </div>
+                        <div>
+                            <h3>GoutouStdio</h3>
+                            <p>科技创新工作室</p>
                         </div>
                     </div>
-                    <div class="contributor">
-                        <div class="contributor-avatar">王</div>
-                        <div class="contributor-info">
-                            <h4>王俊X</h4>
-                            <p>贡献者</p>
+                    <div class="footer-links">
+                        <div class="footer-column">
+                            <h4>产品</h4>
+                            <ul>
+                                <li><a href="#pyspos">PySpOS</a></li>
+                                <li><a href="#spaceos6">SpaceOS 6</a></li>
+                                <li><a href="#spaceos7">SpaceOS 7</a></li>
+                            </ul>
                         </div>
-                    </div>
-                    <div class="contributor">
-                        <div class="contributor-avatar">陈</div>
-                        <div class="contributor-info">
-                            <h4>陈X</h4>
-                            <p>贡献者</p>
+                        <div class="footer-column">
+                            <h4>资源</h4>
+                            <ul>
+                                <li><a href="#history">发展历程</a></li>
+                                <li><a href="#about">关于我们</a></li>
+                                <li><a href="#contact">联系我们</a></li>
+                                <li><a href="https://github.com/GoutouStdio-cn" target="_blank">GitHub</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-column">
+                            <h4>法律</h4>
+                            <ul>
+                                <li><a href="#">隐私政策</a></li>
+                                <li><a href="#">使用条款</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2022~2026 GoutouStdio. Open all rights.</p>
+                </div>
             </div>
-        </section>
+        </footer>
     </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2022~2026 GoutouStdio. 保留所有权利。</p>
-            <p>PySpOS 模拟操作系统基于Python开发。</p>
-        </div>
-    </footer>
-
-    <script>
-        // 检查是否是从其他页面返回的
-        function isReturningFromOtherPage() {
-            return sessionStorage.getItem('returningFromOtherPage') === 'true';
-        }
-
-        // 设置返回状态
-        function setReturningFromOtherPage() {
-            sessionStorage.setItem('returningFromOtherPage', 'true');
-        }
-
-        // 清除返回状态
-        function clearReturningFromOtherPage() {
-            sessionStorage.removeItem('returningFromOtherPage');
-        }
-
-        // 导航菜单切换和指示器动画
-        document.addEventListener('DOMContentLoaded', function() {
-            const navToggle = document.getElementById('nav-toggle');
-            const navMenu = document.getElementById('nav-menu');
-            const navIndicator = document.getElementById('nav-indicator');
-            const navLinks = document.querySelectorAll('.nav-link');
-            
-            let isInitialized = false;
-            let resizeTimeout;
-            
-            // 检查是否是从其他页面返回的，如果是则移除header动画
-            if (isReturningFromOtherPage()) {
-                const header = document.querySelector('header');
-                if (header) {
-                    header.style.animation = 'none';
-                }
-                clearReturningFromOtherPage();
-            }
-            
-            // 初始化导航指示器位置
-            function initNavIndicator() {
-                const activeLink = document.querySelector('.nav-link.active');
-                if (activeLink && navIndicator) {
-                    const rect = activeLink.getBoundingClientRect();
-                    const navRect = navMenu.getBoundingClientRect();
-                    const targetWidth = rect.width;
-                    const targetLeft = rect.left - navRect.left;
-                    
-                    // 初始设置，无过渡效果
-                    navIndicator.style.transition = 'none';
-                    navIndicator.style.width = `${targetWidth}px`;
-                    navIndicator.style.transform = `translateX(${targetLeft}px)`;
-                    navIndicator.offsetHeight;
-                    
-                    // 启用过渡效果
-                    navIndicator.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                    isInitialized = true;
-                }
-            }
-            
-            // 获取当前指示器位置
-            function getCurrentIndicatorPosition() {
-                if (!navIndicator) return { left: 0, width: 0 };
-                const transform = navIndicator.style.transform;
-                const width = parseInt(navIndicator.style.width) || 0;
-                const left = transform ? parseInt(transform.match(/translateX\((\d+)px\)/)?.[1]) || 0 : 0;
-                return { left, width };
-            }
-            
-            // 更新导航指示器位置（超丝滑动画）
-            function updateNavIndicator(target, isHover = false) {
-                if (target && navIndicator) {
-                    requestAnimationFrame(() => {
-                        const rect = target.getBoundingClientRect();
-                        const navRect = navMenu.getBoundingClientRect();
-                        const targetWidth = rect.width;
-                        const targetLeft = rect.left - navRect.left;
-                        
-                        const currentPos = getCurrentIndicatorPosition();
-                        
-                        // 计算移动距离和方向
-                        const distance = Math.abs(targetLeft - currentPos.left);
-                        const isMovingRight = targetLeft > currentPos.left;
-                        const isMovingLeft = targetLeft < currentPos.left;
-                        
-                        // 短距离快速，长距离稍慢但保持流畅
-                        const baseDuration = 0.35; // 基础时长（更短更灵敏）
-                        const distanceFactor = Math.min(distance / 150, 0.5); // 距离因子（限制最大影响）
-                        const transitionDuration = `${baseDuration + (distanceFactor * 0.15)}s`;
-                        
-                        // 使用超丝滑~的贝塞尔曲线
-                        const easing = 'cubic-bezier(0.25, 0.1, 0.25, 1)';
-                        
-                        // 设置动画属性（分别控制transform和width）
-                        navIndicator.style.transition = `transform ${transitionDuration} ${easing}, width ${transitionDuration} ${easing}`;
-                        
-                        // 应用新的位置和宽度
-                        navIndicator.style.width = `${targetWidth}px`;
-                        navIndicator.style.transform = `translateX(${targetLeft}px)`;
-                        
-                        // 优化移动方向的视觉反馈
-                        if (isMovingRight) {
-                            navIndicator.style.background = 'linear-gradient(90deg, var(--primary-color), #3b82f6)';
-                        } else if (isMovingLeft) {
-                            navIndicator.style.background = 'linear-gradient(90deg, #3b82f6, var(--primary-color))';
-                        }
-                        
-                        // 添加微妙的缩放效果增强视觉流畅度
-                        navIndicator.style.transform += ' scaleY(1.1)';
-                        setTimeout(() => {
-                            navIndicator.style.transform = `translateX(${targetLeft}px) scaleY(1)`;
-                        }, 100);
-                    });
-                }
-            }
-            
-            // 全局变量：用于控制请求和动画
-            let currentFetchController = null;
-            let isNavigating = false;
-            let navigationQueue = [];
-            
-
-            
-            // SPA导航，加载页面内容
-            function loadPageContent(url) {
-                // 如果正在导航，将请求加入队列
-                if (isNavigating) {
-                    // 取消当前请求
-                    if (currentFetchController) {
-                        currentFetchController.abort();
-                        currentFetchController = null;
-                    }
-                    
-                    // 清空队列，只保留最新的请求
-                    navigationQueue = [url];
-                    return;
-                }
-                
-                // 设置导航状态
-                isNavigating = true;
-                
-                // 显示加载状态
-                const main = document.querySelector('main');
-                requestAnimationFrame(() => {
-                    main.style.opacity = '0.7';
-                    main.style.transition = 'opacity 0.2s ease';
-                });
-                
-                // 创建新的AbortController用于取消请求
-                const controller = new AbortController();
-                currentFetchController = controller;
-                
-                // 处理相对路径
-                const fullUrl = new URL(url, window.location.origin).href;
-                
-                // 使用fetch API加载页面
-                fetch(fullUrl, { signal: controller.signal })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.text();
-                    })
-                    .then(html => {
-                        // 如果请求已被取消，直接返回
-                        if (controller.signal.aborted) {
-                            return;
-                        }
-                        
-                        // 解析HTML并提取主要内容
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const newMain = doc.querySelector('main');
-                        
-                        if (newMain) {
-                            // 使用requestAnimationFrame优化DOM操作
-                            requestAnimationFrame(() => {
-                                // 直接使用innerHTML替换，性能最优
-                                main.innerHTML = newMain.innerHTML;
-                                
-                                // 更新页面标题
-                                const newTitle = doc.querySelector('title');
-                                if (newTitle) {
-                                    document.title = newTitle.textContent;
-                                }
-                                
-                                // 恢复透明度（使用requestAnimationFrame）
-                                requestAnimationFrame(() => {
-                                    main.style.opacity = '1';
-                                    main.style.transition = 'opacity 0.3s ease';
-                                });
-                                
-                                // 延迟执行页面脚本，避免阻塞UI
-                                setTimeout(() => {
-                                    executePageScripts(doc, url);
-                                }, 50);
-                                
-                                // 更新URL
-                                window.history.pushState({}, '', url);
-                            });
-                        }
-                        
-                        // 完成导航
-                        isNavigating = false;
-                        currentFetchController = null;
-                        
-                        // 处理队列中的下一个请求
-                        if (navigationQueue.length > 0) {
-                            const nextUrl = navigationQueue.shift();
-                            // 立即执行下一个请求，确保动画流畅
-                            loadPageContent(nextUrl);
-                        }
-                    })
-                    .catch(error => {
-                        // 如果是取消请求的错误，忽略
-                        if (error.name === 'AbortError') {
-                            console.log('请求已取消:', url);
-                            return;
-                        }
-                        
-                        console.error('加载页面失败:', error);
-                        
-                        // 完成导航（即使失败）
-                        isNavigating = false;
-                        currentFetchController = null;
-                        
-                        // 如果AJAX失败，回退到传统导航
-                        window.location.href = normalizedUrl;
-                    });
-            }
-            
-
-            
-
-            
-            // 规范化URL，处理相对路径和绝对路径
-            // 检查两个URL是否指向同一页面
-            function isSamePage(url1, url2) {
-                // 处理完整的URL（包括http://和https://）
-                const getPath = (url) => {
-                    if (url.startsWith('http://') || url.startsWith('https://')) {
-                        return new URL(url).pathname;
-                    }
-                    return url;
-                };
-                
-                const path1 = getPath(url1);
-                const path2 = getPath(url2);
-                
-                // 比较路径
-                return path1 === path2;
-            }
-            
-            // 执行页面特定的JavaScript
-            function executePageScripts(doc, url) {
-                // 获取页面中的所有script标签
-                const scripts = doc.querySelectorAll('script');
-                
-                scripts.forEach(oldScript => {
-                    // 跳过导航相关的脚本
-                    const scriptContent = oldScript.textContent;
-                    if (scriptContent && (
-                        scriptContent.includes('function loadPageContent') ||
-                        scriptContent.includes('function isSamePage') ||
-                        scriptContent.includes('function executePageScripts') ||
-                        scriptContent.includes('function initNavIndicator') ||
-                        scriptContent.includes('function updateNavIndicator') ||
-                        scriptContent.includes('function toggleMenu') ||
-                        scriptContent.includes('let isNavigating') ||
-                        scriptContent.includes('let currentFetchController') ||
-                        scriptContent.includes('let navigationQueue') ||
-                        scriptContent.includes('let isInitialized') ||
-                        scriptContent.includes('let resizeTimeout') ||
-                        scriptContent.includes('const navLinks') ||
-                        scriptContent.includes('const navMenu') ||
-                        scriptContent.includes('const navIndicator') ||
-                        scriptContent.includes('const navToggle') ||
-                        scriptContent.includes('addEventListener(\'click\'') ||
-                        scriptContent.includes('addEventListener(\'popstate\'') ||
-                        scriptContent.includes('addEventListener(\'resize\'') ||
-                        scriptContent.includes('window.history.pushState') ||
-                        scriptContent.includes('window.history.replaceState')
-                    )) {
-                        return;
-                    }
-                    
-                    if (oldScript.src) {
-                        // 外部脚本 - 创建新的script标签
-                        const newScript = document.createElement('script');
-                        newScript.src = oldScript.src;
-                        if (oldScript.type) newScript.type = oldScript.type;
-                        if (oldScript.async) newScript.async = oldScript.async;
-                        if (oldScript.defer) newScript.defer = oldScript.defer;
-                        document.head.appendChild(newScript);
-                    } else if (oldScript.textContent.trim()) {
-                        // 使用eval执行（注意安全）
-                        try {
-                            eval(oldScript.textContent);
-                        } catch (e) {
-                            console.warn('执行内联脚本时出错:', e);
-                        }
-                    }
-                });
-            }
-            
-            // 处理浏览器前进后退按钮
-            window.addEventListener('popstate', function() {
-                // 当用户点击前进后退按钮时，重新加载当前页面内容
-                const currentPath = window.location.pathname;
-                loadPageContent(currentPath);
-            });
-            
-            // 检查当前URL是否正确，如果不正确则重定向
-            // 初始化导航指示器
-            initNavIndicator();
-            
-            // 添加导航链接悬停事件（只添加绿色发光效果，不移动指示器）
-            navLinks.forEach(link => {
-                link.addEventListener('mouseenter', function() {
-                    // 鼠标悬停时只添加绿色发光效果，不移动指示器
-                }, { passive: true });
-                
-                link.addEventListener('mouseleave', function() {
-                    // 鼠标离开时发光效果会自动移除
-                }, { passive: true });
-                
-                link.addEventListener('click', function(e) {
-                    // 阻止默认的链接跳转行为
-                    e.preventDefault();
-                    
-                    // 如果是外部链接（如GitHub），直接跳转
-                    if (this.getAttribute('target') === '_blank' || this.href.includes('github.com')) {
-                        window.open(this.href, '_blank');
-                        return;
-                    }
-                    
-                    // 检查是否已经是当前页面
-                    const targetUrl = this.getAttribute('href');
-                    const currentUrl = window.location.pathname;
-                    const isCurrentPage = isSamePage(currentUrl, targetUrl);
-                    
-                    // 更新导航状态
-                    navLinks.forEach(navLink => navLink.classList.remove('active'));
-                    this.classList.add('active');
-                    updateNavIndicator(this, false);
-                    if (navMenu.classList.contains('active')) {
-                        navMenu.classList.remove('active');
-                    }
-                    
-                    // 如果不是当前页面，才执行SPA导航
-                    if (!isCurrentPage) {
-                        // 直接执行导航，确保动画流畅
-                        loadPageContent(targetUrl);
-                    }
-                }, { passive: false });
-            });
-            
-            // 窗口大小变化时重新初始化导航指示器（防抖）
-            window.addEventListener('resize', function() {
-                if (resizeTimeout) {
-                    clearTimeout(resizeTimeout);
-                }
-                resizeTimeout = setTimeout(initNavIndicator, 100);
-            }, { passive: true });
-            
-            if (navToggle && navMenu) {
-                let isMenuOpen = false;
-                
-                // 切换菜单函数
-                function toggleMenu(e) {
-                    if (e) {
-                        e.stopPropagation();
-                    }
-                    isMenuOpen = !isMenuOpen;
-                    if (isMenuOpen) {
-                        navMenu.classList.add('active');
-                    } else {
-                        navMenu.classList.remove('active');
-                    }
-                }
-                
-                // 关闭菜单函数
-                function closeMenu() {
-                    if (isMenuOpen) {
-                        isMenuOpen = false;
-                        navMenu.classList.remove('active');
-                    }
-                }
-                
-                // 添加点击事件监听器
-                navToggle.addEventListener('click', toggleMenu, { passive: false });
-                
-                // 添加触摸事件监听器，确保在移动设备上也能响应
-                navToggle.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    toggleMenu(e);
-                }, { passive: false });
-                
-                // 点击菜单项后关闭菜单
-                navLinks.forEach(link => {
-                    link.addEventListener('click', closeMenu, { passive: true });
-                });
-                
-                // 点击页面其他地方关闭菜单
-                document.addEventListener('click', function(e) {
-                    if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                        closeMenu();
-                    }
-                }, { passive: true });
-                
-                // ESC键关闭菜单
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape' && isMenuOpen) {
-                        closeMenu();
-                    }
-                }, { passive: true });
-            }
-        });
-    </script>
+    <script src="js/main.js"></script>
 </body>
 </html>
