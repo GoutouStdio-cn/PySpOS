@@ -1425,6 +1425,11 @@ footer {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    /* 隐藏桌面版 GitHub 链接 */
+    .github-link-desktop {
+        display: none;
+    }
+    
     /* 导航栏优化 */
     .nav-toggle {
         display: block;
@@ -1443,6 +1448,7 @@ footer {
         transform: translateY(-100%);
         opacity: 0;
         visibility: hidden;
+        pointer-events: none;
         transition: all 0.3s ease;
         border-bottom: 1px solid rgba(99, 102, 241, 0.2);
         max-height: calc(100vh - 72px);
@@ -1454,6 +1460,7 @@ footer {
         transform: translateY(0);
         opacity: 1;
         visibility: visible;
+        pointer-events: auto;
     }
     
     .nav-menu ul {
@@ -1470,8 +1477,12 @@ footer {
         font-weight: 500;
     }
     
-    /* GitHub 链接特殊样式 */
-    .nav-menu a[href*="github.com"] {
+    /* 移动端 GitHub 链接 - 在菜单底部显示 */
+    .github-link-mobile {
+        display: block !important;
+    }
+    
+    .github-link-mobile a {
         background: rgba(99, 102, 241, 0.15);
         margin-top: 16px;
         border-top: 1px solid rgba(99, 102, 241, 0.2);
