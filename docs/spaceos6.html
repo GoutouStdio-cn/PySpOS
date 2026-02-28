@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceOS 6 - 高性能桌面操作系统 | GoutouStdio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+</head>
+<body class="product-page spaceos6-page">
+    <header>
+        <div class="container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <div>
+                    <h1>GoutouStdio</h1>
+                    <span class="subtitle">科技创新工作室</span>
+                </div>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            <nav class="nav-menu" id="nav-menu">
+                <ul>
+                    <li><a href="index.html">首页</a></li>
+                    <li><a href="pyspos.html">PySpOS</a></li>
+                    <li><a href="spaceos6.html" class="active">SpaceOS 6</a></li>
+                    <li><a href="spaceos7.html">SpaceOS 7</a></li>
+                    <li><a href="index.html#history">发展历程</a></li>
+                    <li><a href="index.html#about">关于我们</a></li>
+                    <li><a href="index.html#contact">联系我们</a></li>
+                    <li><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
+                </ul>
+                <div class="nav-indicator" id="nav-indicator"></div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="product-hero" id="spaceos6-hero" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(139, 92, 246, 0.05) 100%);">
+            <div class="container">
+                <div class="product-hero-content">
+                    <div class="hero-badge" style="border-color: rgba(16, 185, 129, 0.4);">
+                        <i class="fas fa-space-shuttle" style="color: #10b981;"></i>
+                        <span>高性能桌面操作系统</span>
+                    </div>
+                    <h1 class="product-hero-title" style="color: #10b981;">SpaceOS 6</h1>
+                    <p class="product-hero-subtitle">基于 Uinxed-Kernel 构建，搭载 SPUI 1.0 界面、SPF Parser 2.0、SPFS 2.0 文件系统</p>
+                    <div class="hero-buttons">
+                        <a href="#intro" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <i class="fas fa-info-circle"></i>
+                            了解 SpaceOS 6
+                        </a>
+                        <a href="#features" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-list"></i>
+                            核心特性
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="product-intro" id="intro">
+            <div class="container">
+                <h2 class="section-title">项目介绍</h2>
+                <div class="intro-content">
+                    <div class="intro-text">
+                        <h3><i class="fas fa-question-circle" style="color: #10b981;"></i> 什么是 SpaceOS 6？</h3>
+                        <p>SpaceOS 6 是我们推出的高性能桌面操作系统，基于 Uinxed-Kernel（由 ViudiraTech 打造）进行深度定制和优化。它集成了我们自研的多项核心技术，为用户提供流畅、稳定的桌面体验。</p>
+                        <p>从 2024 年开始研发基于 Uinxed-Kernel 的 SpaceOS，我们不断迭代优化，最终推出了 SpaceOS 6 这一成熟稳定版本。</p>
+                        
+                        <h3><i class="fas fa-terminal" style="color: #10b981;"></i> Uinxed-Kernel 内核</h3>
+                        <p>SpaceOS 6 基于 Uinxed-Kernel 构建，这是由 ViudiraTech 开发的 64 位宏内核。Uinxed-Kernel 运行在 CPU Ring 0 最高特权级，提供完整的系统调用接口、进程调度、内存管理和文件系统支持。作为宏内核架构，所有核心组件（进程管理、内存管理、文件系统、设备驱动等）都运行在内核空间，确保高效的系统性能和低延迟的硬件访问。</p>
+                        
+                        <h3><i class="fas fa-desktop" style="color: #10b981;"></i> SPUI 1.0 界面</h3>
+                        <p>SpaceOS User Interface 1.0 是我们自主研发的桌面环境，提供现代化的用户交互体验。界面简洁直观，操作流畅高效，不适合日常办公和娱乐使用。</p>
+                        
+                        <h3><i class="fas fa-microchip" style="color: #10b981;"></i> 硬件支持</h3>
+                        <p>SpaceOS 6 支持现代硬件技术，包括 AHCI、NVMe 存储控制器，SB16 声卡，以及 JPG 图片硬件加速。分区表支持让多系统部署更加灵活。</p>
+                    </div>
+                    <div class="intro-stats">
+                        <div class="stat-item" style="border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+                            <div class="stat-number" style="color: #10b981;">6.0</div>
+                            <div class="stat-label">版本号</div>
+                        </div>
+                        <div class="stat-item" style="border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+                            <div class="stat-number" style="color: #10b981;">2024</div>
+                            <div class="stat-label">首次发布</div>
+                        </div>
+                        <div class="stat-item" style="border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+                            <div class="stat-number" style="color: #10b981;">SPUI</div>
+                            <div class="stat-label">桌面环境</div>
+                        </div>
+                        <div class="stat-item" style="border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+                            <div class="stat-number" style="color: #10b981;">SPFS</div>
+                            <div class="stat-label">文件系统</div>
+                        </div>
+                        <div class="stat-item" style="border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+                            <div class="stat-number" style="color: #10b981;">x86</div>
+                            <div class="stat-label">架构支持</div>
+                        </div>
+                        <div class="stat-item" style="border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
+                            <div class="stat-number" style="color: #10b981;">GUI</div>
+                            <div class="stat-label">图形界面</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-section" id="features">
+            <div class="container">
+                <h2 class="section-title">核心特性</h2>
+                <div class="features-grid">
+                    <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                        <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1);">
+                            <i class="fas fa-desktop" style="color: #10b981;"></i>
+                        </div>
+                        <h3>SPUI 1.0 桌面</h3>
+                        <p>自研的 SpaceOS User Interface 1.0，提供现代化的桌面体验。支持窗口管理、任务栏、开始菜单等功能。</p>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                        <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1);">
+                            <i class="fas fa-file-code" style="color: #10b981;"></i>
+                        </div>
+                        <h3>SPF Parser 2.0</h3>
+                        <p>支持 SPF (SpaceOS Format) 可执行文件的解析和执行。SPF 2.0 版本带来更好的性能和更多系统调用支持。</p>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                        <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1);">
+                            <i class="fas fa-image" style="color: #10b981;"></i>
+                        </div>
+                        <h3>JPG 图片解析</h3>
+                        <p>原生支持 JPG 图片格式的解析和显示，无需第三方库。支持多种尺寸和压缩质量。</p>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                        <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1);">
+                            <i class="fas fa-volume-up" style="color: #10b981;"></i>
+                        </div>
+                        <h3>SB16 声卡支持</h3>
+                        <p>完整支持 SB16 声卡，提供高质量的音频输出。支持 PCM 音频播放和 MIDI 音乐合成。</p>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                        <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1);">
+                            <i class="fas fa-hdd" style="color: #10b981;"></i>
+                        </div>
+                        <h3>分区表与存储</h3>
+                        <p>支持分区表、AHCI、NVMe 等现代存储技术。支持多分区管理和引导加载器配置。</p>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                        <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1);">
+                            <i class="fas fa-database" style="color: #10b981;"></i>
+                        </div>
+                        <h3>SPFS 2.0 文件系统</h3>
+                        <p>自研的高性能文件系统 SPFS 2.0，提供卓越的文件操作性能。支持文件权限管理和日志功能。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="technical-section" id="technical">
+            <div class="container">
+                <h2 class="section-title">技术规格</h2>
+                <div class="technical-grid">
+                    <div class="tech-card">
+                        <h4><i class="fas fa-terminal"></i> Uinxed-Kernel</h4>
+                        <p>由 ViudiraTech 开发的 64 位宏内核，运行在 Ring 0 最高特权级。提供完整的系统调用、进程调度、内存管理和文件系统支持。</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4><i class="fas fa-microchip"></i> 宏内核架构</h4>
+                        <p>所有核心组件（进程管理、内存管理、文件系统、设备驱动）都运行在内核空间，确保高效的系统性能和低延迟的硬件访问。</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4><i class="fas fa-shield-alt"></i> Ring 0 特权级</h4>
+                        <p>内核运行在 CPU 最高特权级 Ring 0，拥有对硬件的完全访问权限，实现高效的系统资源管理和硬件控制。</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4><i class="fas fa-memory"></i> 内存管理</h4>
+                        <p>支持分页内存管理，提供内存保护机制。优化内存分配算法，减少碎片化。</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4><i class="fas fa-hdd"></i> 存储支持</h4>
+                        <p>支持 IDE、AHCI、NVMe 存储接口。支持 MBR 和 GPT 分区表格式。</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4><i class="fas fa-music"></i> 音频系统</h4>
+                        <p>SB16 兼容音频驱动，支持 DMA 传输。提供音频混合和音量控制功能。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="compatibility-section" id="compatibility">
+            <div class="container">
+                <h2 class="section-title">系统要求</h2>
+                <div class="compatibility-grid">
+                    <div class="compat-item">
+                        <i class="fas fa-microchip"></i>
+                        <h4>处理器</h4>
+                        <p>x86 架构处理器，支持 Pentium 及以上</p>
+                    </div>
+                    <div class="compat-item">
+                        <i class="fas fa-memory"></i>
+                        <h4>内存</h4>
+                        <p>最低 64MB，推荐 128MB 及以上</p>
+                    </div>
+                    <div class="compat-item">
+                        <i class="fas fa-hdd"></i>
+                        <h4>存储</h4>
+                        <p>至少 500MB 可用空间</p>
+                    </div>
+                    <div class="compat-item">
+                        <i class="fas fa-tv"></i>
+                        <h4>显卡</h4>
+                        <p>VESA 兼容显卡，支持 800x600 分辨率</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <div>
+                        <h3>GoutouStdio</h3>
+                        <p>科技创新工作室</p>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>产品</h4>
+                        <ul>
+                            <li><a href="pyspos.html">PySpOS</a></li>
+                            <li><a href="spaceos6.html">SpaceOS 6</a></li>
+                            <li><a href="spaceos7.html">SpaceOS 7</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>关于</h4>
+                        <ul>
+                            <li><a href="index.html#history">发展历程</a></li>
+                            <li><a href="index.html#about">关于我们</a></li>
+                            <li><a href="index.html#contact">联系我们</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2022~2026 GoutouStdio. 保留所有权利。</p>
+                <p>SpaceOS 6 是 GoutouStdio 开发的高性能桌面操作系统。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
