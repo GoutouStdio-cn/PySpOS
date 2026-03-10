@@ -6,10 +6,11 @@
     <title>GoutouStdio - 科技创新工作室</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&family=Orbitron:wght@400;500;700;900&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%234f46e5' rx='20'/><text x='50' y='72' font-size='65' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>G</text></svg>">
 </head>
 <body class="home-page">
     <header>
@@ -25,6 +26,10 @@
             </div>
             <div class="nav-toggle" id="nav-toggle">
                 <i class="fas fa-bars"></i>
+                <i class="fas fa-times"></i>
+            </div>
+            <div class="theme-toggle" id="theme-toggle" title="切换主题">
+                <i class="far fa-moon"></i>
             </div>
             <nav class="nav-menu" id="nav-menu">
                 <ul>
@@ -48,11 +53,15 @@
             <div class="container">
                 <div class="hero-content">
                     <h1 class="hero-title">构建未来操作系统</h1>
-                    <p class="hero-subtitle">我们致力于研发下一代高性能、高安全性的操作系统解决方案。从 MP4 架构到混合内核，我们不断突破技术边界。</p>
+                    <p class="hero-subtitle">从零开始写操作系统。MP4 架构、混合内核，都是我们亲手折腾出来的。</p>
                     <div class="hero-buttons">
                         <a href="pyspos.html" class="btn btn-primary btn-lg">
                             <i class="fas fa-python"></i>
                             PySpOS
+                        </a>
+                        <a href="ota/index.html" class="btn btn-success btn-lg">
+                            <i class="fas fa-download"></i>
+                            下载 PySpOS 更新
                         </a>
                         <a href="spaceos6.html" class="btn btn-secondary btn-lg">
                             <i class="fas fa-space-shuttle"></i>
@@ -102,18 +111,18 @@
                         <div class="timeline-year">2025</div>
                         <div class="timeline-content">
                             <div class="timeline-title">
-                                <i class="fas fa-memory"></i> UEFI 研究与 PySpOS
+                                <i class="fas fa-memory"></i> UEFI 研究与 SpaceOS 6
                             </div>
-                            <p>开始深入研究 UEFI，同时利用 ViudiraTech 的 Uinxed-Kernel 项目，正式开始研发 PySpOS。</p>
+                            <p>开始深入研究 UEFI，同时利用 ViudiraTech 的 Uinxed-Kernel 项目，正式开始研发正式的 SpaceOS。</p>
                         </div>
                     </div>
                     <div class="timeline-item">
                         <div class="timeline-year">2026</div>
                         <div class="timeline-content">
                             <div class="timeline-title">
-                                <i class="fas fa-crown"></i> 自研操作系统
+                                <i class="fas fa-crown"></i> 全栈自研操作系统 SpaceOS 7
                             </div>
-                            <p>UEFI 终于完全理解，开始完全自研操作系统。目前项目已完成约二分之一，正在稳步推进中。（用户态没做好）</p>
+                            <p>UEFI 终于完全理解，开始完全自研操作系统。目前项目已完成约二分之一，正在稳步推进中。（用户态OK，但是有Heisenbug）</p>
                         </div>
                     </div>
                 </div>
@@ -226,9 +235,9 @@
                         <div class="footer-column">
                             <h4>产品</h4>
                             <ul>
-                                <li><a href="#pyspos">PySpOS</a></li>
-                                <li><a href="#spaceos6">SpaceOS 6</a></li>
-                                <li><a href="#spaceos7">SpaceOS 7</a></li>
+                                <li><a href="pyspos.html">PySpOS</a></li>
+                                <li><a href="spaceos6.html">SpaceOS 6</a></li>
+                                <li><a href="spaceos7.html">SpaceOS 7</a></li>
                             </ul>
                         </div>
                         <div class="footer-column">
@@ -251,6 +260,7 @@
                 </div>
                 <div class="footer-bottom">
                     <p>&copy; 2022~2026 GoutouStdio. Open all rights.</p>
+                    <p>GoutouStdio 不是真实的公司。这是由学生自发组织的项目，不涉及任何商业活动。</p>
                 </div>
             </div>
         </footer>

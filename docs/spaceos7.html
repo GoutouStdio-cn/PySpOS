@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%237c3aed' rx='20'/><text x='50' y='72' font-size='65' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>G</text></svg>">
 </head>
 <body class="product-page spaceos7-page">
     <header>
@@ -25,17 +25,22 @@
             </div>
             <div class="nav-toggle" id="nav-toggle">
                 <i class="fas fa-bars"></i>
+                <i class="fas fa-times"></i>
+            </div>
+            <div class="theme-toggle" id="theme-toggle" title="切换主题">
+                <i class="far fa-moon"></i>
             </div>
             <nav class="nav-menu" id="nav-menu">
                 <ul>
-                    <li><a href="index.html">首页</a></li>
-                    <li><a href="pyspos.html">PySpOS</a></li>
-                    <li><a href="spaceos6.html">SpaceOS 6</a></li>
-                    <li><a href="spaceos7.html" class="active">SpaceOS 7</a></li>
-                    <li><a href="index.html#history">发展历程</a></li>
-                    <li><a href="index.html#about">关于我们</a></li>
-                    <li><a href="index.html#contact">联系我们</a></li>
-                    <li><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
+                    <li><a href="index.html" class="nav-link">首页</a></li>
+                    <li><a href="pyspos.html" class="nav-link">PySpOS</a></li>
+                    <li><a href="spaceos6.html" class="nav-link">SpaceOS 6</a></li>
+                    <li><a href="spaceos7.html" class="nav-link active">SpaceOS 7</a></li>
+                    <li><a href="index.html" class="nav-link">发展历程</a></li>
+                    <li><a href="index.html" class="nav-link">关于我们</a></li>
+                    <li><a href="index.html" class="nav-link">联系我们</a></li>
+                    <li class="github-link-desktop"><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
+                    <li class="github-link-mobile" style="display: none;"><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
                 </ul>
                 <div class="nav-indicator" id="nav-indicator"></div>
             </nav>
@@ -51,7 +56,7 @@
                         <span>混合内核架构操作系统</span>
                     </div>
                     <h1 class="product-hero-title">SpaceOS 7</h1>
-                    <p class="product-hero-subtitle">完全自研的混合内核架构操作系统</p>
+                    <p class="product-hero-subtitle">纯自研混合内核架构操作系统。</p>
                     <div class="hero-buttons">
                         <a href="#features" class="btn btn-primary btn-lg">
                             <i class="fas fa-check-circle"></i>
@@ -72,13 +77,13 @@
                 <div class="intro-content">
                     <div class="intro-text">
                         <h3>什么是 SpaceOS 7？</h3>
-                        <p>SpaceOS 7 是我们完全自研的混合内核架构操作系统。从 2026 年开始，我们完全理解了 UEFI 技术，开始完全自研操作系统。目前项目已完成约二分之一，正在稳步推进中。</p>
+                        <p>SpaceOS 7 是纯自研的混合内核架构操作系统。2026 年，我们掌握了 UEFI 技术后，决定完全不依赖外部代码，自己从头写操作系统。现在完成了一半，还在继续开发。</p>
                         
                         <h3>项目起源</h3>
-                        <p>SpaceOS 7 的研发始于 2026 年，这是我们在完全理解 UEFI 技术后启动的完全自研项目。与之前的版本不同，SpaceOS 7 从零开始构建，不依赖任何外部代码，真正实现了完全自研。</p>
+                        <p>2026 年，我们完全掌握了 UEFI 技术，启动了这个自研项目。没有外部代码，没有依赖，UEFI 引导、内核加载都是我们自己写的。</p>
                         
                         <h3>设计理念</h3>
-                        <p>SpaceOS 7 的设计理念是"完全自研、混合内核、极致性能"。我们相信，只有完全自研才能真正掌握核心技术，实现真正的创新。混合内核架构结合了微内核和宏内核的优点，既保证了系统的稳定性，又提供了卓越的性能。</p>
+                        <p>"完全自研、混合内核、极致性能"。混合内核架构结合微内核和宏内核的优点，既保证稳定性，又提供高性能。</p>
                     </div>
                     <div class="intro-stats">
                         <div class="stat-item">
@@ -108,16 +113,31 @@
                 <div class="feature-grid">
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-microchip"></i>
+                            <i class="fas fa-hdd"></i>
                         </div>
-                        <h3>混合内核架构</h3>
-                        <p>全手搓自研混合内核，保证系统稳定性和性能。SpaceOS 7 的混合内核结合了微内核和宏内核的优点，既保证了系统的稳定性，又提供了卓越的性能。</p>
+                        <h3>SPFS 2.0-Next 文件系统</h3>
+                        <p>自研的高性能硬盘文件系统 SPFS 2.0-Next，为硬盘存储优化，提供卓越的文件操作性能和可靠性。</p>
                         <div class="feature-details">
                             <ul>
-                                <li><i class="fas fa-check"></i> 微内核组件用户空间化</li>
-                                <li><i class="fas fa-check"></i> 关键服务内核空间运行</li>
-                                <li><i class="fas fa-check"></i> 高效的 IPC 机制</li>
-                                <li><i class="fas fa-check"></i> 完善的中断处理</li>
+                                <li><i class="fas fa-check"></i> 硬盘高性能优化</li>
+                                <li><i class="fas fa-check"></i> 日志功能支持</li>
+                                <li><i class="fas fa-check"></i> 文件权限管理</li>
+                                <li><i class="fas fa-check"></i> 低延迟读写</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-usb"></i>
+                        </div>
+                        <h3>SPUFS 1.0 文件系统</h3>
+                        <p>自研的 USB 存储设备文件系统 SPUFS 1.0，专为 USB 存储设备设计，支持热插拔和即插即用。</p>
+                        <div class="feature-details">
+                            <ul>
+                                <li><i class="fas fa-check"></i> USB 存储设备优化</li>
+                                <li><i class="fas fa-check"></i> 热插拔支持</li>
+                                <li><i class="fas fa-check"></i> 即插即用</li>
+                                <li><i class="fas fa-check"></i> 兼容 USB 2.0/3.0</li>
                             </ul>
                         </div>
                     </div>
@@ -129,10 +149,10 @@
                         <p>中间引导和内核完全重构，全部手搓自研。SpaceOS 7 的内核从零开始构建，不依赖任何外部代码，真正实现了完全自研。</p>
                         <div class="feature-details">
                             <ul>
-                                <li><i class="fas fa-check"></i> 完全自研的引导程序，并没有使用Limine和grub这样的开源引导程序</li>
-                                <li><i class="fas fa-check"></i> 自研的内核架构，抛弃Uinxed-Kernel内核转为纯自研</li>
-                                <li><i class="fas fa-check"></i> 优化的内存管理，支持伙伴分配器</li>
-                                <li><i class="fas fa-check"></i> 高效的进程调度，支持进程间IPC，支持用户态</li>
+                                <li><i class="fas fa-check"></i> 完全自研的引导程序，并没有使用 Limine 和 grub 这样的开源引导程序</li>
+                                <li><i class="fas fa-check"></i> 自研的内核架构，抛弃 Uinxed-Kernel 内核转为纯自研</li>
+                                <li><i class="fas fa-check"></i> 伙伴系统内存管理，Slab 分配器</li>
+                                <li><i class="fas fa-check"></i> 高效的进程调度，支持进程间 IPC，支持用户态</li>
                             </ul>
                         </div>
                     </div>
@@ -171,7 +191,7 @@
                             <i class="fas fa-usb"></i>
                         </div>
                         <h3>xHCI 控制器</h3>
-                        <p>完整支持 xHCI (eXtensible Host Controller Interface)。SpaceOS 7 提供了完整的 xHCI 驱动，支持 USB 3.0 及以上版本。</p>
+                        <p>SpaceOS 7 支持 xHCI (eXtensible Host Controller Interface)。SpaceOS 7 提供了完整的 xHCI 驱动，支持 USB 3.0 及以上版本。</p>
                         <div class="feature-details">
                             <ul>
                                 <li><i class="fas fa-check"></i> USB 3.0 支持</li>
@@ -215,77 +235,102 @@
             </div>
         </section>
 
-        <section class="technical-details" id="technical">
+        <section class="features" id="technical">
             <div class="container">
                 <h2 class="section-title">技术细节</h2>
-                <div class="technical-content">
-                    <div class="tech-section">
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
                         <h3>混合内核架构</h3>
-                        <p>SpaceOS 7 采用创新的混合内核架构：</p>
-                        <ul>
-                            <li><strong>微内核组件</strong>：核心服务运行在用户空间，包括文件系统、网络协议栈等</li>
-                            <li><strong>宏内核组件</strong>：关键驱动和子系统运行在内核空间，包括中断处理、进程调度、内存管理等</li>
-                            <li><strong>IPC 机制</strong>：高效的进程间通信机制，确保用户空间和内核空间的高效协作</li>
-                            <li><strong>权限管理</strong>：严格的权限控制，确保系统安全</li>
-                        </ul>
-                        <p>这种架构既保证了系统的稳定性（用户空间组件崩溃不会影响系统），又提供了卓越的性能（关键组件在内核空间运行）。</p>
+                        <p>SpaceOS 7 采用创新的混合内核架构，结合微内核和宏内核的优点。</p>
+                        <div class="feature-details">
+                            <ul>
+                                <li><i class="fas fa-check"></i> 微内核组件用户空间化</li>
+                                <li><i class="fas fa-check"></i> 关键服务内核空间运行</li>
+                                <li><i class="fas fa-check"></i> 高效的 IPC 机制</li>
+                                <li><i class="fas fa-check"></i> 完善的权限管理</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="tech-section">
-                        <h3>引导程序</h3>
-                        <p>SpaceOS 7 实现了完全自研的引导程序，从零开始手写 UEFI 库：</p>
-                        <ul>
-                            <li><strong>纯手写 UEFI 库</strong>：完全自研的 UEFI 库，不依赖任何外部代码（除efi.h，那是基本的），深入理解 UEFI 规范</li>
-                            <li><strong>高半地址内核加载</strong>：支持高半地址（Higher Half）内核加载，优化内存布局和性能</li>
-                            <li><strong>UEFI 引导支持</strong>：完整的 UEFI 引导支持，支持现代计算机的启动方式</li>
-                        </ul>
-                        <p>引导程序经过精心设计，确保在各种硬件上都能稳定启动。</p>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-power-off"></i>
+                        </div>
+                        <h3>纯手写 UEFI 库</h3>
+                        <p>完全自研的引导程序，从零开始构建 UEFI 库，不依赖任何外部代码。</p>
+                        <div class="feature-details">
+                            <ul>
+                                <li><i class="fas fa-check"></i> 纯手写 UEFI 库</li>
+                                <li><i class="fas fa-check"></i> 高半地址内核加载</li>
+                                <li><i class="fas fa-check"></i> UEFI 引导支持</li>
+                                <li><i class="fas fa-check"></i> 深入理解 UEFI 规范</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="tech-section">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-memory"></i>
+                        </div>
                         <h3>内存管理</h3>
-                        <p>SpaceOS 7 实现了先进的内存管理机制：</p>
-                        <ul>
-                            <li><strong>分页管理</strong>：支持 4KB 和 2MB 大页</li>
-                            <li><strong>虚拟内存</strong>：完整的虚拟内存支持</li>
-                            <li><strong>内存保护</strong>：硬件辅助的内存保护</li>
-                            <li><strong>内存压缩</strong>：可选的内存压缩，提高内存利用率</li>
-                            <li><strong>NUMA 支持</strong>：支持非统一内存访问架构</li>
-                        </ul>
-                        <p>内存管理经过深度优化，确保在各种场景下都能高效运行。</p>
+                        <p>先进的内存管理机制，包括伙伴系统和 Slab 分配器。</p>
+                        <div class="feature-details">
+                            <ul>
+                                <li><i class="fas fa-check"></i> 伙伴系统（Buddy System）</li>
+                                <li><i class="fas fa-check"></i> Slab 分配器</li>
+                                <li><i class="fas fa-check"></i> 4KB 和 2MB 大页支持</li>
+                                <li><i class="fas fa-check"></i> 完整的虚拟内存</li>
+                                <li><i class="fas fa-check"></i> 硬件辅助内存保护</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="tech-section">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
                         <h3>进程调度</h3>
-                        <p>SpaceOS 7 实现了先进的进程调度算法：</p>
-                        <ul>
-                            <li><strong>CFS (Completely Fair Scheduler)</strong>：完全公平调度器</li>
-                            <li><strong>实时调度</strong>：支持实时进程调度</li>
-                            <li><strong>多核调度</strong>：支持多核处理器的负载均衡</li>
-                            <li><strong>节能调度</strong>：根据系统负载自动调整 CPU 频率</li>
-                        </ul>
-                        <p>调度器经过精心设计，确保公平性和效率。</p>
+                        <p>先进的进程调度算法，确保公平性和效率。</p>
+                        <div class="feature-details">
+                            <ul>
+                                <li><i class="fas fa-check"></i> CFS 完全公平调度器</li>
+                                <li><i class="fas fa-check"></i> 实时调度支持</li>
+                                <li><i class="fas fa-check"></i> 多核负载均衡</li>
+                                <li><i class="fas fa-check"></i> 节能调度</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="tech-section">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-hdd"></i>
+                        </div>
                         <h3>设备驱动</h3>
-                        <p>SpaceOS 7 提供了丰富的设备驱动支持：</p>
-                        <ul>
-                            <li><strong>存储驱动</strong>：支持 IDE、AHCI、NVMe、USB、SCSI 等各种存储设备</li>
-                            <li><strong>显示驱动</strong>：支持各种显卡，包括集成显卡和独立显卡</li>
-                            <li><strong>网络驱动</strong>：支持各种有线和无线网卡</li>
-                            <li><strong>音频驱动</strong>：支持各种声卡</li>
-                            <li><strong>输入驱动</strong>：支持键盘、鼠标、触摸板、触摸屏等</li>
-                            <li><strong>USB 驱动</strong>：完整支持 xHCI，支持 USB 3.0 及以上版本</li>
-                        </ul>
-                        <p>所有驱动都经过严格测试，确保稳定性和兼容性。</p>
+                        <p>丰富的设备驱动支持，覆盖各种硬件设备。</p>
+                        <div class="feature-details">
+                            <ul>
+                                <li><i class="fas fa-check"></i> 存储驱动（IDE/AHCI/NVMe/USB/SCSI）</li>
+                                <li><i class="fas fa-check"></i> 显示驱动</li>
+                                <li><i class="fas fa-check"></i> 网络驱动</li>
+                                <li><i class="fas fa-check"></i> 音频驱动</li>
+                                <li><i class="fas fa-check"></i> 输入驱动</li>
+                                <li><i class="fas fa-check"></i> xHCI USB 驱动</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="tech-section">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
                         <h3>空间 API</h3>
-                        <p>空间 API 是我们自研的系统调用接口：</p>
-                        <ul>
-                            <li><strong>丰富的系统调用</strong>：提供各种系统调用，满足各种需求</li>
-                            <li><strong>高性能 IPC</strong>：高效的进程间通信机制</li>
-                            <li><strong>灵活的通信机制</strong>：支持消息队列、共享内存、信号量等</li>
-                            <li><strong>安全的权限控制</strong>：严格的权限控制，确保系统安全</li>
-                        </ul>
-                        <p>空间 API 经过精心设计，既强大又易用。</p>
+                        <p>自研的系统调用接口，提供强大的功能和高效的 IPC。</p>
+                        <div class="feature-details">
+                            <ul>
+                                <li><i class="fas fa-check"></i> 丰富的系统调用</li>
+                                <li><i class="fas fa-check"></i> 高性能 IPC</li>
+                                <li><i class="fas fa-check"></i> 灵活的通信机制</li>
+                                <li><i class="fas fa-check"></i> 安全的权限控制</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -458,9 +503,9 @@
                         <div class="footer-column">
                             <h4>资源</h4>
                             <ul>
-                                <li><a href="index.html#history">发展历程</a></li>
-                                <li><a href="index.html#about">关于我们</a></li>
-                                <li><a href="index.html#contact">联系我们</a></li>
+                                <li><a href="index.html">发展历程</a></li>
+                                <li><a href="index.html">关于我们</a></li>
+                                <li><a href="index.html">联系我们</a></li>
                                 <li><a href="https://github.com/GoutouStdio-cn" target="_blank">GitHub</a></li>
                             </ul>
                         </div>
@@ -475,6 +520,7 @@
                 </div>
                 <div class="footer-bottom">
                     <p>&copy; 2022~2026 GoutouStdio. Open all rights.</p>
+                    <p>GoutouStdio 不是真实的公司。这是由学生自发组织的项目，不涉及任何商业活动。</p>
                 </div>
             </div>
         </footer>

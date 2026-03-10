@@ -1,20 +1,68 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // 主题切换功能
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = themeToggle?.querySelector('i');
+    const body = document.body;
+    
+    // 从 localStorage 读取主题偏好
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        body.classList.add('light-theme');
+        if (themeIcon) {
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
+    }
+    
+    // 主题切换按钮点击事件
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            const icon = themeToggle.querySelector('i');
+            
+            // 添加过渡效果
+            if (icon) {
+                // 先缩小消失
+                icon.classList.add('icon-transition');
+                
+                // 等图标消失后切换，然后再淡入
+                setTimeout(() => {
+                    body.classList.toggle('light-theme');
+                    
+                    // 更新图标
+                    const isLight = body.classList.contains('light-theme');
+                    if (icon) {
+                        icon.className = isLight ? 'far fa-sun' : 'far fa-moon';
+                    }
+                    
+                    // 保存到 localStorage
+                    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                    
+                    // 移除过渡类，让图标重新显示
+                    icon.classList.remove('icon-transition');
+                }, 150);
+            } else {
+                // 如果没有图标，直接切换
+                body.classList.toggle('light-theme');
+                const isLight = body.classList.contains('light-theme');
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            }
+        });
+    }
+    
     // Mobile Navigation Toggle
     const navToggle = document.getElementById('nav-toggle');
     const navMenu = document.getElementById('nav-menu');
     const navLinks = document.querySelectorAll('.nav-link');
     const navIndicator = document.getElementById('nav-indicator');
-    const body = document.body;
 
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', function() {
             const isActive = navMenu.classList.toggle('active');
-            navToggle.classList.toggle('active', isActive);
-            
-            // 防止背景滚动
             if (isActive) {
+                navToggle.classList.add('active');
                 body.style.overflow = 'hidden';
             } else {
+                navToggle.classList.remove('active');
                 body.style.overflow = '';
             }
         });
@@ -118,7 +166,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (navMenu && navMenu.classList.contains('active')) {
             if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
                 navMenu.classList.remove('active');
+                navToggle.classList.remove('active');
+                body.style.overflow = '';
             }
         }
     });
+
+    // 毛玻璃效果通过 CSS 的 backdrop-filter 实现，无需额外 JavaScript
 });

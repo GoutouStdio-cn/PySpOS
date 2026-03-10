@@ -6,10 +6,11 @@
     <title>SpaceOS 6 - 高性能桌面操作系统 | GoutouStdio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&family=Orbitron:wght@400;500;700;900&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230ea5e9' rx='20'/><text x='50' y='72' font-size='65' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>G</text></svg>">
 </head>
 <body class="product-page spaceos6-page">
     <header>
@@ -25,17 +26,22 @@
             </div>
             <div class="nav-toggle" id="nav-toggle">
                 <i class="fas fa-bars"></i>
+                <i class="fas fa-times"></i>
+            </div>
+            <div class="theme-toggle" id="theme-toggle" title="切换主题">
+                <i class="far fa-moon"></i>
             </div>
             <nav class="nav-menu" id="nav-menu">
                 <ul>
-                    <li><a href="index.html">首页</a></li>
-                    <li><a href="pyspos.html">PySpOS</a></li>
-                    <li><a href="spaceos6.html" class="active">SpaceOS 6</a></li>
-                    <li><a href="spaceos7.html">SpaceOS 7</a></li>
-                    <li><a href="index.html#history">发展历程</a></li>
-                    <li><a href="index.html#about">关于我们</a></li>
-                    <li><a href="index.html#contact">联系我们</a></li>
-                    <li><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
+                    <li><a href="index.html" class="nav-link">首页</a></li>
+                    <li><a href="pyspos.html" class="nav-link">PySpOS</a></li>
+                    <li><a href="spaceos6.html" class="nav-link active">SpaceOS 6</a></li>
+                    <li><a href="spaceos7.html" class="nav-link">SpaceOS 7</a></li>
+                    <li><a href="index.html" class="nav-link">发展历程</a></li>
+                    <li><a href="index.html" class="nav-link">关于我们</a></li>
+                    <li><a href="index.html" class="nav-link">联系我们</a></li>
+                    <li class="github-link-desktop"><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
+                    <li class="github-link-mobile" style="display: none;"><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
                 </ul>
                 <div class="nav-indicator" id="nav-indicator"></div>
             </nav>
@@ -51,7 +57,7 @@
                         <span>高性能桌面操作系统</span>
                     </div>
                     <h1 class="product-hero-title" style="color: #10b981;">SpaceOS 6</h1>
-                    <p class="product-hero-subtitle">基于 Uinxed-Kernel 构建，搭载 SPUI 1.0 界面、SPF Parser 2.0、SPFS 2.0 文件系统</p>
+                    <p class="product-hero-subtitle">基于 Uinxed-Kernel 的桌面操作系统。SPUI 1.0 界面、SPF Parser 2.0、SPFS 2.0 高性能文件系统。</p>
                     <div class="hero-buttons">
                         <a href="#intro" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #10b981, #059669);">
                             <i class="fas fa-info-circle"></i>
@@ -72,17 +78,17 @@
                 <div class="intro-content">
                     <div class="intro-text">
                         <h3><i class="fas fa-question-circle" style="color: #10b981;"></i> 什么是 SpaceOS 6？</h3>
-                        <p>SpaceOS 6 是我们推出的高性能桌面操作系统，基于 Uinxed-Kernel（由 ViudiraTech 打造）进行深度定制和优化。它集成了我们自研的多项核心技术，为用户提供流畅、稳定的桌面体验。</p>
-                        <p>从 2024 年开始研发基于 Uinxed-Kernel 的 SpaceOS，我们不断迭代优化，最终推出了 SpaceOS 6 这一成熟稳定版本。</p>
+                        <p>SpaceOS 6 是基于 Uinxed-Kernel（ViudiraTech 开发）深度定制的桌面操作系统。内核优化、用户界面、文件系统、硬件驱动都是我们自己做的。</p>
+                        <p>2024 年开始基于 Uinxed-Kernel 研发，现在 SpaceOS 6 已经稳定可用。</p>
                         
                         <h3><i class="fas fa-terminal" style="color: #10b981;"></i> Uinxed-Kernel 内核</h3>
-                        <p>SpaceOS 6 基于 Uinxed-Kernel 构建，这是由 ViudiraTech 开发的 64 位宏内核。Uinxed-Kernel 运行在 CPU Ring 0 最高特权级，提供完整的系统调用接口、进程调度、内存管理和文件系统支持。作为宏内核架构，所有核心组件（进程管理、内存管理、文件系统、设备驱动等）都运行在内核空间，确保高效的系统性能和低延迟的硬件访问。</p>
+                        <p>SpaceOS 6 使用 Uinxed-Kernel，这是 ViudiraTech 开发的 64 位宏内核。运行在 CPU Ring 0，提供进程调度、内存管理、文件系统、设备驱动。所有核心组件都在内核空间，性能高效，硬件访问延迟低。</p>
                         
                         <h3><i class="fas fa-desktop" style="color: #10b981;"></i> SPUI 1.0 界面</h3>
-                        <p>SpaceOS User Interface 1.0 是我们自主研发的桌面环境，提供现代化的用户交互体验。界面简洁直观，操作流畅高效，不适合日常办公和娱乐使用。</p>
+                        <p>SPUI（SpaceOS User Interface）1.0 是自研桌面环境。界面简洁，操作流畅，适合日常办公和娱乐。</p>
                         
                         <h3><i class="fas fa-microchip" style="color: #10b981;"></i> 硬件支持</h3>
-                        <p>SpaceOS 6 支持现代硬件技术，包括 AHCI、NVMe 存储控制器，SB16 声卡，以及 JPG 图片硬件加速。分区表支持让多系统部署更加灵活。</p>
+                        <p>支持 AHCI、NVMe 存储控制器、SB16 声卡、JPG 图片硬件加速。支持分区表，可以多系统部署。</p>
                     </div>
                     <div class="intro-stats">
                         <div class="stat-item" style="border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1);">
@@ -159,6 +165,7 @@
                         </div>
                         <h3>SPFS 2.0 文件系统</h3>
                         <p>自研的高性能文件系统 SPFS 2.0，提供卓越的文件操作性能。支持文件权限管理和日志功能。</p>
+                        <p>SPFS 2.0 专为硬盘存储优化，提供低延迟、高吞吐的文件读写性能。</p>
                     </div>
                 </div>
             </div>
@@ -249,9 +256,9 @@
                     <div class="footer-column">
                         <h4>关于</h4>
                         <ul>
-                            <li><a href="index.html#history">发展历程</a></li>
-                            <li><a href="index.html#about">关于我们</a></li>
-                            <li><a href="index.html#contact">联系我们</a></li>
+                            <li><a href="index.html">发展历程</a></li>
+                            <li><a href="index.html">关于我们</a></li>
+                            <li><a href="index.html">联系我们</a></li>
                         </ul>
                     </div>
                 </div>
@@ -259,6 +266,7 @@
             <div class="footer-bottom">
                 <p>&copy; 2022~2026 GoutouStdio. 保留所有权利。</p>
                 <p>SpaceOS 6 是 GoutouStdio 开发的高性能桌面操作系统。</p>
+                <p>GoutouStdio 不是真实的公司。这是由学生自发组织的项目，不涉及任何商业活动。</p>
             </div>
         </div>
     </footer>

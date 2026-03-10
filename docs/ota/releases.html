@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2310b981' rx='20'/><text x='50' y='72' font-size='65' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>G</text></svg>">
 </head>
 <body class="product-page pyspos-page">
     <header>
@@ -25,17 +25,22 @@
             </div>
             <div class="nav-toggle" id="nav-toggle">
                 <i class="fas fa-bars"></i>
+                <i class="fas fa-times"></i>
+            </div>
+            <div class="theme-toggle" id="theme-toggle" title="切换主题">
+                <i class="far fa-moon"></i>
             </div>
             <nav class="nav-menu" id="nav-menu">
                 <ul>
-                    <li><a href="../index.html">首页</a></li>
-                    <li><a href="../pyspos.html">PySpOS</a></li>
-                    <li><a href="../spaceos6.html">SpaceOS 6</a></li>
-                    <li><a href="../spaceos7.html">SpaceOS 7</a></li>
-                    <li><a href="../index.html#history">发展历程</a></li>
-                    <li><a href="../index.html#about">关于我们</a></li>
-                    <li><a href="../index.html#contact">联系我们</a></li>
-                    <li><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
+                    <li><a href="../index.html" class="nav-link">首页</a></li>
+                    <li><a href="../pyspos.html" class="nav-link">PySpOS</a></li>
+                    <li><a href="../spaceos6.html" class="nav-link">SpaceOS 6</a></li>
+                    <li><a href="../spaceos7.html" class="nav-link">SpaceOS 7</a></li>
+                    <li><a href="../index.html#history" class="nav-link">发展历程</a></li>
+                    <li><a href="../index.html#about" class="nav-link">关于我们</a></li>
+                    <li><a href="../index.html#contact" class="nav-link">联系我们</a></li>
+                    <li class="github-link-desktop"><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
+                    <li class="github-link-mobile" style="display: none;"><a href="https://github.com/GoutouStdio-cn" target="_blank" class="nav-link"><i class="fab fa-github"></i> GitHub</a></li>
                 </ul>
                 <div class="nav-indicator" id="nav-indicator"></div>
             </nav>
@@ -51,7 +56,7 @@
                         <span>PySpOS 版本历史</span>
                     </div>
                     <h1 class="product-hero-title" style="color: #8b5cf6;">版本历史</h1>
-                    <p class="product-hero-subtitle">查看 PySpOS 的所有历史版本和更新日志</p>
+                    <p class="product-hero-subtitle">查看 PySpOS 的所有历史版本和更新日志，你可以随意下载。</p>
                     <div class="hero-buttons">
                         <a href="index.html" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
                             <i class="fas fa-download"></i>
@@ -285,23 +290,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', loadVersionData);
-
-        const navToggle = document.getElementById('nav-toggle');
-        const navMenu = document.getElementById('nav-menu');
-
-        if (navToggle && navMenu) {
-            navToggle.addEventListener('click', function() {
-                navMenu.classList.toggle('active');
-            });
-        }
-
-        document.addEventListener('click', function(e) {
-            if (navMenu && navMenu.classList.contains('active')) {
-                if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
-                    navMenu.classList.remove('active');
-                }
-            }
-        });
     </script>
+    <script src="../js/main.js"></script>
 </body>
 </html>
