@@ -102,7 +102,8 @@ token = generate_token()
 
 # 打印提示符
 def print_prompt():
-    current_dir_name = os.path.basename(current_dir)
+    # 实时获取当前工作目录
+    current_dir_name = os.path.basename(os.getcwd())
     username = get_system_username()
     current_time = time.strftime("%H:%M:%S")
 
@@ -130,12 +131,27 @@ def screen_clear():
         os.system("clear")    
 
 # 内核主循环
-def loop():    
+def loop():
+    # 热重启循环 - 支持多次热重启
+    while True:
+        try:
+            _inner_loop()
+        except main.HotResetException:
+            # 捕获热重启异常，重新启动内核循环
+            printk.info("正在重新启动系统...")
+            time.sleep(0.5)
+            continue
+        except Exception as e:
+            print(f"error: {e}")
+            break
+
+def _inner_loop():
+    """内部循环，可以被热重启重新加载"""
     screen_clear()
     username = get_system_username()
     print(ascii_logo)
 
-    ota.ota_init() # 初始化ota 
+    ota.ota_init() # 初始化ota
 
     logk.printl("kernel", f"你有 {cores} 个 CPU 逻辑核心，Token = {token}", main.boot_time)
     print(f"欢迎使用 PySpOS 操作系统，{username}！")
@@ -145,6 +161,9 @@ def loop():
             prompt = input(print_prompt())
             main.handle_command(prompt)
 
+        except main.HotResetException:
+            # 向上传递热重启异常
+            raise
         except Exception as e:
             print(f"error: {e}")
 

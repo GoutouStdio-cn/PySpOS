@@ -37,6 +37,7 @@
                     <li><a href="pyspos.html" class="nav-link active">PySpOS</a></li>
                     <li><a href="spaceos6.html" class="nav-link">SpaceOS 6</a></li>
                     <li><a href="spaceos7.html" class="nav-link">SpaceOS 7</a></li>
+                    <li><a href="requirements.html" class="nav-link">配置要求</a></li>
                     <li><a href="index.html#history" class="nav-link">发展历程</a></li>
                     <li><a href="index.html#about" class="nav-link">关于我们</a></li>
                     <li><a href="index.html#contact" class="nav-link">联系我们</a></li>
@@ -91,7 +92,9 @@
                         
                         <h3><i class="fas fa-terminal"></i> 命令行界面</h3>
                         <p>类 busybox 命令行，支持 cd、ls、echo 等命令。可以运行 apps 目录下的 Python 程序。</p>
-                    </div>
+                        
+                        <h3><i class="fas fa-play-circle"></i> ELF 程序执行</h3>
+                        <p>内置完整的 ELF 加载器和 CPU 模拟器，能够直接运行 Linux x86/x86_64 ELF 可执行文件。支持动态链接、重定位、系统调用模拟，无需真实 Linux 环境。</p>
                     <div class="intro-stats">
                         <div class="stat-item">
                             <div class="stat-number">v3.0</div>
@@ -117,6 +120,14 @@
                             <div class="stat-number">OTA</div>
                             <div class="stat-label">在线更新</div>
                         </div>
+                        <div class="stat-item">
+                            <div class="stat-number">ELF</div>
+                            <div class="stat-label">程序运行</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">x86_64</div>
+                            <div class="stat-label">CPU 模拟</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -139,6 +150,13 @@
                         </div>
                         <h3>SPF 可执行文件</h3>
                         <p>SPF（Space Portable Format）是自研可执行文件格式。目前支持 putchar() 输出和 exit() 退出，适合教学实验。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3>ELF 程序运行</h3>
+                        <p>支持运行 Linux x86/x86_64 ELF 可执行文件。内置 CPU 模拟器、系统调用模拟器，无需真实 Linux 环境即可运行 ELF 程序。这可能是全网唯一的支持 ELF 程序运行的操作系统模拟器。</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon">
@@ -193,32 +211,37 @@
                     <div class="tech-card">
                         <h4><i class="fas fa-microchip"></i> 内核模块</h4>
                         <p>kernel.py 是 PySpOS 的主内核，负责处理用户输入、执行命令、管理应用运行。内核启动时显示 ASCII 艺术 Logo，初始化各子系统。</p>
-                        <code>kernel.loop() - 主循环，处理用户输入</code>
+                        <pre><code class="language-python"><span class="code-function">kernel</span>.<span class="code-method">loop</span>()  <span class="code-comment"># 主循环，处理用户输入</span></code></pre>
                     </div>
                     <div class="tech-card">
                         <h4><i class="fas fa-file-alt"></i> SPF 解析器</h4>
                         <p>parse_spf.py 实现 SPF 文件格式的解析和执行。支持 putchar() 和 exit() 系统调用，适合编写简单的演示程序。</p>
-                        <code>putchar("Hello"); exit(0);</code>
+                        <pre><code class="language-c"><span class="code-function">putchar</span>(<span class="code-string">"Hello"</span>);  <span class="code-function">exit</span>(<span class="code-number">0</span>);</code></pre>
                     </div>
                     <div class="tech-card">
                         <h4><i class="fas fa-cloud-download-alt"></i> OTA 更新</h4>
                         <p>ota.py 处理 OTA 更新逻辑，包括版本检查、下载、验证、安装。支持从 https://pyspos.us.ci/ota/ 获取更新。</p>
-                        <code>compare_versions(v1, v2) - 版本比较</code>
+                        <pre><code class="language-python"><span class="code-function">compare_versions</span>(v1, v2)  <span class="code-comment"># 版本比较</span></code></pre>
                     </div>
                     <div class="tech-card">
                         <h4><i class="fas fa-folder"></i> 文件系统</h4>
                         <p>fs.py 提供文件系统操作 API，包括 list_dir、create_file、read_file、delete_file 等。基于 Python 的 os 和 shutil 模块实现。</p>
-                        <code>fs.create_file("test.txt", "content")</code>
+                        <pre><code class="language-python">fs.<span class="code-method">create_file</span>(<span class="code-string">"test.txt"</span>, <span class="code-string">"content"</span>)</code></pre>
                     </div>
                     <div class="tech-card">
                         <h4><i class="fas fa-cog"></i> 配置管理</h4>
                         <p>btcfg.py 管理启动配置，包括 ROOT 权限、启动器锁定状态等。配置文件存储在 etc/bootcfg.json。</p>
-                        <code>btcfg.load_bootcfg() - 加载配置</code>
+                        <pre><code class="language-python">btcfg.<span class="code-method">load_bootcfg</span>()  <span class="code-comment"># 加载配置</span></code></pre>
                     </div>
                     <div class="tech-card">
                         <h4><i class="fas fa-rocket"></i> 应用系统</h4>
                         <p>apps 目录包含系统应用，如 calc.py（计算器）、hello.py（示例程序）等。通过 open 命令运行应用。</p>
-                        <code>open hello - 运行 hello.py</code>
+                        <pre><code class="language-bash"><span class="code-command">open</span> hello  <span class="code-comment"># 运行 hello.py</span></code></pre>
+                    </div>
+                    <div class="tech-card">
+                        <h4><i class="fas fa-microchip"></i> ELF 运行器</h4>
+                        <p>elf_runner.py 整合 ELF 加载器、CPU 模拟器和系统调用模拟器，提供完整的 ELF 程序执行功能。支持 x86/x86_64 架构，模拟 Linux 系统调用。</p>
+                        <pre><code class="language-python"><span class="code-function">run_elf</span>(<span class="code-string">"program.elf"</span>)  <span class="code-comment"># 运行 ELF 程序</span></code></pre>
                     </div>
                 </div>
             </div>

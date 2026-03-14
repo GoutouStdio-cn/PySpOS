@@ -4,6 +4,33 @@
     box-sizing: border-box;
 }
 
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--primary-color) 0%, rgba(99, 102, 241, 0.6) 100%);
+    border-radius: 4px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--primary-dark) 0%, rgba(99, 102, 241, 0.8) 100%);
+}
+
+/* Firefox 滚动条样式 */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) rgba(15, 23, 42, 0.3);
+}
+
 /* 防止页面加载时跳动 */
 html {
     font-size: 16px;
@@ -699,26 +726,26 @@ section {
 .timeline {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    margin-top: 32px;
+    gap: 18px;
+    margin-top: 28px;
 }
 
 .timeline-item {
     display: flex;
-    gap: 24px;
-    padding: 24px;
+    gap: 20px;
+    padding: 20px;
     background: rgba(30, 41, 59, 0.5);
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid rgba(99, 102, 241, 0.1);
 }
 
 .timeline-year {
     font-family: 'Orbitron', sans-serif;
-    font-size: 32px;
-    font-weight: 800;
+    font-size: 28px;
+    font-weight: 700;
     color: var(--primary-color);
     opacity: 0.3;
-    min-width: 80px;
+    min-width: 70px;
 }
 
 .timeline-content {
@@ -726,8 +753,8 @@ section {
 }
 
 .timeline-title {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 17px;
+    font-weight: 600;
     color: #ffffff;
     margin-bottom: 8px;
     display: flex;
@@ -742,53 +769,252 @@ section {
 .timeline-content p {
     color: var(--text-muted);
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 /* Contact Section */
 .contact-info {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
 }
 
 .contact-item {
     display: flex;
     align-items: flex-start;
-    gap: 16px;
-    padding: 24px;
+    gap: 14px;
+    padding: 20px;
     background: rgba(30, 41, 59, 0.5);
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid rgba(99, 102, 241, 0.1);
 }
 
 .contact-icon {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(99, 102, 241, 0.1);
-    border-radius: 10px;
+    border-radius: 8px;
     flex-shrink: 0;
 }
 
 .contact-icon i {
-    font-size: 20px;
+    font-size: 18px;
     color: var(--primary-color);
 }
 
 .contact-details h4 {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: #fff;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .contact-details p {
     color: var(--text-muted);
     font-size: 14px;
+    line-height: 1.7;
+}
+
+/* Requirements Section */
+.requirements-section {
+    padding: 80px 0 100px;
+}
+
+.requirements-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.requirements-block {
+    margin-bottom: 60px;
+    background: rgba(30, 41, 59, 0.4);
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.requirements-block:last-child {
+    margin-bottom: 0;
+}
+
+.requirements-block.minimum {
+    border-color: rgba(245, 158, 11, 0.2);
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.requirements-block.recommended {
+    border-color: rgba(16, 185, 129, 0.2);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.requirements-block-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(99, 102, 241, 0.1);
+}
+
+.requirements-block.minimum .requirements-block-title {
+    border-bottom-color: rgba(245, 158, 11, 0.3);
+}
+
+.requirements-block.recommended .requirements-block-title {
+    border-bottom-color: rgba(16, 185, 129, 0.3);
+}
+
+.requirements-block-title i {
+    font-size: 24px;
+    color: var(--primary-color);
+}
+
+.requirements-block.minimum .requirements-block-title i {
+    color: #f59e0b;
+}
+
+.requirements-block.recommended .requirements-block-title i {
+    color: #10b981;
+}
+
+.requirements-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+}
+
+.requirement-card {
+    padding: 32px 24px;
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 12px;
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.requirement-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--primary-color);
+    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.2);
+    background: rgba(30, 41, 59, 0.9);
+}
+
+.requirements-block.minimum .requirement-card {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(245, 158, 11, 0.15);
+}
+
+.requirements-block.minimum .requirement-card:hover {
+    border-color: #f59e0b;
+    box-shadow: 0 12px 32px rgba(245, 158, 11, 0.2);
+    background: rgba(30, 41, 59, 0.9);
+}
+
+.requirements-block.recommended .requirement-card {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(16, 185, 129, 0.15);
+}
+
+.requirements-block.recommended .requirement-card:hover {
+    border-color: #10b981;
+    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.2);
+    background: rgba(30, 41, 59, 0.9);
+}
+
+.requirement-icon {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 16px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.requirement-card:hover .requirement-icon {
+    transform: scale(1.1);
+}
+
+.requirement-icon i {
+    font-size: 32px;
+    color: var(--primary-color);
+}
+
+.requirements-block.minimum .requirement-icon {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.requirements-block.minimum .requirement-icon i {
+    color: #f59e0b;
+}
+
+.requirements-block.recommended .requirement-icon {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.requirements-block.recommended .requirement-icon i {
+    color: #10b981;
+}
+
+.requirement-card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.requirement-main {
+    color: #cbd5e1;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.requirement-detail {
+    color: #94a3b8;
+    font-size: 13px;
     line-height: 1.6;
+    font-weight: 500;
+}
+
+.requirements-note {
+    max-width: 1200px;
+    margin: 50px auto 0;
+    padding: 24px 28px;
+    background: rgba(99, 102, 241, 0.08);
+    border-radius: 12px;
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.requirements-note i {
+    font-size: 22px;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.requirements-note p {
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.8;
+    margin: 0;
 }
 
 /* Footer */
@@ -905,20 +1131,20 @@ footer {
 
 .intro-content {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr;
     gap: 40px;
     align-items: start;
 }
 
 .intro-text h3 {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 19px;
+    font-weight: 600;
     color: #fff;
-    margin-bottom: 12px;
-    margin-top: 24px;
+    margin-bottom: 10px;
+    margin-top: 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .intro-text h3:first-child {
@@ -927,52 +1153,54 @@ footer {
 
 .intro-text h3 i {
     color: var(--primary-color);
-    font-size: 18px;
+    font-size: 17px;
 }
 
 .intro-text p {
     color: #cbd5e1;
     font-size: 15px;
-    line-height: 1.7;
-    margin-bottom: 16px;
+    line-height: 1.8;
+    margin-bottom: 14px;
 }
 
 .intro-stats {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
 }
 
 .stat-item {
-    padding: 20px;
-    background: rgba(99, 102, 241, 0.1);
-    border-radius: 10px;
+    padding: 18px 16px;
+    background: rgba(99, 102, 241, 0.08);
+    border-radius: 8px;
     text-align: center;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.15);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.12);
+    background: rgba(99, 102, 241, 0.1);
 }
 
 /* SpaceOS 6 绿色主题统计卡片 */
 .stat-item[style*="rgba(16, 185, 129)"]:hover {
-    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.12);
 }
 
 .stat-number {
     font-family: 'Orbitron', sans-serif;
-    font-size: 28px;
-    font-weight: 800;
+    font-size: 26px;
+    font-weight: 700;
     color: var(--primary-color);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .stat-label {
     font-size: 13px;
     color: #94a3b8;
+    font-weight: 500;
 }
 
 /* Features Section */
@@ -982,54 +1210,54 @@ footer {
 
 .features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
     margin-top: 32px;
 }
 
 .feature-card {
-    padding: 28px;
+    padding: 24px;
     background: rgba(30, 41, 59, 0.6);
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid rgba(99, 102, 241, 0.15);
     transition: all 0.3s ease;
     text-decoration: none !important;
 }
 
 .feature-card:hover {
-    transform: translateY(-6px);
+    transform: translateY(-4px);
     border-color: var(--primary-color);
-    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
     text-decoration: none !important;
 }
 
 .feature-icon {
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(99, 102, 241, 0.1);
-    border-radius: 12px;
-    margin-bottom: 18px;
+    border-radius: 10px;
+    margin-bottom: 16px;
 }
 
 .feature-icon i {
-    font-size: 24px;
+    font-size: 22px;
     color: var(--primary-color);
 }
 
 .feature-card h3 {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 17px;
+    font-weight: 600;
     color: #fff;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     text-decoration: none !important;
 }
 
 .feature-card p {
     color: #94a3b8;
-    line-height: 1.6;
+    line-height: 1.7;
     font-size: 14px;
 }
 
@@ -1040,15 +1268,15 @@ footer {
 
 .technical-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
     margin-top: 32px;
 }
 
 .tech-card {
-    padding: 24px;
+    padding: 22px;
     background: rgba(30, 41, 59, 0.5);
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid rgba(99, 102, 241, 0.1);
     text-decoration: none !important;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1057,16 +1285,16 @@ footer {
 .tech-card:hover {
     background: rgba(30, 41, 59, 0.7);
     border-color: rgba(99, 102, 241, 0.3);
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), 0 0 20px rgba(99, 102, 241, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 15px rgba(99, 102, 241, 0.1);
     text-decoration: none !important;
 }
 
 .tech-card h4 {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: #fff;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1080,20 +1308,124 @@ footer {
 .tech-card p {
     color: #94a3b8;
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.7;
     margin-bottom: 12px;
 }
 
 .tech-card code {
     display: block;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 12px;
-    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    padding: 16px 20px;
+    border-radius: 8px;
     font-family: 'Fira Code', monospace;
     font-size: 13px;
     color: #e2e8f0;
     overflow-x: auto;
     margin-top: 12px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-left: 3px solid var(--primary-color);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    line-height: 1.6;
+    transition: all 0.3s ease;
+}
+
+.tech-card code:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    border-left-color: var(--primary-color);
+    box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 15px rgba(99, 102, 241, 0.1);
+}
+
+/* 代码语法高亮 */
+.tech-card pre {
+    margin: 12px 0 0 0;
+    position: relative;
+}
+
+.tech-card pre code {
+    display: block;
+    padding: 12px 16px;
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-left: 2px solid var(--primary-color);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 6px;
+    font-family: 'Consolas', 'Monaco', 'PingFang SC', 'Hiragino Sans GB', 'SimHei', 'Heiti SC', monospace;
+    font-size: 13px;
+    color: #e2e8f0;
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: pre;
+}
+
+/* 代码框自定义滚动条 */
+.tech-card pre code::-webkit-scrollbar {
+    height: 6px;
+}
+
+.tech-card pre code::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 3px;
+}
+
+.tech-card pre code::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, var(--primary-color) 0%, rgba(99, 102, 241, 0.6) 100%);
+    border-radius: 3px;
+}
+
+.tech-card pre code::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, var(--primary-dark) 0%, rgba(99, 102, 241, 0.8) 100%);
+}
+
+.tech-card pre code:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    border-left-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 0 10px rgba(99, 102, 241, 0.1);
+}
+
+.code-function {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+.code-method {
+    color: #60a5fa;
+    font-weight: 500;
+}
+
+.code-string {
+    color: #34d399;
+}
+
+.code-number {
+    color: #f472b6;
+}
+
+.code-comment {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.code-command {
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+.code-keyword {
+    color: #c084fc;
+    font-weight: 600;
+}
+
+.code-operator {
+    color: #94a3b8;
 }
 
 /* Compatibility Section */
@@ -1216,13 +1548,29 @@ footer {
 
 .tech-item code {
     display: block;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 12px;
-    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    padding: 16px 20px;
+    border-radius: 8px;
     font-family: 'Fira Code', monospace;
     font-size: 13px;
     color: #e2e8f0;
     overflow-x: auto;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-left: 3px solid var(--primary-color);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    line-height: 1.6;
+    transition: all 0.3s ease;
+}
+
+.tech-item code:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    border-left-color: var(--primary-color);
+    box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 15px rgba(99, 102, 241, 0.1);
 }
 
 /* Technical Details Section (for SpaceOS 7) */
@@ -1693,12 +2041,16 @@ footer {
 }
 
 .rollback-steps code {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 2px 8px;
-    border-radius: 4px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+    padding: 4px 10px;
+    border-radius: 6px;
     font-family: 'Fira Code', monospace;
     font-size: 13px;
     color: #e2e8f0;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Responsive Design */
@@ -1824,6 +2176,11 @@ footer {
         gap: 24px;
     }
     
+    .intro-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
     /* 时间线优化 */
     .timeline-item {
         flex-direction: column;
@@ -1895,20 +2252,53 @@ footer {
     /* 版本卡片优化 */
     .version-cards {
         grid-template-columns: 1fr;
-        gap: 24px;
+    }
+    
+    /* Requirements 响应式优化 */
+    .requirements-block {
+        padding: 24px 20px;
+    }
+    
+    .requirements-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    
+    .requirement-card {
+        padding: 24px 16px;
+    }
+    
+    .requirement-icon {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .requirement-icon i {
+        font-size: 24px;
+    }
+    
+    .requirement-card h3 {
+        font-size: 15px;
+    }
+    
+    .requirement-main {
+        font-size: 14px;
+    }
+    
+    .requirement-detail {
+        font-size: 12px;
+    }
+    
+    .requirements-note {
+        margin: 40px auto 0;
+        padding: 20px;
     }
     
     .version-card {
         padding: 24px;
     }
     
-    /* 统计卡片优化 */
-    .intro-stats {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-    
-    .stat-card {
+    .stat-item {
         padding: 16px;
     }
     
@@ -1977,6 +2367,60 @@ footer {
     
     .logo .subtitle {
         font-size: 10px;
+    }
+    
+    /* Requirements 手机端优化 */
+    .requirements-block {
+        padding: 20px 16px;
+    }
+    
+    .requirements-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    
+    .requirement-card {
+        padding: 20px 16px;
+    }
+    
+    .requirement-icon {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .requirement-icon i {
+        font-size: 20px;
+    }
+    
+    .requirement-card h3 {
+        font-size: 14px;
+    }
+    
+    .requirement-main {
+        font-size: 13px;
+    }
+    
+    .requirement-detail {
+        font-size: 11px;
+    }
+    
+    .requirements-block-title {
+        font-size: 18px;
+        margin-bottom: 24px;
+    }
+    
+    .requirements-note {
+        margin: 32px auto 0;
+        padding: 16px;
+        gap: 12px;
+    }
+    
+    .requirements-note i {
+        font-size: 18px;
+    }
+    
+    .requirements-note p {
+        font-size: 13px;
     }
     
     /* 统计卡片单列显示 */

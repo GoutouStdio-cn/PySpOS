@@ -18,6 +18,14 @@ import recovery
 import pyspos
 import ota
 
+# 导入 ELF 加载器
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from elf_loader import ELFRunner, run_elf, __version__ as ELF_LOADER_VERSION
+from elf_loader import __develop_stage__ as ELF_LOADER_STAGE
+from elf_loader import __cpu_emulator_name__ as ELF_CPU_NAME
+from elf_loader import __supported_archs__ as ELF_SUPPORTED_ARCHS
+from elf_loader import __syscall_abi__ as ELF_SYSCALL_ABI
+
 # 检查是否通过启动器启动
 if not hasattr(sys, '_launcher_detected'):
     raise RuntimeError("请使用启动器（launcher）启动PySpOS！")
@@ -127,14 +135,18 @@ def cmd_help():
     print("python     启动Python")
     print("shb        打印孙浩博是小可爱 n 次（n 指你的CPU逻辑核心数）")
     print("ls/dir     列出当前目录下的文件和文件夹")
+    print("cd         切换工作目录")
+    print("rm         删除文件或文件夹")
     print("finfo      查看指定文件的信息")
     print("testroot   测试ROOT权限")
     print("open       运行 apps 目录下的指定应用程序")
+    print("run        加载并运行 ELF 可执行文件")
     print("ota_check  检查是否有可用的更新")
     print("ota_update 下载并安装更新")
     print("ota_status 查看OTA更新状态")
     print("ota_rollback 回滚到上一个版本")
-    print("ota_clean  清理更新包文件\n")
+    print("ota_clean  清理更新包文件")
+    print("hotreset   热重启系统（重新加载代码）\n")
 
 # 打印指定字符串
 def cmd_echo(text: str):
@@ -178,12 +190,97 @@ def cmd_ls():
         print(item)
     print()
 
+def cmd_cd(path: str = None):
+    #切换工作目录
+    if path is None or path.strip() == "":
+        # 如果没有参数，切换到用户主目录
+        path = os.path.expanduser("~")
+    
+    # 处理特殊路径
+    if path == "-":
+        # 切换到上一个目录
+        path = os.environ.get("OLDPWD", os.getcwd())
+    elif path == "~":
+        path = os.path.expanduser("~")
+    
+    # 保存当前目录
+    old_cwd = os.getcwd()
+    
+    try:
+        # 尝试切换目录
+        os.chdir(path)
+        # 更新 OLDPWD 环境变量
+        os.environ["OLDPWD"] = old_cwd
+        # 打印当前目录
+        print(os.getcwd())
+    except FileNotFoundError:
+        printk.error(f"cd: 没有那个文件或目录: {path}\n")
+    except NotADirectoryError:
+        printk.error(f"cd: 不是目录: {path}\n")
+    except PermissionError:
+        printk.error(f"cd: 权限拒绝: {path}\n")
+    except Exception as e:
+        printk.error(f"cd: 错误: {e}\n")
+
 def cmd_finfo(filename: str):
     info = fs.get_file_info(filename) # 获取文件信息
     if info:    
         print(f"{filename} 的文件信息\n大小: {info['size']} 字节, 修改时间: {info['modified']}, 是否为目录: {info['is_dir']}\n")
     else:
         print(f"未找到文件或目录: {filename}\n")
+
+# 删除文件或文件夹
+def cmd_rm(target: str, recursive: bool = False, force: bool = False):
+    if not target or target.strip() == "":
+        printk.error("rm: 缺少操作数\n")
+        return
+    
+    target = target.strip()
+    
+    # 安全检查
+    if not is_safe_filename(target):
+        printk.error("错误：文件名不允许包含 ../ 或绝对路径\n")
+        return
+    
+    # 获取完整路径
+    full_path = os.path.abspath(target)
+    
+    # 检查文件/文件夹是否存在
+    if not os.path.exists(full_path):
+        printk.error(f"rm: 无法删除 '{target}': 没有那个文件或目录\n")
+        return
+    
+    try:
+        # 判断是文件还是目录
+        if os.path.isfile(full_path):
+            # 删除文件
+            if not force:
+                if not printk.confirm(f"确认删除文件 '{target}'?"):
+                    print("操作已取消\n")
+                    return
+            os.remove(full_path)
+            printk.ok(f"已删除文件: {target}\n")
+            
+        elif os.path.isdir(full_path):
+            # 删除目录
+            if not recursive:
+                printk.error(f"rm: 无法删除 '{target}': 是一个目录\n")
+                print("提示: 使用 'rm -r <目录>' 递归删除目录及其内容\n")
+                return
+            
+            if not force:
+                if not printk.confirm(f"确认递归删除目录 '{target}' 及其所有内容?"):
+                    print("操作已取消\n")
+                    return
+            
+            import shutil
+            shutil.rmtree(full_path)
+            printk.ok(f"已删除目录: {target}\n")
+            
+    except PermissionError:
+        printk.error(f"rm: 无法删除 '{target}': 权限拒绝\n")
+    except Exception as e:
+        printk.error(f"rm: 无法删除 '{target}': {str(e)}\n")
 
 def cmd_testroot():
     if rootstate:
@@ -259,6 +356,158 @@ def cmd_openspf(app_name: str):
     except Exception as e:
         printk.error(f"执行 {app_name} 失败: {str(e)}\n")
 
+def cmd_run(args: str):
+    """加载并运行 ELF 可执行文件
+    
+    用法: run [-v] [-d] [-f] <elf文件路径>
+    
+    选项:
+        -v  显示 ELF on Windows Space 兼容层版本信息
+        -d  启用调试日志模式（显示更多执行信息）
+        -f  强制运行（跳过某些安全检查）
+    """
+    import logging
+    import shlex
+    
+    # 解析参数
+    show_version = False
+    debug_mode = False
+    force_mode = False
+    elf_path = None
+    
+    # 使用 shlex 分割参数，支持引号
+    try:
+        tokens = shlex.split(args) if args else []
+    except ValueError:
+        # 引号不匹配，简单分割
+        tokens = args.split() if args else []
+    
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+        if token == '-v':
+            show_version = True
+            i += 1
+        elif token == '-d':
+            debug_mode = True
+            i += 1
+        elif token == '-f':
+            force_mode = True
+            i += 1
+        elif token.startswith('-'):
+            printk.error(f"run: 未知选项: {token}\n")
+            return
+        else:
+            # 第一个非选项参数作为 ELF 路径
+            if elf_path is None:
+                elf_path = token
+                i += 1
+            else:
+                # 额外的参数，忽略或报错
+                i += 1
+    
+    # 显示版本信息
+    if show_version:
+        print("ELF/SPE on Windows 兼容层")
+        print(f"兼容层版本: {ELF_LOADER_VERSION}")
+        print(f"开发阶段: {ELF_LOADER_STAGE}")
+        print(f"CPU 模拟器: {ELF_CPU_NAME}")
+        print(f"支持的架构: {', '.join(ELF_SUPPORTED_ARCHS)}")
+        print(f"系统调用模拟: {ELF_SYSCALL_ABI}")
+        print("@Copyright 2022~2026 GoutouStdio. Open all rights.")
+        print()
+        # 如果只指定了 -v 而没有指定文件路径，直接返回
+        if elf_path is None:
+            return
+        print("执行ELF程序...")
+    
+    # 检查 ELF 路径
+    if elf_path is None:
+        printk.error("用法: run [-v] [-d] [-f] <elf文件路径>\n")
+        return
+    
+    # 设置日志级别
+    if debug_mode:
+        logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
+        logk.printl("run", f"调试模式已启用", boot_time)
+        logk.printl("run", f"ELF 路径: {elf_path}", boot_time)
+    else:
+        logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    
+    # 检查文件是否存在
+    if not os.path.exists(elf_path):
+        # 尝试在 elf_apps 目录中查找
+        alt_path = os.path.join(os.getcwd(), "elf_apps", elf_path)
+        if debug_mode:
+            logk.printl("run", f"尝试查找: {alt_path}", boot_time)
+        if not os.path.exists(alt_path):
+            alt_path = os.path.join(os.getcwd(), "test_programs", elf_path)
+            if debug_mode:
+                logk.printl("run", f"尝试查找: {alt_path}", boot_time)
+        if os.path.exists(alt_path):
+            elf_path = alt_path
+            if debug_mode:
+                logk.printl("run", f"找到 ELF 文件: {elf_path}", boot_time)
+    
+    if not os.path.isfile(elf_path):
+        printk.error(f"未找到 ELF 文件: {elf_path}\n")
+        return
+    
+    if debug_mode:
+        logk.printl("run", f"文件大小: {os.path.getsize(elf_path)} 字节", boot_time)
+        logk.printl("run", f"开始加载 ELF 文件...", boot_time)
+    
+    try:
+        # 根据调试模式决定是否禁用日志
+        if not debug_mode:
+            logging.disable(logging.CRITICAL)
+        
+        # 创建 ELF 运行器
+        runner = ELFRunner(elf_path)
+        
+        # 加载 ELF 文件
+        if not runner.load():
+            printk.error("ELF 文件加载失败\n")
+            if not debug_mode:
+                logging.disable(logging.NOTSET)
+            return
+        
+        if debug_mode:
+            logk.printl("run", f"ELF 文件加载成功", boot_time)
+            logk.printl("run", f"入口点: 0x{runner.parser.header.e_entry:08X}", boot_time)
+            logk.printl("run", f"架构: {'x86_64' if runner.parser.header.e_machine == 62 else 'x86'}", boot_time)
+            logk.printl("run", f"程序头数量: {runner.parser.header.e_phnum}", boot_time)
+            logk.printl("run", f"节头数量: {runner.parser.header.e_shnum}", boot_time)
+            logk.printl("run", f"开始执行程序...", boot_time)
+        
+        # 运行程序
+        result = runner.run()
+        
+        if debug_mode:
+            logk.printl("run", f"程序执行完成", boot_time)
+            logk.printl("run", f"退出码: {result.exit_code}", boot_time)
+            logk.printl("run", f"执行指令数: {result.instruction_count}", boot_time)
+            logk.printl("run", f"执行时间: {result.execution_time:.3f} 秒", boot_time)
+            logk.printl("run", f"内存使用: {result.memory_usage} 字节", boot_time)
+        
+        # 恢复日志输出
+        if not debug_mode:
+            logging.disable(logging.NOTSET)
+        
+        # 显示程序输出
+        if result.stdout:
+            print(result.stdout, end='')
+        if result.stderr:
+            print(result.stderr, end='', file=__import__('sys').stderr)
+        
+    except Exception as e:
+        if not debug_mode:
+            logging.disable(logging.NOTSET)
+        printk.error(f"运行 ELF 文件失败: {str(e)}\n")
+        if debug_mode:
+            import traceback
+            traceback.print_exc()
+
 # 检查是否有可用的更新命令
 def cmd_ota_check():
     update_info = ota.check_cloud_update()
@@ -304,6 +553,132 @@ def cmd_ota_clean():
     ota.clean_update_package()
     print()
 
+# 热重启系统
+def cmd_hotreset():
+    """热重启系统 - 重新加载所有模块并重启内核"""
+    import importlib
+    import sys
+    import logging
+    
+    printk.info("正在执行热重启...")
+    printk.info("清除模块缓存并重新加载代码...")
+    
+    # 获取当前系统路径
+    current_system_path = os.getcwd()
+    
+    # 需要保留的核心模块（Python内置模块）
+    core_modules = {'sys', 'os', 'builtins', '__builtin__', 'importlib', 'types'}
+    
+    # ELF加载器相关模块列表（确保完整重载）
+    elf_loader_modules = [
+        'elf_loader',
+        'elf_loader.__init__',
+        'elf_loader.elf_constants',
+        'elf_loader.elf_parser',
+        'elf_loader.elf_loader',
+        'elf_loader.cpu_emulator',
+        'elf_loader.syscall_emulator',
+        'elf_loader.elf_runner'
+    ]
+    
+    # 需要重新加载的系统模块列表
+    modules_to_reload = []
+    elf_modules_found = []
+    app_modules_found = []
+    
+    for name in list(sys.modules.keys()):
+        # 只重新加载 PySpOS 相关的模块
+        if name in ['main', 'kernel', 'fs', 'btcfg', 'logk', 'recovery', 'pyspos', 'ota', 'printk', 'parse_spf']:
+            modules_to_reload.append(name)
+        # 重新加载 elf_loader 及其子模块
+        elif name.startswith('elf_loader'):
+            if name not in modules_to_reload:
+                modules_to_reload.append(name)
+                elf_modules_found.append(name)
+        # 重新加载 apps 目录下的模块
+        elif name.startswith('apps.') or name == 'apps':
+            if name not in modules_to_reload:
+                modules_to_reload.append(name)
+                app_modules_found.append(name)
+    
+    # 确保 ELF 加载器根模块也被清除（用于重新导入）
+    if 'elf_loader' in sys.modules and 'elf_loader' not in modules_to_reload:
+        modules_to_reload.append('elf_loader')
+        elf_modules_found.append('elf_loader')
+    
+    # 删除这些模块，强制下次导入时重新加载
+    for name in modules_to_reload:
+        if name in sys.modules:
+            del sys.modules[name]
+    
+    printk.ok(f"已清除 {len(modules_to_reload)} 个模块缓存")
+    if elf_modules_found:
+        printk.info(f"  - ELF加载器模块: {len(elf_modules_found)} 个")
+    if app_modules_found:
+        printk.info(f"  - Apps模块: {len(app_modules_found)} 个")
+    
+    # 重新导入 main 模块
+    try:
+        # 重新导入 elf_loader（从磁盘加载最新代码）
+        import elf_loader
+        importlib.reload(elf_loader)
+        
+        # 重新导入并 reload 所有 ELF 加载器子模块
+        from elf_loader import elf_constants
+        importlib.reload(elf_constants)
+        from elf_loader import elf_parser
+        importlib.reload(elf_parser)
+        from elf_loader import elf_loader as elf_loader_module
+        importlib.reload(elf_loader_module)
+        from elf_loader import cpu_emulator
+        importlib.reload(cpu_emulator)
+        from elf_loader import syscall_emulator
+        importlib.reload(syscall_emulator)
+        from elf_loader import elf_runner
+        importlib.reload(elf_runner)
+        
+        # 重新导入 main 模块
+        import main as new_main
+        importlib.reload(new_main)
+        
+        printk.ok("系统代码已重新加载")
+        printk.ok("ELF加载器已重新加载")
+        
+        # 重新初始化全局变量
+        global bootcfg, rootstate, boot_time
+        bootcfg = new_main.bootcfg
+        rootstate = new_main.rootstate
+        boot_time = new_main.boot_time
+        
+        # 重新初始化 ELF 相关全局变量
+        global ELFRunner, run_elf, ELF_LOADER_VERSION, ELF_LOADER_STAGE
+        global ELF_CPU_NAME, ELF_SUPPORTED_ARCHS, ELF_SYSCALL_ABI
+        ELFRunner = elf_loader.ELFRunner
+        run_elf = elf_loader.run_elf
+        ELF_LOADER_VERSION = elf_loader.__version__
+        ELF_LOADER_STAGE = elf_loader.__develop_stage__
+        ELF_CPU_NAME = elf_loader.__cpu_emulator_name__
+        ELF_SUPPORTED_ARCHS = elf_loader.__supported_archs__
+        ELF_SYSCALL_ABI = elf_loader.__syscall_abi__
+        
+        printk.info("热重启完成！系统已更新。")
+        print()
+        
+        # 抛出特殊异常通知 kernel 重新启动循环
+        raise HotResetException("系统热重启")
+        
+    except HotResetException:
+        raise
+    except Exception as e:
+        printk.error(f"热重启失败: {e}")
+        import traceback
+        traceback.print_exc()
+
+# 热重启异常类
+class HotResetException(Exception):
+    """用于通知 kernel 进行热重启的特殊异常"""
+    pass
+
 # 命令映射表
 COMMANDS = {
     'help': cmd_help,
@@ -315,13 +690,17 @@ COMMANDS = {
     'shb': cmd_shb,
     'ls': cmd_ls,
     'dir': cmd_ls,
+    'cd': lambda: cmd_cd(),
+    'rm': lambda: printk.error("用法: rm [-r] [-f] <文件或目录>\n"),
     'testroot': cmd_testroot,
-    'echo': lambda: print("Usage: echo 指定的字符串\n"),
+    'echo': lambda: print("用法: echo 指定的字符串\n"),
+    'run': lambda: print("用法: run [-v] [-d] [-f] <elf文件路径>\n"),
     'ota_check': cmd_ota_check,
     'ota_update': cmd_ota_update,
     'ota_status': cmd_ota_status,
     'ota_rollback': cmd_ota_rollback,
     'ota_clean': cmd_ota_clean,
+    'hotreset': cmd_hotreset,
 }
 
 # 处理命令
@@ -336,6 +715,51 @@ def handle_command(prompt) -> str:
         cmd_openspf(prompt[8:].strip())
     elif prompt.startswith("finfo "):
         cmd_finfo(prompt[6:].strip())
+    elif prompt.startswith("run "):
+        cmd_run(prompt[4:].strip())
+    elif prompt.startswith("cd "):
+        cmd_cd(prompt[3:].strip())
+    elif prompt.startswith("rm "):
+        # 解析 rm 命令参数
+        args = prompt[3:].strip()
+        import shlex
+        try:
+            tokens = shlex.split(args) if args else []
+        except ValueError:
+            tokens = args.split() if args else []
+        
+        recursive = False
+        force = False
+        target = None
+        
+        i = 0
+        while i < len(tokens):
+            token = tokens[i]
+            if token == '-r' or token == '-R' or token == '--recursive':
+                recursive = True
+                i += 1
+            elif token == '-f' or token == '--force':
+                force = True
+                i += 1
+            elif token == '-rf' or token == '-fr':
+                recursive = True
+                force = True
+                i += 1
+            elif token.startswith('-'):
+                printk.error(f"rm: 未知选项: {token}\n")
+                return
+            else:
+                if target is None:
+                    target = token
+                    i += 1
+                else:
+                    # 多个目标，处理完第一个后提示
+                    break
+        
+        if target:
+            cmd_rm(target, recursive, force)
+        else:
+            printk.error("rm: 缺少操作数\n")
     else:
         print(f"'{prompt}' 不是内部或外部命令，也不是可运行的程序或批处理文件。\n")
 

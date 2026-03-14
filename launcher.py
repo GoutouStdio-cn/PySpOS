@@ -24,7 +24,8 @@ def main():
         class logk:
             @staticmethod
             def printl(module, message, boot_time):
-                print(f"[{boot_time:.6f}] {module}: {message}")
+                elapsed = time.time() - boot_time
+                print(f"[{elapsed:10.6f}] {module}: {message}")
     
     # 获取启动器所在目录作为根目录
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -49,8 +50,19 @@ def main():
                 # 验证槽位是否有效
                 main_py = os.path.join(slot_path, "main.py")
                 if os.path.exists(main_py):
-                    use_slot = True
-                    logk.printl("launcher", "槽位有效，将从槽位加载系统文件", boot_time)
+                    # 询问用户是否从槽位启动
+                    print(f"\n[launcher] 检测到槽位 {current_slot}，是否从槽位启动？(y/n): ", end='', flush=True)
+                    try:
+                        user_input = input().strip().lower()
+                        if user_input == 'y' or user_input == 'yes':
+                            use_slot = True
+                            logk.printl("launcher", "用户选择从槽位加载系统文件", boot_time)
+                        else:
+                            logk.printl("launcher", "用户选择从src目录加载系统文件", boot_time)
+                    except (EOFError, KeyboardInterrupt):
+                        # 非交互式环境或用户中断，默认从src启动
+                        print("n")
+                        logk.printl("launcher", "非交互式环境，默认从src目录加载系统文件", boot_time)
                 else:
                     logk.printl("launcher", "槽位无效，将从src目录加载系统文件", boot_time)
         except Exception as e:
