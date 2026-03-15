@@ -11,9 +11,12 @@ import time
 import errno
 import struct
 import random
+import logging
 from typing import Dict, List, Optional, Callable, Any, Tuple
 from dataclasses import dataclass, field
 from enum import IntEnum
+
+logger = logging.getLogger(__name__)
 
 
 # Linux 系统调用号 (x86_64)
@@ -938,27 +941,20 @@ class SyscallEmulator:
             }
     
     def handle_syscall(self, num: int, *args) -> int:
-        """
-        处理系统调用
-        
-        Args:
-            num: 系统调用号
-            *args: 参数
-        
-        Returns:
-            返回值，错误时返回负的错误码
-        """
         handler = self.handlers.get(num)
         if handler:
             try:
-                return handler(*args)
+                result = handler(*args)
+                if num == 12:  # BRK
+                    logger.debug(f"BRK({args[0]:#x}) -> {result:#x}")
+                return result
             except SystemExit:
-                # sys_exit 或 sys_exit_group 被调用，重新抛出
                 raise
             except Exception as e:
+                logger.error(f"Syscall {num} error: {e}")
                 return -self._get_errno(e)
         else:
-            # 未实现的系统调用
+            logger.warning(f"Unimplemented syscall: {num}")
             return -errno.ENOSYS
     
     def _get_errno(self, e: Exception) -> int:
@@ -1326,8 +1322,7 @@ class SyscallEmulator:
         # 简化处理
         return 0
     
-    def sys_brk(self, addr: int) -> int:
-        """设置程序中断（堆结束）"""
+    def sys_brk(self, addr: int, *args) -> int:
         if addr == 0:
             return self.loader.brk
         return self.loader.brk_extend(addr)
@@ -1403,9 +1398,9 @@ class SyscallEmulator:
     def sys_uname(self, buf: int) -> int:
         """获取系统信息"""
         # utsname 结构
-        sysname = b"Linux\x00"
+        sysname = b"PySPK\x00"
         nodename = b"pyspos\x00"
-        release = b"5.0.0\x00"
+        release = b"3.0.0\x00"
         version = b"#1 SMP\x00"
         machine = b"x86_64\x00" if self.is_64bit else b"i686\x00"
         domainname = b"(none)\x00"

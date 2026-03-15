@@ -21,15 +21,19 @@ OS_MAJOR_VER = 3
 #   Possible values: "alpha", "beta", "stable"
 #   "alpha": Early development stage, may contain many bugs and incomplete features.
 #   "beta": Feature complete, but may still contain bugs. More stable than alpha.
+#   "RC x(number 1-10   ``)": Release Candidate, final testing before official release.
 #   "stable": Official release, thoroughly tested and stable for general use.
 #   You can change this value to your custom format, but you need change parse_spf to truely use it.
-OS_DEVELOP_STAGE = "beta"
+OS_DEVELOP_STAGE = "RC 1"
 
 # OS Minor Version. (0~99)
-OS_MINOR_VER = 0
+OS_MINOR_VER = 1
+
+# OS Patch Version. (0~99)
+OS_PATCH_VER = 0
 
 # Full OS Version String.
-OS_VERSION = f"{OS_MAJOR_VER}.{OS_MINOR_VER}"
+OS_VERSION = f"{OS_MAJOR_VER}.{OS_MINOR_VER}.{OS_PATCH_VER}"
 
 # OS Vendor. (your Company/Author Name)
 OS_VENDOR = "GoutouStdio"
@@ -58,14 +62,14 @@ SPUI_VERSION = NULL # SPUI is not developed yet, so we think its version is NULL
 # Sunglass Settings.
 if SPUI_ENABLED:
     # Select whether to enable SunGlass.
-    SUNGALASS_ENABLED = True # SunGlass is true by default. (You can change this in spui settings later)
+    SUNGLASS_ENABLED = True # SunGlass is true by default. (You can change this in spui settings later)
 
     # SunGlass Version.
-    SUNGALASS_VERSION = NULL # SunGlass is not developed yet, so we think its version is NULL
+    SUNGLASS_VERSION = NULL # SunGlass is not developed yet, so we think its version is NULL
 else:
     # You don't need these values, because you have disabled SPUI.
-    SUNGALASS_ENABLED = NULL
-    SUNGALASS_VERSION = NULL
+    SUNGLASS_ENABLED = NULL
+    SUNGLASS_VERSION = NULL
 
 # Select whether to enable developer mode.
 DEVELOPER_MODE = False # Developer mode is disabled by default. You can enable it for development and testing purposes.

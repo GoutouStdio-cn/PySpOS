@@ -5,9 +5,8 @@
 #   By GoutouStdio
 #   @ 2022~2026 GoutouStdio. Open all rights.
 
-# ELF on Windows Space 兼容层版本信息
-__version__ = "1.0.0"
-__develop_stage__ = "beta"
+__version__ = "2.0.0"
+__develop_stage__ = "stable"
 __cpu_emulator_name__ = "SpaceCPU 1 Pro"
 __supported_archs__ = ["x86", "x86_64"]
 __syscall_abi__ = "SpaceOS ABI 兼容"
@@ -20,24 +19,29 @@ from .elf_constants import (
 )
 from .elf_parser import ELFParser, ELFHeader, ProgramHeader, SectionHeader
 from .elf_parser import ELFSymbol, ELFDynamic, ELFRelocation, ELFRelocationA
-from .elf_loader import ELFLoader, MemoryRegion, LoadedSegment
+from .elf_loader import (
+    ELFLoader, MemoryRegion, LoadedSegment,
+    ELFLoaderError, MemoryAccessError, MemoryProtectionError,
+    RelocationError, SymbolResolutionError,
+    TLSInfo, SymbolVersion, PLTEntry, AuxvEntry, AuxvType,
+    MemoryProtection
+)
 from .syscall_emulator import SyscallEmulator
 from .cpu_emulator import CPUEmulator, CPUState, Register32, Register64
-from .elf_runner import ELFRunner, ELFDebugger, ExecutionResult, run_elf
+from .elf_runner import (
+    ELFRunner, ELFDebugger, ExecutionResult, LoaderStats, run_elf
+)
 
 __all__ = [
-    # 版本信息
     '__version__',
     '__develop_stage__',
     '__cpu_emulator_name__',
     '__supported_archs__',
     '__syscall_abi__',
-    # 常量
     'ELFClass', 'ELFData', 'ELFOSABI',
     'ELFType', 'ELFMachine', 'SectionHeaderType', 'SectionHeaderFlags',
     'ProgramHeaderType', 'ProgramHeaderFlags', 'SymbolBinding',
     'SymbolType', 'DynamicTag', 'RelocationTypeX86_64', 'RelocationTypeI386',
-    # ELF 解析
     'ELFParser',
     'ELFHeader',
     'ProgramHeader',
@@ -46,20 +50,28 @@ __all__ = [
     'ELFDynamic',
     'ELFRelocation',
     'ELFRelocationA',
-    # ELF 加载
     'ELFLoader',
     'MemoryRegion',
     'LoadedSegment',
-    # 系统调用模拟
+    'MemoryProtection',
+    'TLSInfo',
+    'SymbolVersion',
+    'PLTEntry',
+    'AuxvEntry',
+    'AuxvType',
+    'ELFLoaderError',
+    'MemoryAccessError',
+    'MemoryProtectionError',
+    'RelocationError',
+    'SymbolResolutionError',
     'SyscallEmulator',
-    # CPU 模拟
-    'CPUEmulator', # CPU模拟器（SpaceCPU 1 Pro）
-    'CPUState',    # CPU状态寄存器
-    'Register32',  # 32位寄存器
-    'Register64',  # 64位寄存器
-    # 程序执行
+    'CPUEmulator',
+    'CPUState',
+    'Register32',
+    'Register64',
     'ELFRunner',
     'ELFDebugger',
     'ExecutionResult',
+    'LoaderStats',
     'run_elf',
 ]

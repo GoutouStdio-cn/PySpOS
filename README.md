@@ -1,4 +1,5 @@
 # PySpOS 3.0.0 模拟操作系统
+
 <span style="color:cyan">***这是一个使用Python制作的模拟操作系统，方便让新手理解操作系统基本操作。***</span>
 
 ## 当前版本
@@ -15,29 +16,46 @@
 
 ## 在线访问
 
-- 🌐 **官方网站**: [https://pyspos.us.ci](https://pyspos.us.ci)
-- 📦 **OTA 更新地址**: [https://pyspos.us.ci/ota/](https://pyspos.us.ci/ota/)
+- 🌐 **官方网站**: <https://pyspos.us.ci>
+- 📦 **OTA 更新地址**: <https://pyspos.us.ci/ota/>
 
 ## 支持系统：
 
-   - [x] Windows 7 及以上
-   - [x] Linux
-   - [x] MacOS
-  
+- [x] Windows 7 及以上
+- [x] Linux
+- [x] MacOS
 
 ⚠ 这里更推荐使用Windows运行，兼容性会更好
 
 ## TODOS：
 
-  - [x] 实现OTA更新（从云端拉取更新）
-  - [x] 实现一个简易的恢复模式
-  - [ ] 实现SpaceGlass毛玻璃效果（666SpaceOS6都没上，先给这个小玩意上）
-  - [ ] 把json配置文件改成我们的spc格式（SpaceConfig）
-  - [x] 移植spf解析
-  - [ ] 实现模拟进程管理，并实现signal
-  - [ ] 实现一个图形化的app，可以操控PySpOS（比如可以发signal，解锁BL之类的）
-    
+- [x] 实现OTA更新（从云端拉取更新）
+- [x] 实现一个简易的恢复模式
+- [ ] 实现SpaceGlass毛玻璃效果（666SpaceOS6都没上，先给这个小玩意上）
+- [ ] 把json配置文件改成我们的spc格式（SpaceConfig）
+- [x] 移植spf解析
+- [ ] 实现模拟进程管理，并实现signal
+- [ ] 实现一个图形化的app，可以操控PySpOS（比如可以发signal，解锁BL之类的）
+- [x] 实现一个ELF加载器（支持Windows）
+
+## FAQ
+
+- Q: 你们这个ELF是怎么跑的？
+  - A: 我们是通过***模拟一台计算机***（x86\_64架构,或许未来写一个**QEMU替代品**？）和syscall实现的，Windows也能跑，全部依靠内置库
+- Q: 你们为什么没有开源协议？
+  - A: 没想好用什么开源协议
+- Q: 你们这个项目有什么用？
+  - A: 这个项目主要是为了让新手理解操作系统基本操作，以及为了让我自己学习操作系统原理。注意这是模拟的操作系统非裸机能跑的
+- Q: 你们这个项目的代码是开源的吗？
+  - A: 是的，我们的代码是开源的，你可以在[这里](https://github.com/GoutouStdio-cn/PySpOS)找到我们的代码。
+- Q: 你们这个项目的代码是怎么写的？
+  - A: 我们的代码是用Python和部分C（用于elf程序）写的，全部在src目录下。
+- Q: 我也想写在线OTA更新，能给我点建议吗？
+  - A: 你可以参考一下我们的代码，而且更新包千万别直接Github Pages（因为慢），***推荐用Cloudflare CDN加速一下***。还有，**一定要写请求头**（别问我为什么）
+
 ## 贡献者：
-  - GoutouStdio-cn
-  - 王俊X（我同学）
-  - 陈X（我同学）
+
+- GoutouStdio-cn
+- 王俊X（我同学）
+- 陈X（我同学）
+

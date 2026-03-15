@@ -408,13 +408,15 @@ def cmd_run(args: str):
     
     # 显示版本信息
     if show_version:
-        print("ELF/SPE on Windows 兼容层")
-        print(f"兼容层版本: {ELF_LOADER_VERSION}")
-        print(f"开发阶段: {ELF_LOADER_STAGE}")
-        print(f"CPU 模拟器: {ELF_CPU_NAME}")
-        print(f"支持的架构: {', '.join(ELF_SUPPORTED_ARCHS)}")
-        print(f"系统调用模拟: {ELF_SYSCALL_ABI}")
-        print("@Copyright 2022~2026 GoutouStdio. Open all rights.")
+        print(f"ELF/SPE on PySpOS (in {pyspos.OS_NAME} {pyspos.OS_VERSION} {pyspos.OS_DEVELOP_STAGE}) {ELF_LOADER_VERSION}")
+        print("Copyright (C) 2022-2026 GoutouStdio.")
+        print("This is free software; see the source for copying conditions.  There is NO")
+        print("warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.")
+        print()
+        print(f"Home page: <https://pyspos.us.ci/pyspos.html>")
+        print(f"Source code: <https://github.com/GoutouStdio-cn/PySpOS>")
+        print(f"Bug reports: <https://github.com/GoutouStdio-cn/PySpOS/issues>")
+        print(f"             or <goutoustdio@outlook.com>")
         print()
         # 如果只指定了 -v 而没有指定文件路径，直接返回
         if elf_path is None:
@@ -555,129 +557,8 @@ def cmd_ota_clean():
 
 # 热重启系统
 def cmd_hotreset():
-    """热重启系统 - 重新加载所有模块并重启内核"""
-    import importlib
-    import sys
-    import logging
-    
-    printk.info("正在执行热重启...")
-    printk.info("清除模块缓存并重新加载代码...")
-    
-    # 获取当前系统路径
-    current_system_path = os.getcwd()
-    
-    # 需要保留的核心模块（Python内置模块）
-    core_modules = {'sys', 'os', 'builtins', '__builtin__', 'importlib', 'types'}
-    
-    # ELF加载器相关模块列表（确保完整重载）
-    elf_loader_modules = [
-        'elf_loader',
-        'elf_loader.__init__',
-        'elf_loader.elf_constants',
-        'elf_loader.elf_parser',
-        'elf_loader.elf_loader',
-        'elf_loader.cpu_emulator',
-        'elf_loader.syscall_emulator',
-        'elf_loader.elf_runner'
-    ]
-    
-    # 需要重新加载的系统模块列表
-    modules_to_reload = []
-    elf_modules_found = []
-    app_modules_found = []
-    
-    for name in list(sys.modules.keys()):
-        # 只重新加载 PySpOS 相关的模块
-        if name in ['main', 'kernel', 'fs', 'btcfg', 'logk', 'recovery', 'pyspos', 'ota', 'printk', 'parse_spf']:
-            modules_to_reload.append(name)
-        # 重新加载 elf_loader 及其子模块
-        elif name.startswith('elf_loader'):
-            if name not in modules_to_reload:
-                modules_to_reload.append(name)
-                elf_modules_found.append(name)
-        # 重新加载 apps 目录下的模块
-        elif name.startswith('apps.') or name == 'apps':
-            if name not in modules_to_reload:
-                modules_to_reload.append(name)
-                app_modules_found.append(name)
-    
-    # 确保 ELF 加载器根模块也被清除（用于重新导入）
-    if 'elf_loader' in sys.modules and 'elf_loader' not in modules_to_reload:
-        modules_to_reload.append('elf_loader')
-        elf_modules_found.append('elf_loader')
-    
-    # 删除这些模块，强制下次导入时重新加载
-    for name in modules_to_reload:
-        if name in sys.modules:
-            del sys.modules[name]
-    
-    printk.ok(f"已清除 {len(modules_to_reload)} 个模块缓存")
-    if elf_modules_found:
-        printk.info(f"  - ELF加载器模块: {len(elf_modules_found)} 个")
-    if app_modules_found:
-        printk.info(f"  - Apps模块: {len(app_modules_found)} 个")
-    
-    # 重新导入 main 模块
-    try:
-        # 重新导入 elf_loader（从磁盘加载最新代码）
-        import elf_loader
-        importlib.reload(elf_loader)
-        
-        # 重新导入并 reload 所有 ELF 加载器子模块
-        from elf_loader import elf_constants
-        importlib.reload(elf_constants)
-        from elf_loader import elf_parser
-        importlib.reload(elf_parser)
-        from elf_loader import elf_loader as elf_loader_module
-        importlib.reload(elf_loader_module)
-        from elf_loader import cpu_emulator
-        importlib.reload(cpu_emulator)
-        from elf_loader import syscall_emulator
-        importlib.reload(syscall_emulator)
-        from elf_loader import elf_runner
-        importlib.reload(elf_runner)
-        
-        # 重新导入 main 模块
-        import main as new_main
-        importlib.reload(new_main)
-        
-        printk.ok("系统代码已重新加载")
-        printk.ok("ELF加载器已重新加载")
-        
-        # 重新初始化全局变量
-        global bootcfg, rootstate, boot_time
-        bootcfg = new_main.bootcfg
-        rootstate = new_main.rootstate
-        boot_time = new_main.boot_time
-        
-        # 重新初始化 ELF 相关全局变量
-        global ELFRunner, run_elf, ELF_LOADER_VERSION, ELF_LOADER_STAGE
-        global ELF_CPU_NAME, ELF_SUPPORTED_ARCHS, ELF_SYSCALL_ABI
-        ELFRunner = elf_loader.ELFRunner
-        run_elf = elf_loader.run_elf
-        ELF_LOADER_VERSION = elf_loader.__version__
-        ELF_LOADER_STAGE = elf_loader.__develop_stage__
-        ELF_CPU_NAME = elf_loader.__cpu_emulator_name__
-        ELF_SUPPORTED_ARCHS = elf_loader.__supported_archs__
-        ELF_SYSCALL_ABI = elf_loader.__syscall_abi__
-        
-        printk.info("热重启完成！系统已更新。")
-        print()
-        
-        # 抛出特殊异常通知 kernel 重新启动循环
-        raise HotResetException("系统热重启")
-        
-    except HotResetException:
-        raise
-    except Exception as e:
-        printk.error(f"热重启失败: {e}")
-        import traceback
-        traceback.print_exc()
-
-# 热重启异常类
-class HotResetException(Exception):
-    """用于通知 kernel 进行热重启的特殊异常"""
-    pass
+    import hotreset_env
+    hotreset_env.trigger()
 
 # 命令映射表
 COMMANDS = {

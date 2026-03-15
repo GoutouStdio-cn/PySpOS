@@ -952,6 +952,16 @@ def ota_init() -> bool:
     # 复制src目录文件到当前槽位
     current_slot = get_current_slot()
     current_slot_path = os.path.join(root_dir, current_slot)
+    
+    # 确保槽位目录存在
+    if not os.path.exists(current_slot_path):
+        try:
+            os.makedirs(current_slot_path, exist_ok=True)
+            logk.printl("ota", f"创建槽位目录 {current_slot_path} 成功", boot_time)
+        except Exception as e:
+            logk.printl("ota", f"创建槽位目录失败: {str(e)}", boot_time)
+            return False
+    
     logk.printl("ota", f"正在将src目录文件复制到 {current_slot} 槽位...", boot_time)
     
     try:
@@ -961,6 +971,11 @@ def ota_init() -> bool:
         for item in src_items:
             src_path = os.path.join(script_dir, item)
             dest_path = os.path.join(current_slot_path, item)
+            
+            # 确保目标父目录存在
+            dest_parent = os.path.dirname(dest_path)
+            if not os.path.exists(dest_parent):
+                os.makedirs(dest_parent, exist_ok=True)
             
             if os.path.isfile(src_path):
                 shutil.copy2(src_path, dest_path)

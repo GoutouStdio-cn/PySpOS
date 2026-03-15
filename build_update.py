@@ -110,12 +110,12 @@ def update_version_json(zip_filename, file_size, sha256, version, release_notes)
     # 如果版本不存在，添加新条目
     if not version_exists:
         print(f"\n当前版本 {version} 不在changelog中")
-        print("请输入更新内容（每行一条，输入空行结束）:")
+        print("请输入更新内容（每行一条，输入空行结束，或输入 'done' 结束）:")
         
         changes = []
         while True:
             change = input("> ").strip()
-            if not change:
+            if not change or change.lower() == 'done':
                 break
             changes.append(change)
         

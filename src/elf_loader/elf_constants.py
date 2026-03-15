@@ -47,7 +47,7 @@ class ELFOSABI(IntEnum):
 class ELFType(IntEnum):
     ET_NONE = 0        # 无文件类型
     ET_REL = 1         # 可重定位文件
-    ET_EXEC = 2        # 可执行文件
+    ET_EXEC = 2        # 可执行文件（无敌之常见）
     ET_DYN = 3         # 共享目标文件
     ET_CORE = 4        # 核心文件
     ET_LOOS = 0xfe00   # 操作系统特定范围开始
@@ -360,6 +360,9 @@ class DynamicTag(IntEnum):
     DT_HIOS = 0x6ffff000     # 操作系统特定范围结束
     DT_LOPROC = 0x70000000   # 处理器特定范围开始
     DT_HIPROC = 0x7fffffff   # 处理器特定范围结束
+
+# DT_FLAGS 常量（从 DynamicTag 中提取）
+DT_FLAGS = 30
 
 # GNU 特定动态标签
 DT_GNU_HASH = 0x6ffffef5

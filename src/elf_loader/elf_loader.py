@@ -1,31 +1,66 @@
 #
 #   elf_loader/elf_loader.py
 #   ELF 加载器, 内存加载和重定位
+#   工业级实现版本
 #
 #   By GoutouStdio
 #   @ 2022~2026 GoutouStdio. Open all rights.
 
 import struct
-from typing import Dict, List, Optional, Tuple, Set
+import logging
+import random
+from typing import Dict, List, Optional, Tuple, Set, Callable, Any, Union
 from dataclasses import dataclass, field
+from enum import IntEnum, IntFlag
+from collections import OrderedDict
 
-from .elf_parser import ELFParser, ProgramHeader, SectionHeader, ELFSymbol
+from .elf_parser import ELFParser, ProgramHeader, SectionHeader, ELFSymbol, ELFRelocation, ELFRelocationA
 from .elf_constants import (
     ProgramHeaderType, SectionHeaderType,
     DynamicTag, SymbolBinding, SymbolType,
     RelocationTypeX86_64, RelocationTypeI386,
-    SpecialSectionIndex
+    SpecialSectionIndex, ELFType, ELFMachine,
+    PT_GNU_STACK, PT_GNU_RELRO, PT_GNU_PROPERTY,
+    DT_GNU_HASH, DT_VERSYM, DT_VERDEF, DT_VERNEED,
+    DT_FLAGS_1, DT_FLAGS,
+    SectionHeaderFlags, ProgramHeaderFlags
 )
+
+logger = logging.getLogger(__name__)
+
+
+PAGE_SIZE = 0x1000
+PAGE_MASK = ~(PAGE_SIZE - 1)
+
+
+def align_up(value: int, alignment: int) -> int:
+    return (value + alignment - 1) & ~(alignment - 1)
+
+
+def align_down(value: int, alignment: int) -> int:
+    return value & ~(alignment - 1)
+
+
+class MemoryProtection(IntFlag):
+    NONE = 0
+    READ = 4
+    WRITE = 2
+    EXEC = 1
+    RW = READ | WRITE
+    RX = READ | EXEC
+    RWX = READ | WRITE | EXEC
 
 
 @dataclass
 class MemoryRegion:
-    """内存区域"""
-    start: int              # 起始地址
-    size: int               # 大小
-    data: bytearray         # 数据
-    flags: int = 0          # 保护标志 (读/写/执行)
-    name: str = ""          # 区域名称
+    start: int
+    size: int
+    data: bytearray
+    flags: int = 0
+    name: str = ""
+    is_mapped: bool = True
+    file_backed: bool = False
+    growable: bool = False
     
     @property
     def end(self) -> int:
@@ -33,311 +68,656 @@ class MemoryRegion:
     
     @property
     def readable(self) -> bool:
-        """是否可读"""
-        return (self.flags & 0x4) != 0  # PF_R = 0x4
+        return (self.flags & MemoryProtection.READ) != 0
     
     @property
     def writable(self) -> bool:
-        """是否可写"""
-        return (self.flags & 0x2) != 0  # PF_W = 0x2
+        return (self.flags & MemoryProtection.WRITE) != 0
     
     @property
     def executable(self) -> bool:
-        """是否可执行"""
-        return (self.flags & 0x1) != 0  # PF_X = 0x1
+        return (self.flags & MemoryProtection.EXEC) != 0
     
     def contains(self, addr: int) -> bool:
         return self.start <= addr < self.end
     
+    def page_aligned_start(self) -> int:
+        return align_down(self.start, PAGE_SIZE)
+    
+    def page_aligned_end(self) -> int:
+        return align_up(self.end, PAGE_SIZE)
+    
     def read(self, addr: int, size: int) -> bytes:
-        """从内存读取数据"""
         offset = addr - self.start
         if offset < 0 or offset + size > self.size:
-            raise MemoryError(f"内存读取越界: addr=0x{addr:x}, size={size}")
+            raise MemoryAccessError(
+                f"read oob: addr=0x{addr:x}, size={size}, "
+                f"region=[0x{self.start:x}, 0x{self.end:x})"
+            )
         return bytes(self.data[offset:offset + size])
     
-    def write(self, addr: int, data: bytes):
-        """向内存写入数据"""
+    def write(self, addr: int, data: bytes) -> None:
+        if not self.writable:
+            raise MemoryProtectionError(f"write to read-only region at 0x{addr:x}")
         offset = addr - self.start
         if offset < 0 or offset + len(data) > self.size:
-            raise MemoryError(f"内存写入越界: addr=0x{addr:x}, size={len(data)}")
+            raise MemoryAccessError(
+                f"write oob: addr=0x{addr:x}, size={len(data)}, "
+                f"region=[0x{self.start:x}, 0x{self.end:x})"
+            )
         self.data[offset:offset + len(data)] = data
     
     def read_int(self, addr: int, size: int, signed: bool = False) -> int:
-        """读取整数"""
         data = self.read(addr, size)
-        fmt = {1: 'B', 2: 'H', 4: 'I', 8: 'Q'}.get(size, 'I')
+        fmt_map = {1: 'B', 2: 'H', 4: 'I', 8: 'Q'}
+        fmt = fmt_map.get(size, 'I')
         if signed:
             fmt = fmt.lower()
         return struct.unpack('<' + fmt, data)[0]
     
-    def write_int(self, addr: int, value: int, size: int):
-        """写入整数"""
-        fmt = {1: 'B', 2: 'H', 4: 'I', 8: 'Q'}.get(size, 'I')
-        data = struct.pack('<' + fmt, value & ((1 << (size * 8)) - 1))
+    def write_int(self, addr: int, value: int, size: int) -> None:
+        fmt_map = {1: 'B', 2: 'H', 4: 'I', 8: 'Q'}
+        fmt = fmt_map.get(size, 'I')
+        max_val = 1 << (size * 8)
+        data = struct.pack('<' + fmt, value & (max_val - 1))
         self.write(addr, data)
 
 
 @dataclass
 class LoadedSegment:
-    """已加载的段"""
-    ph: ProgramHeader       # 原始程序头
-    vaddr: int              # 虚拟地址
-    memsz: int              # 内存大小
-    filesz: int             # 文件大小
-    data: bytearray         # 数据
+    ph: ProgramHeader
+    vaddr: int
+    memsz: int
+    filesz: int
+    data: bytearray
+    page_aligned: bool = True
+
+
+@dataclass
+class TLSInfo:
+    template_addr: int = 0
+    template_size: int = 0
+    memsz: int = 0
+    filesz: int = 0
+    align: int = 1
+    first_byte: int = 0
+    offset: int = 0
+    module_id: int = 0
+
+
+@dataclass
+class SymbolVersion:
+    index: int
+    name: str = ""
+    is_hidden: bool = False
+
+
+@dataclass
+class PLTEntry:
+    addr: int
+    symbol_name: str
+    symbol_index: int
+    got_addr: int
+    resolver_stub: Optional[Callable] = None
+
+
+@dataclass
+class AuxvEntry:
+    key: int
+    value: int
+
+
+class AuxvType(IntEnum):
+    AT_NULL = 0
+    AT_IGNORE = 1
+    AT_EXECFD = 2
+    AT_PHDR = 3
+    AT_PHENT = 4
+    AT_PHNUM = 5
+    AT_PAGESZ = 6
+    AT_BASE = 7
+    AT_FLAGS = 8
+    AT_ENTRY = 9
+    AT_UID = 11
+    AT_EUID = 12
+    AT_GID = 13
+    AT_EGID = 14
+    AT_CLKTCK = 17
+    AT_PLATFORM = 15
+    AT_HWCAP = 16
+    AT_FPUCW = 18
+    AT_DCACHEBSIZE = 19
+    AT_ICACHEBSIZE = 20
+    AT_UCACHEBSIZE = 21
+    AT_SECURE = 23
+    AT_BASE_PLATFORM = 24
+    AT_RANDOM = 25
+    AT_HWCAP2 = 26
+    AT_EXECFN = 31
+    AT_SYSINFO = 32
+    AT_SYSINFO_EHDR = 33
+
+
+class ELFLoaderError(Exception):
+    pass
+
+
+class MemoryAccessError(ELFLoaderError):
+    pass
+
+
+class MemoryProtectionError(ELFLoaderError):
+    pass
+
+
+class RelocationError(ELFLoaderError):
+    pass
+
+
+class SymbolResolutionError(ELFLoaderError):
+    pass
+
+
+class TLSModule:
+    _next_id = 1
+    
+    def __init__(self):
+        self.id = TLSModule._next_id
+        TLSModule._next_id += 1
 
 
 class ELFLoader:
-    """ELF 加载器"""
     
-    # 默认内存布局
-    DEFAULT_BASE_ADDR = 0x400000
-    STACK_SIZE = 8 * 1024 * 1024  # 8MB 栈
-    STACK_TOP = 0x7fff0000
-    HEAP_START = 0x80000000
+    DEFAULT_BASE_ADDR_64 = 0x400000
+    DEFAULT_BASE_ADDR_32 = 0x08048000
+    STACK_SIZE = 8 * 1024 * 1024
+    STACK_TOP_64 = 0x7fff0000
+    STACK_TOP_32 = 0xc0000000
+    HEAP_START_64 = 0x100000000
+    HEAP_START_32 = 0x80000000
+    VDSO_BASE = 0x7ffff7ffd000
     
-    def __init__(self, parser: ELFParser, base_addr: Optional[int] = None):
-        """
-        初始化 ELF 加载器
-        
-        Args:
-            parser: 已解析的 ELF 文件
-            base_addr: 加载基址（为 None 时使用文件指定的地址）
-        """
+    def __init__(self, parser: ELFParser, base_addr: Optional[int] = None,
+                 enable_aslr: bool = False, strict_protection: bool = True):
         self.parser = parser
-        self.base_addr = base_addr or self.DEFAULT_BASE_ADDR
+        self.enable_aslr = enable_aslr
+        self.strict_protection = strict_protection
         
-        # 内存区域
-        self.memory: Dict[int, MemoryRegion] = {}  # 起始地址 -> 区域
+        if base_addr is not None:
+            self.base_addr = base_addr
+        elif enable_aslr:
+            self.base_addr = self._randomize_base()
+        else:
+            self.base_addr = (self.DEFAULT_BASE_ADDR_64 if not parser.is_32bit 
+                            else self.DEFAULT_BASE_ADDR_32)
+        
+        self.memory: OrderedDict[int, MemoryRegion] = OrderedDict()
         self.segments: List[LoadedSegment] = []
         
-        # 加载信息
         self.entry_point: int = 0
-        self.brk: int = 0           # 程序中断（堆结束）
+        self.brk: int = 0
         self.heap_start: int = 0
-        self.stack_top: int = self.STACK_TOP - 16  # 栈顶地址
+        self.stack_top: int = 0
+        self.stack_bottom: int = 0
         
-        # 符号解析
-        self.symbols: Dict[str, int] = {}  # 符号名 -> 地址
-        self.plt_entries: Dict[str, int] = {}  # PLT 条目
-        self.got_entries: Dict[int, int] = {}  # GOT 条目地址 -> 目标地址
+        self.symbols: Dict[str, int] = {}
+        self.symbols_by_addr: Dict[int, str] = {}
+        self.dynamic_symbols: Dict[str, Tuple[int, int, int]] = {}
         
-        # 重定位信息
+        self.plt_entries: Dict[int, PLTEntry] = {}
+        self.plt_by_name: Dict[str, int] = {}
+        self.got_entries: Dict[int, int] = {}
+        self.got_plt_base: int = 0
+        
         self.relocations_done = False
+        self.bind_now = False
         
-        # 动态链接信息
-        self.dynamic_info: Dict[int, int] = {}  # 标签 -> 值
+        self.dynamic_info: Dict[int, int] = {}
         self.needed_libs: List[str] = []
+        
+        self.tls_info: Optional[TLSInfo] = None
+        self.tls_module_id: int = 0
+        
+        self.init_functions: List[int] = []
+        self.fini_functions: List[int] = []
+        self.preinit_functions: List[int] = []
+        
+        self.auxv: List[AuxvEntry] = []
+        self.phdr_addr: int = 0
+        self.phdr_count: int = 0
+        self.phdr_ent_size: int = 0
+        
+        self.gnu_stack_flags: int = MemoryProtection.RW
+        self.has_gnu_stack: bool = False
+        self.gnu_relro_start: int = 0
+        self.gnu_relro_size: int = 0
+        
+        self.symbol_versions: Dict[int, SymbolVersion] = {}
+        self.verdef: List[Tuple[int, str]] = []
+        self.verneed: Dict[str, List[Tuple[int, str]]] = {}
+        
+        self.loaded = False
+        self.initialized = False
+        
+        self._external_symbol_resolver: Optional[Callable[[str], Optional[int]]] = None
+        
+    def _randomize_base(self) -> int:
+        if self.parser.is_32bit:
+            base_range = (0x08048000, 0x40000000)
+        else:
+            base_range = (0x400000, 0x80000000)
+        
+        page_count = (base_range[1] - base_range[0]) // PAGE_SIZE
+        random_page = random.randint(0, page_count)
+        return base_range[0] + random_page * PAGE_SIZE
     
     def load(self) -> 'ELFLoader':
-        """
-        加载 ELF 文件到内存
-        
-        Returns:
-            self 用于链式调用
-        """
-        # 计算加载偏移
-        if self.parser.header.e_type == 2:  # ET_EXEC
-            # 可执行文件使用固定地址
-            load_offset = 0
-        else:
-            # 共享库使用基址
-            load_offset = self.base_addr
-        
-        # 加载所有可加载段
-        for ph in self.parser.program_headers:
-            if ph.p_type == ProgramHeaderType.PT_LOAD:
-                self._load_segment(ph, load_offset)
-        
-        # 设置入口点
-        self.entry_point = self.parser.header.e_entry + load_offset
-        
-        # 解析动态链接信息
-        self._parse_dynamic(load_offset)
-        
-        # 执行重定位
-        self._perform_relocations(load_offset)
-        
-        # 设置堆起始
-        self._setup_heap()
-        
-        # 创建栈
-        self._create_stack()
-        
-        return self
+        if self.loaded:
+            return self
+            
+        try:
+            self._validate_elf()
+            
+            load_offset = self._calculate_load_offset()
+            
+            self._load_segments(load_offset)
+            
+            self._parse_program_headers(load_offset)
+            
+            self._parse_dynamic(load_offset)
+            
+            self._parse_symbol_versions(load_offset)
+            
+            self._parse_symbols(load_offset)
+            
+            self._setup_plt_got(load_offset)
+            
+            self._perform_relocations(load_offset)
+            
+            self._setup_tls(load_offset)
+            
+            self._collect_init_fini(load_offset)
+            
+            self._setup_heap()
+            
+            self._create_stack()
+            
+            self._build_auxv(load_offset)
+            
+            self.loaded = True
+            logger.info(f"ELF loaded: entry=0x{self.entry_point:x}, "
+                       f"base=0x{self.base_addr:x}, segments={len(self.segments)}")
+            
+            return self
+            
+        except Exception as e:
+            logger.error(f"ELF load failed: {e}")
+            raise ELFLoaderError(f"Failed to load ELF: {e}") from e
     
-    def _load_segment(self, ph: ProgramHeader, load_offset: int):
-        """加载单个段"""
+    def _validate_elf(self) -> None:
+        header = self.parser.header
+        
+        if header.e_type not in (ELFType.ET_EXEC, ELFType.ET_DYN):
+            raise ELFLoaderError(f"Unsupported ELF type: {header.e_type}")
+        
+        if header.e_machine not in (ELFMachine.EM_386, ELFMachine.EM_X86_64):
+            raise ELFLoaderError(f"Unsupported architecture: {header.e_machine}")
+        
+        if header.e_phnum == 0:
+            raise ELFLoaderError("No program headers found")
+        
+        loadable = [ph for ph in self.parser.program_headers 
+                   if ph.p_type == ProgramHeaderType.PT_LOAD]
+        if not loadable:
+            raise ELFLoaderError("No loadable segments found")
+    
+    def _calculate_load_offset(self) -> int:
+        if self.parser.header.e_type == ELFType.ET_EXEC:
+            return 0
+        return self.base_addr
+    
+    def _load_segments(self, load_offset: int) -> None:
+        loadable_segments = [ph for ph in self.parser.program_headers 
+                           if ph.p_type == ProgramHeaderType.PT_LOAD]
+        
+        loadable_segments.sort(key=lambda ph: ph.p_vaddr)
+        
+        merged_segments = self._merge_segments(loadable_segments)
+        
+        for ph in merged_segments:
+            self._load_segment(ph, load_offset)
+        
+        for ph in self.parser.program_headers:
+            if ph.p_type == PT_GNU_STACK:
+                self.has_gnu_stack = True
+                self.gnu_stack_flags = ph.p_flags
+            elif ph.p_type == PT_GNU_RELRO:
+                self.gnu_relro_start = align_down(ph.p_vaddr + load_offset, PAGE_SIZE)
+                self.gnu_relro_size = align_up(ph.p_memsz, PAGE_SIZE)
+    
+    def _merge_segments(self, segments: List[ProgramHeader]) -> List[ProgramHeader]:
+        if not segments:
+            return []
+        
+        merged = []
+        current = segments[0]
+        
+        for next_seg in segments[1:]:
+            current_end = align_up(current.p_vaddr + current.p_memsz, PAGE_SIZE)
+            next_start = align_down(next_seg.p_vaddr, PAGE_SIZE)
+            
+            if (next_start <= current_end and 
+                current.p_flags == next_seg.p_flags and
+                current.p_align == next_seg.p_align):
+                new_filesz = max(current.p_filesz, 
+                               next_seg.p_vaddr + next_seg.p_filesz - current.p_vaddr)
+                new_memsz = max(current.p_memsz,
+                              next_seg.p_vaddr + next_seg.p_memsz - current.p_vaddr)
+                current = ProgramHeader(
+                    p_type=current.p_type,
+                    p_flags=current.p_flags,
+                    p_offset=current.p_offset,
+                    p_vaddr=current.p_vaddr,
+                    p_paddr=current.p_paddr,
+                    p_filesz=new_filesz,
+                    p_memsz=new_memsz,
+                    p_align=current.p_align
+                )
+            else:
+                merged.append(current)
+                current = next_seg
+        
+        merged.append(current)
+        return merged
+    
+    def _load_segment(self, ph: ProgramHeader, load_offset: int) -> None:
         vaddr = ph.p_vaddr + load_offset
-        memsz = ph.p_memsz
-        filesz = ph.p_filesz
         
-        # 创建数据缓冲区
-        data = bytearray(memsz)
+        page_start = align_down(vaddr, PAGE_SIZE)
+        page_end = align_up(vaddr + ph.p_memsz, PAGE_SIZE)
+        aligned_size = page_end - page_start
         
-        # 从文件复制数据
-        if filesz > 0:
-            file_data = self.parser.data[ph.p_offset:ph.p_offset + filesz]
-            data[:filesz] = file_data
+        data = bytearray(aligned_size)
         
-        # 清零 BSS 部分
-        if memsz > filesz:
-            data[filesz:] = b'\x00' * (memsz - filesz)
+        file_offset = ph.p_offset
+        file_vaddr_offset = vaddr - page_start
         
-        # 创建内存区域
+        if ph.p_filesz > 0:
+            actual_offset = file_offset
+            actual_size = min(ph.p_filesz, ph.p_memsz)
+            if actual_offset + actual_size <= len(self.parser.data):
+                file_data = self.parser.data[actual_offset:actual_offset + actual_size]
+                data[file_vaddr_offset:file_vaddr_offset + len(file_data)] = file_data
+        
         region = MemoryRegion(
-            start=vaddr,
-            size=memsz,
+            start=page_start,
+            size=aligned_size,
             data=data,
             flags=ph.p_flags,
-            name=f"segment_0x{vaddr:x}"
+            name=f"segment_0x{page_start:x}",
+            file_backed=True
         )
         
-        self.memory[vaddr] = region
+        self.memory[page_start] = region
         self.segments.append(LoadedSegment(
             ph=ph,
             vaddr=vaddr,
-            memsz=memsz,
-            filesz=filesz,
-            data=data
+            memsz=ph.p_memsz,
+            filesz=ph.p_filesz,
+            data=data,
+            page_aligned=True
         ))
     
-    def _parse_dynamic(self, load_offset: int):
-        """解析动态链接信息"""
+    def _parse_program_headers(self, load_offset: int) -> None:
+        header = self.parser.header
+        
+        for ph in self.parser.program_headers:
+            if ph.p_type == ProgramHeaderType.PT_PHDR:
+                self.phdr_addr = ph.p_vaddr + load_offset
+                break
+        
+        if self.phdr_addr == 0:
+            for seg in self.segments:
+                if seg.vaddr <= header.e_phoff < seg.vaddr + seg.memsz:
+                    self.phdr_addr = seg.vaddr + header.e_phoff - seg.ph.p_vaddr
+                    break
+        
+        self.phdr_count = header.e_phnum
+        self.phdr_ent_size = header.e_phentsize
+        self.entry_point = header.e_entry + load_offset
+    
+    def _parse_dynamic(self, load_offset: int) -> None:
         for dyn in self.parser.dynamics:
             tag = dyn.d_tag
             val = dyn.d_val
             
-            # 调整地址值
             if dyn.is_pointer and val != 0:
                 val += load_offset
             
             self.dynamic_info[tag] = val
         
-        # 获取所需库
+        if DT_FLAGS in self.dynamic_info:
+            flags = self.dynamic_info[DT_FLAGS]
+            if flags & 0x1:
+                self.bind_now = True
+        
+        if DT_FLAGS_1 in self.dynamic_info:
+            flags_1 = self.dynamic_info[DT_FLAGS_1]
+            if flags_1 & 0x1:
+                self.bind_now = True
+        
+        if DynamicTag.DT_BIND_NOW in self.dynamic_info:
+            self.bind_now = True
+        
         self.needed_libs = self.parser.get_needed_libraries()
-        
-        # 解析符号表
-        self._parse_symbols(load_offset)
     
-    def _parse_symbols(self, load_offset: int):
-        """解析符号表"""
-        symtab_addr = self.dynamic_info.get(DynamicTag.DT_SYMTAB, 0)
-        strtab_addr = self.dynamic_info.get(DynamicTag.DT_STRTAB, 0)
+    def _parse_symbol_versions(self, load_offset: int) -> None:
+        versym_addr = self.dynamic_info.get(DT_VERSYM, 0)
+        verdef_addr = self.dynamic_info.get(DT_VERDEF, 0)
+        verneed_addr = self.dynamic_info.get(DT_VERNEED, 0)
         
-        if symtab_addr == 0 or strtab_addr == 0:
-            # 使用节区表中的符号
-            for sym in self.parser.symbols:
-                if sym.name and sym.st_value != 0:
-                    self.symbols[sym.name] = sym.st_value + load_offset
-            for sym in self.parser.dynamic_symbols:
-                if sym.name and sym.st_value != 0:
-                    self.symbols[sym.name] = sym.st_value + load_offset
-            return
+        if versym_addr:
+            self._parse_versym(versym_addr, load_offset)
         
-        # 从动态段解析符号
-        sym_ent_size = self.dynamic_info.get(DynamicTag.DT_SYMENT, 
-                                              16 if self.parser.is_32bit else 24)
+        if verdef_addr:
+            self._parse_verdef(verdef_addr, load_offset)
         
-        # 计算符号数量（通过哈希表或字符串表大小估算）
-        strtab_size = self.dynamic_info.get(DynamicTag.DT_STRSZ, 0)
-        
-        # 读取字符串表
-        strtab_data = self._read_memory(strtab_addr, strtab_size)
-        
-        # 解析符号
-        sym_idx = 0
-        while True:
-            sym_addr = symtab_addr + sym_idx * sym_ent_size
-            
-            # 读取符号条目
+        if verneed_addr:
+            self._parse_verneed(verneed_addr, load_offset)
+    
+    def _parse_versym(self, addr: int, load_offset: int) -> None:
+        sym_count = len(self.parser.dynamic_symbols)
+        for i in range(sym_count):
             try:
-                if self.parser.is_32bit:
-                    name_offset = self._read_memory_int(sym_addr, 4)
-                    value = self._read_memory_int(sym_addr + 4, 4)
-                    size = self._read_memory_int(sym_addr + 8, 4)
-                    info = self._read_memory_int(sym_addr + 12, 1)
-                    other = self._read_memory_int(sym_addr + 13, 1)
-                    shndx = self._read_memory_int(sym_addr + 14, 2)
-                else:
-                    name_offset = self._read_memory_int(sym_addr, 4)
-                    info = self._read_memory_int(sym_addr + 4, 1)
-                    other = self._read_memory_int(sym_addr + 5, 1)
-                    shndx = self._read_memory_int(sym_addr + 6, 2)
-                    value = self._read_memory_int(sym_addr + 8, 8)
-                    size = self._read_memory_int(sym_addr + 16, 8)
-            except MemoryError:
-                break
-            
-            if name_offset == 0 and value == 0:
-                sym_idx += 1
-                if sym_idx > 10000:  # 防止无限循环
-                    break
-                continue
-            
-            # 获取符号名
-            name = self._get_string_from_data(strtab_data, name_offset)
-            
-            if name and value != 0:
-                # 调整地址
-                if shndx != SpecialSectionIndex.SHN_ABS:
-                    value += load_offset
-                self.symbols[name] = value
-            
-            sym_idx += 1
-            
-            if sym_idx > 10000:  # 防止无限循环
+                versym = self._read_memory_int(addr + i * 2, 2)
+                index = versym & 0x7fff
+                is_hidden = (versym & 0x8000) != 0
+                self.symbol_versions[i] = SymbolVersion(index=index, is_hidden=is_hidden)
+            except MemoryAccessError:
                 break
     
-    def _perform_relocations(self, load_offset: int):
-        """执行重定位"""
+    def _parse_verdef(self, addr: int, load_offset: int) -> None:
+        strtab = self.dynamic_info.get(DynamicTag.DT_STRTAB, 0)
+        if not strtab:
+            return
+            
+        verdefnum = self.dynamic_info.get(DT_VERDEF, 0)
+        current_addr = addr
+        
+        while current_addr:
+            try:
+                vd_ndx = self._read_memory_int(current_addr + 16, 2)
+                vd_name_off = self._read_memory_int(current_addr + 20, 4)
+                vd_next = self._read_memory_int(current_addr + 8, 4)
+                
+                name = self._read_string(strtab + vd_name_off)
+                self.verdef.append((vd_ndx, name))
+                
+                current_addr = current_addr + vd_next if vd_next else 0
+            except MemoryAccessError:
+                break
+    
+    def _parse_verneed(self, addr: int, load_offset: int) -> None:
+        strtab = self.dynamic_info.get(DynamicTag.DT_STRTAB, 0)
+        if not strtab:
+            return
+            
+        current_addr = addr
+        
+        while current_addr:
+            try:
+                vn_file_off = self._read_memory_int(current_addr + 8, 4)
+                vn_cnt = self._read_memory_int(current_addr + 12, 2)
+                vn_next = self._read_memory_int(current_addr + 16, 4)
+                
+                filename = self._read_string(strtab + vn_file_off)
+                self.verneed[filename] = []
+                
+                vernaux_addr = current_addr + 20
+                for _ in range(vn_cnt):
+                    vna_hash = self._read_memory_int(vernaux_addr + 8, 4)
+                    vna_name_off = self._read_memory_int(vernaux_addr + 12, 4)
+                    vna_next = self._read_memory_int(vernaux_addr + 16, 4)
+                    
+                    name = self._read_string(strtab + vna_name_off)
+                    self.verneed[filename].append((vna_hash, name))
+                    
+                    vernaux_addr = vernaux_addr + vna_next if vna_next else 0
+                
+                current_addr = current_addr + vn_next if vn_next else 0
+            except MemoryAccessError:
+                break
+    
+    def _parse_symbols(self, load_offset: int) -> None:
+        for sym in self.parser.symbols:
+            if sym.name and sym.st_value != 0:
+                addr = sym.st_value + load_offset
+                if sym.st_shndx != SpecialSectionIndex.SHN_ABS:
+                    addr = sym.st_value + load_offset
+                else:
+                    addr = sym.st_value
+                self.symbols[sym.name] = addr
+                self.symbols_by_addr[addr] = sym.name
+        
+        for i, sym in enumerate(self.parser.dynamic_symbols):
+            if sym.name:
+                self.dynamic_symbols[sym.name] = (sym.st_value, sym.st_size, i)
+                if sym.st_value != 0:
+                    addr = sym.st_value + load_offset
+                    if sym.st_shndx != SpecialSectionIndex.SHN_ABS:
+                        addr = sym.st_value + load_offset
+                    else:
+                        addr = sym.st_value
+                    self.symbols[sym.name] = addr
+    
+    def _setup_plt_got(self, load_offset: int) -> None:
+        plt_addr = 0
+        got_plt_addr = 0
+        jmprel_addr = self.dynamic_info.get(DynamicTag.DT_JMPREL, 0)
+        jmprel_size = self.dynamic_info.get(DynamicTag.DT_PLTRELSZ, 0)
+        
+        for section in self.parser.section_headers:
+            if section.name == '.plt':
+                plt_addr = section.sh_addr + load_offset
+            elif section.name == '.got.plt':
+                got_plt_addr = section.sh_addr + load_offset
+            elif section.name == '.got':
+                self.got_plt_base = section.sh_addr + load_offset
+        
+        if not got_plt_addr:
+            got_plt_addr = self.dynamic_info.get(DynamicTag.DT_PLTGOT, 0)
+        
+        self.got_plt_base = got_plt_addr
+        
+        if jmprel_addr and jmprel_size:
+            self._parse_plt_entries(jmprel_addr, jmprel_size, load_offset, 
+                                   plt_addr, got_plt_addr)
+    
+    def _parse_plt_entries(self, jmprel_addr: int, jmprel_size: int, 
+                          load_offset: int, plt_addr: int, got_plt_addr: int) -> None:
+        pltrel_type = self.dynamic_info.get(DynamicTag.DT_PLTREL, DynamicTag.DT_RELA)
+        ent_size = 24 if pltrel_type == DynamicTag.DT_RELA else 16
+        if self.parser.is_32bit:
+            ent_size = 12 if pltrel_type == DynamicTag.DT_RELA else 8
+        
+        num_entries = jmprel_size // ent_size
+        plt_entry_size = 16 if self.parser.is_32bit else 16
+        
+        for i in range(num_entries):
+            entry_addr = jmprel_addr + i * ent_size
+            
+            if self.parser.is_32bit:
+                r_offset = self._read_memory_int(entry_addr, 4)
+                r_info = self._read_memory_int(entry_addr + 4, 4)
+                r_addend = self._read_memory_int(entry_addr + 8, 4, signed=True) if pltrel_type == DynamicTag.DT_RELA else 0
+            else:
+                r_offset = self._read_memory_int(entry_addr, 8)
+                r_info = self._read_memory_int(entry_addr + 8, 8)
+                r_addend = self._read_memory_int(entry_addr + 16, 8, signed=True) if pltrel_type == DynamicTag.DT_RELA else 0
+            
+            sym_idx = r_info >> 32 if not self.parser.is_32bit else r_info >> 8
+            
+            if sym_idx < len(self.parser.dynamic_symbols):
+                sym = self.parser.dynamic_symbols[sym_idx]
+                got_entry_addr = r_offset + load_offset
+                
+                plt_entry_addr = plt_addr + (i + 1) * plt_entry_size if plt_addr else 0
+                
+                entry = PLTEntry(
+                    addr=plt_entry_addr,
+                    symbol_name=sym.name,
+                    symbol_index=sym_idx,
+                    got_addr=got_entry_addr
+                )
+                
+                if plt_entry_addr:
+                    self.plt_entries[plt_entry_addr] = entry
+                    self.plt_by_name[sym.name] = plt_entry_addr
+                
+                self.got_entries[got_entry_addr] = 0
+    
+    def _perform_relocations(self, load_offset: int) -> None:
         if self.relocations_done:
             return
         
-        # 获取重定位信息
         rela_addr = self.dynamic_info.get(DynamicTag.DT_RELA, 0)
         rela_size = self.dynamic_info.get(DynamicTag.DT_RELASZ, 0)
         rela_ent = self.dynamic_info.get(DynamicTag.DT_RELAENT, 
-                                         12 if self.parser.is_32bit else 24)
+                                         24 if not self.parser.is_32bit else 12)
         
         rel_addr = self.dynamic_info.get(DynamicTag.DT_REL, 0)
         rel_size = self.dynamic_info.get(DynamicTag.DT_RELSZ, 0)
         rel_ent = self.dynamic_info.get(DynamicTag.DT_RELENT,
-                                        8 if self.parser.is_32bit else 16)
+                                        16 if not self.parser.is_32bit else 8)
         
-        plt_rel_addr = self.dynamic_info.get(DynamicTag.DT_JMPREL, 0)
-        plt_rel_size = self.dynamic_info.get(DynamicTag.DT_PLTRELSZ, 0)
-        plt_rel_type = self.dynamic_info.get(DynamicTag.DT_PLTREL, 0)
+        jmprel_addr = self.dynamic_info.get(DynamicTag.DT_JMPREL, 0)
+        jmprel_size = self.dynamic_info.get(DynamicTag.DT_PLTRELSZ, 0)
+        plt_rel_type = self.dynamic_info.get(DynamicTag.DT_PLTREL, DynamicTag.DT_RELA)
         
-        # 执行 RELA 重定位
         if rela_addr and rela_size:
-            self._do_rela_relocations(rela_addr, rela_size, rela_ent, load_offset)
+            self._process_rela_relocations(rela_addr, rela_size, rela_ent, load_offset)
         
-        # 执行 REL 重定位
         if rel_addr and rel_size:
-            self._do_rel_relocations(rel_addr, rel_size, rel_ent, load_offset)
+            self._process_rel_relocations(rel_addr, rel_size, rel_ent, load_offset)
         
-        # 执行 PLT 重定位
-        if plt_rel_addr and plt_rel_size:
-            if plt_rel_type == DynamicTag.DT_RELA:
-                self._do_rela_relocations(plt_rel_addr, plt_rel_size, rela_ent, load_offset)
-            else:
-                self._do_rel_relocations(plt_rel_addr, plt_rel_size, rel_ent, load_offset)
+        if jmprel_addr and jmprel_size:
+            ent_size = 24 if plt_rel_type == DynamicTag.DT_RELA else 16
+            if self.parser.is_32bit:
+                ent_size = 12 if plt_rel_type == DynamicTag.DT_RELA else 8
+            self._process_rela_relocations(jmprel_addr, jmprel_size, ent_size, load_offset)
         
-        # 处理从节区解析的重定位
         for rel in self.parser.relocations:
-            self._apply_relocation(rel, load_offset)
+            self._apply_relocation_from_parsed(rel, load_offset)
         
         self.relocations_done = True
     
-    def _do_rela_relocations(self, addr: int, size: int, ent_size: int, load_offset: int):
-        """执行 RELA 重定位"""
+    def _process_rela_relocations(self, addr: int, size: int, ent_size: int, 
+                                  load_offset: int) -> None:
         num_entries = size // ent_size
         
         for i in range(num_entries):
             entry_addr = addr + i * ent_size
-
+            
             if self.parser.is_32bit:
                 r_offset = self._read_memory_int(entry_addr, 4)
                 r_info = self._read_memory_int(entry_addr + 4, 4)
@@ -347,16 +727,15 @@ class ELFLoader:
                 r_info = self._read_memory_int(entry_addr + 8, 8)
                 r_addend = self._read_memory_int(entry_addr + 16, 8, signed=True)
             
-            from .elf_parser import ELFRelocationA
             rel = ELFRelocationA(
-                r_offset=r_offset + load_offset,
+                r_offset=r_offset,
                 r_info=r_info,
                 r_addend=r_addend
             )
             self._apply_relocation(rel, load_offset)
     
-    def _do_rel_relocations(self, addr: int, size: int, ent_size: int, load_offset: int):
-        """执行 REL 重定位"""
+    def _process_rel_relocations(self, addr: int, size: int, ent_size: int,
+                                load_offset: int) -> None:
         num_entries = size // ent_size
         
         for i in range(num_entries):
@@ -369,51 +748,88 @@ class ELFLoader:
                 r_offset = self._read_memory_int(entry_addr, 8)
                 r_info = self._read_memory_int(entry_addr + 8, 8)
             
-            from .elf_parser import ELFRelocation
-            rel = ELFRelocation(
-                r_offset=r_offset + load_offset,
-                r_info=r_info
-            )
+            rel = ELFRelocation(r_offset=r_offset, r_info=r_info)
             self._apply_relocation(rel, load_offset)
     
-    def _apply_relocation(self, rel, load_offset: int):
-        """应用单个重定位"""
+    def _apply_relocation_from_parsed(self, rel: Union[ELFRelocation, ELFRelocationA],
+                                     load_offset: int) -> None:
+        self._apply_relocation(rel, load_offset)
+    
+    def _apply_relocation(self, rel: Union[ELFRelocation, ELFRelocationA],
+                         load_offset: int) -> None:
         addr = rel.r_offset
         sym_idx = rel.sym
         rel_type = rel.type
-        
-        # 获取加数
         addend = getattr(rel, 'r_addend', 0)
         
-        # 获取符号值
+        if self.parser.is_32bit:
+            addend = addend & 0xffffffff
+        
         sym_value = 0
+        sym_name = ""
+        sym_size = 0
+        
         if sym_idx > 0:
-            # 从动态符号表获取
             if sym_idx < len(self.parser.dynamic_symbols):
                 sym = self.parser.dynamic_symbols[sym_idx]
+                sym_name = sym.name
+                
                 if not sym.is_undefined:
-                    sym_value = sym.st_value + load_offset
-                # 未定义符号将在运行时解析
+                    if sym.st_shndx == SpecialSectionIndex.SHN_ABS:
+                        sym_value = sym.st_value
+                    else:
+                        sym_value = sym.st_value + load_offset
+                    sym_size = sym.st_size
+                else:
+                    sym_value = self._resolve_external_symbol(sym_name)
+                    if sym_value is None:
+                        if sym.binding == SymbolBinding.STB_WEAK:
+                            sym_value = 0
+                        else:
+                            logger.warning(f"Unresolved symbol: {sym_name}")
+                            if self.strict_protection:
+                                raise SymbolResolutionError(f"Unresolved symbol: {sym_name}")
+                            sym_value = 0
         
-        # 根据重定位类型计算新值
         if self.parser.is_32bit:
-            new_value = self._calc_relocation_32(rel_type, addr, sym_value, addend, load_offset)
+            new_value = self._calc_relocation_i386(rel_type, addr, sym_value, 
+                                                   addend, load_offset, sym_name, sym_size)
             size = 4
         else:
-            new_value = self._calc_relocation_64(rel_type, addr, sym_value, addend, load_offset)
-            size = 8 if rel_type not in (RelocationTypeX86_64.R_X86_64_32,
-                                          RelocationTypeX86_64.R_X86_64_32S) else 4
+            new_value = self._calc_relocation_x86_64(rel_type, addr, sym_value,
+                                                     addend, load_offset, sym_name, sym_size)
+            size = 8
         
-        # 写入新值
         if new_value is not None:
             try:
+                if rel_type in (RelocationTypeX86_64.R_X86_64_32, 
+                               RelocationTypeX86_64.R_X86_64_32S,
+                               RelocationTypeI386.R_386_32, 
+                               RelocationTypeI386.R_386_PC32):
+                    size = 4
+                elif rel_type in (RelocationTypeX86_64.R_X86_64_16,
+                                 RelocationTypeI386.R_386_16):
+                    size = 2
+                elif rel_type in (RelocationTypeX86_64.R_X86_64_8,
+                                 RelocationTypeI386.R_386_8):
+                    size = 1
+                
                 self._write_memory_int(addr, new_value, size)
-            except MemoryError:
-                pass  # 忽略越界写入
+            except MemoryAccessError as e:
+                logger.warning(f"Relocation write failed at 0x{addr:x}: {e}")
     
-    def _calc_relocation_64(self, rel_type: int, addr: int, sym_value: int, 
-                            addend: int, load_offset: int) -> Optional[int]:
-        """计算 64 位重定位值"""
+    def _resolve_external_symbol(self, name: str) -> Optional[int]:
+        if name in self.symbols:
+            return self.symbols[name]
+        
+        if self._external_symbol_resolver:
+            return self._external_symbol_resolver(name)
+        
+        return None
+    
+    def _calc_relocation_x86_64(self, rel_type: int, addr: int, sym_value: int,
+                                addend: int, load_offset: int, sym_name: str,
+                                sym_size: int) -> Optional[int]:
         if rel_type == RelocationTypeX86_64.R_X86_64_NONE:
             return None
         
@@ -423,15 +839,25 @@ class ELFLoader:
         elif rel_type == RelocationTypeX86_64.R_X86_64_PC32:
             return (sym_value + addend - addr) & 0xffffffff
         
-        elif rel_type == RelocationTypeX86_64.R_X86_64_32:
-            return (sym_value + addend) & 0xffffffff
+        elif rel_type == RelocationTypeX86_64.R_X86_64_GOT32:
+            return self._get_got_entry(sym_name, sym_value) + addend
         
-        elif rel_type == RelocationTypeX86_64.R_X86_64_32S:
-            value = sym_value + addend
-            # 符号扩展检查
-            if value & 0x80000000:
-                value |= ~0xffffffff
-            return value & 0xffffffff
+        elif rel_type == RelocationTypeX86_64.R_X86_64_PLT32:
+            if sym_value != 0:
+                return (sym_value + addend - addr) & 0xffffffff
+            plt_addr = self.plt_by_name.get(sym_name, 0)
+            if plt_addr:
+                return (plt_addr + addend - addr) & 0xffffffff
+            return 0
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_COPY:
+            if sym_value != 0 and sym_size > 0:
+                try:
+                    data = self._read_memory(sym_value, sym_size)
+                    self._write_memory(addr, data)
+                except MemoryAccessError:
+                    pass
+            return None
         
         elif rel_type == RelocationTypeX86_64.R_X86_64_GLOB_DAT:
             return sym_value + addend
@@ -442,10 +868,18 @@ class ELFLoader:
         elif rel_type == RelocationTypeX86_64.R_X86_64_RELATIVE:
             return load_offset + addend
         
-        elif rel_type == RelocationTypeX86_64.R_X86_64_COPY:
-            # 复制重定位 - 需要复制符号数据
-            # 这里简化处理，返回符号地址
-            return sym_value
+        elif rel_type == RelocationTypeX86_64.R_X86_64_GOTPCREL:
+            got_addr = self._get_got_entry(sym_name, sym_value)
+            return (got_addr + addend - addr) & 0xffffffff
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_32:
+            return (sym_value + addend) & 0xffffffff
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_32S:
+            value = sym_value + addend
+            if value > 0x7fffffff or value < -0x80000000:
+                logger.warning(f"R_X86_64_32S overflow: {value}")
+            return value & 0xffffffff
         
         elif rel_type == RelocationTypeX86_64.R_X86_64_16:
             return (sym_value + addend) & 0xffff
@@ -459,12 +893,46 @@ class ELFLoader:
         elif rel_type == RelocationTypeX86_64.R_X86_64_PC8:
             return (sym_value + addend - addr) & 0xff
         
-        # 其他类型暂不处理
-        return None
+        elif rel_type == RelocationTypeX86_64.R_X86_64_DTPMOD64:
+            if self.tls_info:
+                return self.tls_module_id
+            return 0
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_DTPOFF64:
+            return sym_value + addend
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_TPOFF64:
+            if self.tls_info:
+                return sym_value - self.tls_info.offset + addend
+            return sym_value + addend
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_GOTTPOFF:
+            if self.tls_info:
+                got_addr = self._allocate_got_entry()
+                self._write_memory_int(got_addr, sym_value - self.tls_info.offset, 8)
+                return (got_addr + addend - addr) & 0xffffffff
+            return 0
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_GD32:
+            return self._get_got_entry(sym_name, sym_value) + addend
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_SIZE32:
+            return sym_size + addend
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_SIZE64:
+            return sym_size + addend
+        
+        elif rel_type == RelocationTypeX86_64.R_X86_64_IRELATIVE:
+            resolver_addr = load_offset + addend
+            return self._call_ifunc_resolver(resolver_addr)
+        
+        else:
+            logger.debug(f"Unhandled relocation type: {rel_type}")
+            return None
     
-    def _calc_relocation_32(self, rel_type: int, addr: int, sym_value: int,
-                            addend: int, load_offset: int) -> Optional[int]:
-        """计算 32 位重定位值"""
+    def _calc_relocation_i386(self, rel_type: int, addr: int, sym_value: int,
+                              addend: int, load_offset: int, sym_name: str,
+                              sym_size: int) -> Optional[int]:
         if rel_type == RelocationTypeI386.R_386_NONE:
             return None
         
@@ -474,6 +942,26 @@ class ELFLoader:
         elif rel_type == RelocationTypeI386.R_386_PC32:
             return (sym_value + addend - addr) & 0xffffffff
         
+        elif rel_type == RelocationTypeI386.R_386_GOT32:
+            return self._get_got_entry(sym_name, sym_value) + addend
+        
+        elif rel_type == RelocationTypeI386.R_386_PLT32:
+            if sym_value != 0:
+                return (sym_value + addend - addr) & 0xffffffff
+            plt_addr = self.plt_by_name.get(sym_name, 0)
+            if plt_addr:
+                return (plt_addr + addend - addr) & 0xffffffff
+            return 0
+        
+        elif rel_type == RelocationTypeI386.R_386_COPY:
+            if sym_value != 0 and sym_size > 0:
+                try:
+                    data = self._read_memory(sym_value, sym_size)
+                    self._write_memory(addr, data)
+                except MemoryAccessError:
+                    pass
+            return None
+        
         elif rel_type == RelocationTypeI386.R_386_GLOB_DAT:
             return sym_value
         
@@ -481,10 +969,13 @@ class ELFLoader:
             return sym_value
         
         elif rel_type == RelocationTypeI386.R_386_RELATIVE:
-            return load_offset + addend
+            return (load_offset + addend) & 0xffffffff
         
-        elif rel_type == RelocationTypeI386.R_386_COPY:
-            return sym_value
+        elif rel_type == RelocationTypeI386.R_386_GOTOFF:
+            return (sym_value - self.got_plt_base + addend) & 0xffffffff
+        
+        elif rel_type == RelocationTypeI386.R_386_GOTPC:
+            return (self.got_plt_base + addend - addr) & 0xffffffff
         
         elif rel_type == RelocationTypeI386.R_386_16:
             return (sym_value + addend) & 0xffff
@@ -498,152 +989,425 @@ class ELFLoader:
         elif rel_type == RelocationTypeI386.R_386_PC8:
             return (sym_value + addend - addr) & 0xff
         
-        return None
+        elif rel_type == RelocationTypeI386.R_386_TLS_TPOFF:
+            if self.tls_info:
+                return sym_value - self.tls_info.offset + addend
+            return sym_value + addend
+        
+        elif rel_type == RelocationTypeI386.R_386_TLS_IE:
+            if self.tls_info:
+                return sym_value - self.tls_info.offset + addend
+            return 0
+        
+        elif rel_type == RelocationTypeI386.R_386_TLS_GOTIE:
+            got_addr = self._allocate_got_entry()
+            if self.tls_info:
+                self._write_memory_int(got_addr, sym_value - self.tls_info.offset, 4)
+            return (got_addr + addend - addr) & 0xffffffff
+        
+        elif rel_type == RelocationTypeI386.R_386_TLS_LE:
+            if self.tls_info:
+                return sym_value - self.tls_info.offset + addend
+            return 0
+        
+        elif rel_type == RelocationTypeI386.R_386_IRELATIVE:
+            resolver_addr = load_offset + addend
+            return self._call_ifunc_resolver(resolver_addr)
+        
+        else:
+            logger.debug(f"Unhandled i386 relocation type: {rel_type}")
+            return None
     
-    def _setup_heap(self):
-        """设置堆"""
-        # 找到最高的已加载段
+    def _get_got_entry(self, sym_name: str, sym_value: int) -> int:
+        for got_addr, value in self.got_entries.items():
+            if value == sym_value or value == 0:
+                self.got_entries[got_addr] = sym_value
+                return got_addr
+        
+        got_addr = self._allocate_got_entry()
+        self.got_entries[got_addr] = sym_value
+        return got_addr
+    
+    def _allocate_got_entry(self) -> int:
+        if self.got_plt_base:
+            for i in range(3, 100):
+                addr = self.got_plt_base + i * 8
+                if addr not in self.got_entries:
+                    self.got_entries[addr] = 0
+                    return addr
+        
+        return 0
+    
+    def _call_ifunc_resolver(self, resolver_addr: int) -> int:
+        logger.debug(f"IFUNC resolver at 0x{resolver_addr:x}")
+        return 0
+    
+    def _setup_tls(self, load_offset: int) -> None:
+        for ph in self.parser.program_headers:
+            if ph.p_type == ProgramHeaderType.PT_TLS:
+                self.tls_info = TLSInfo(
+                    template_addr=ph.p_vaddr + load_offset,
+                    template_size=ph.p_filesz,
+                    memsz=ph.p_memsz,
+                    filesz=ph.p_filesz,
+                    align=max(ph.p_align, 1),
+                    first_byte=0
+                )
+                self.tls_module_id = TLSModule().id
+                
+                self.tls_info.offset = align_up(self.tls_info.memsz, self.tls_info.align)
+                break
+    
+    def _collect_init_fini(self, load_offset: int) -> None:
+        init_addr = self.dynamic_info.get(DynamicTag.DT_INIT, 0)
+        fini_addr = self.dynamic_info.get(DynamicTag.DT_FINI, 0)
+        
+        if init_addr:
+            self.init_functions.append(init_addr)
+        if fini_addr:
+            self.fini_functions.append(fini_addr)
+        
+        init_array_addr = self.dynamic_info.get(DynamicTag.DT_INIT_ARRAY, 0)
+        init_array_size = self.dynamic_info.get(DynamicTag.DT_INIT_ARRAYSZ, 0)
+        
+        if init_array_addr and init_array_size:
+            ptr_size = 8 if not self.parser.is_32bit else 4
+            num_entries = init_array_size // ptr_size
+            
+            for i in range(num_entries):
+                try:
+                    func_ptr = self._read_memory_int(init_array_addr + i * ptr_size, ptr_size)
+                    if func_ptr != 0:
+                        self.init_functions.append(func_ptr)
+                except MemoryAccessError:
+                    break
+        
+        fini_array_addr = self.dynamic_info.get(DynamicTag.DT_FINI_ARRAY, 0)
+        fini_array_size = self.dynamic_info.get(DynamicTag.DT_FINI_ARRAYSZ, 0)
+        
+        if fini_array_addr and fini_array_size:
+            ptr_size = 8 if not self.parser.is_32bit else 4
+            num_entries = fini_array_size // ptr_size
+            
+            for i in range(num_entries):
+                try:
+                    func_ptr = self._read_memory_int(fini_array_addr + i * ptr_size, ptr_size)
+                    if func_ptr != 0:
+                        self.fini_functions.append(func_ptr)
+                except MemoryAccessError:
+                    break
+        
+        preinit_array_addr = self.dynamic_info.get(DynamicTag.DT_PREINIT_ARRAY, 0)
+        preinit_array_size = self.dynamic_info.get(DynamicTag.DT_PREINIT_ARRAYSZ, 0)
+        
+        if preinit_array_addr and preinit_array_size:
+            ptr_size = 8 if not self.parser.is_32bit else 4
+            num_entries = preinit_array_size // ptr_size
+            
+            for i in range(num_entries):
+                try:
+                    func_ptr = self._read_memory_int(preinit_array_addr + i * ptr_size, ptr_size)
+                    if func_ptr != 0:
+                        self.preinit_functions.append(func_ptr)
+                except MemoryAccessError:
+                    break
+    
+    def _setup_heap(self) -> None:
         max_addr = 0
         for seg in self.segments:
             end = seg.vaddr + seg.memsz
             if end > max_addr:
                 max_addr = end
         
-        page_size = 0x1000
-        self.heap_start = (max_addr + page_size - 1) // page_size * page_size
+        page_aligned_end = align_up(max_addr, PAGE_SIZE)
+        
+        self.heap_start = page_aligned_end
         self.brk = self.heap_start
         
+        initial_heap_size = PAGE_SIZE * 4
         heap_region = MemoryRegion(
             start=self.heap_start,
-            size=page_size,
-            data=bytearray(page_size),
-            flags=0x6,
-            name="heap"
+            size=initial_heap_size,
+            data=bytearray(initial_heap_size),
+            flags=MemoryProtection.RW,
+            name="heap",
+            growable=True
         )
         self.memory[self.heap_start] = heap_region
     
-    def _create_stack(self):
-        """创建栈"""
-        stack_bottom = self.STACK_TOP - self.STACK_SIZE
+    def brk_extend(self, addr: int) -> int:
+        if addr < self.heap_start:
+            return self.brk
         
-        region = MemoryRegion(
+        heap_region = self.memory.get(self.heap_start)
+        if not heap_region:
+            return self.brk
+        
+        current_end = self.heap_start + heap_region.size
+        
+        if addr > current_end:
+            new_size = align_up(addr - self.heap_start, PAGE_SIZE)
+            max_heap_size = 128 * 1024 * 1024
+            if new_size > max_heap_size:
+                return self.brk
+            
+            old_data = heap_region.data
+            heap_region.data = bytearray(new_size)
+            heap_region.data[:len(old_data)] = old_data
+            heap_region.size = new_size
+        
+        self.brk = addr
+        return self.brk
+    
+    def _create_stack(self) -> None:
+        if self.parser.is_32bit:
+            stack_top = self.STACK_TOP_32
+        else:
+            stack_top = self.STACK_TOP_64
+        
+        stack_bottom = stack_top - self.STACK_SIZE
+        
+        stack_region = MemoryRegion(
             start=stack_bottom,
-            size=self.STACK_SIZE + 0x10000,
-            data=bytearray(self.STACK_SIZE + 0x10000),
-            flags=0x6,
-            name="stack"
+            size=self.STACK_SIZE,
+            data=bytearray(self.STACK_SIZE),
+            flags=MemoryProtection.RW,
+            name="stack",
+            growable=True
         )
         
-        self.memory[stack_bottom] = region
-        self.stack_top = self.STACK_TOP + 0x8000
+        self.memory[stack_bottom] = stack_region
+        self.stack_top = stack_top
+        self.stack_bottom = stack_bottom
+    
+    def _build_auxv(self, load_offset: int) -> None:
+        self.auxv = []
+        
+        self.auxv.append(AuxvEntry(AuxvType.AT_PHDR, self.phdr_addr))
+        self.auxv.append(AuxvEntry(AuxvType.AT_PHENT, self.phdr_ent_size))
+        self.auxv.append(AuxvEntry(AuxvType.AT_PHNUM, self.phdr_count))
+        self.auxv.append(AuxvEntry(AuxvType.AT_PAGESZ, PAGE_SIZE))
+        self.auxv.append(AuxvEntry(AuxvType.AT_BASE, 0))
+        self.auxv.append(AuxvEntry(AuxvType.AT_FLAGS, 0))
+        self.auxv.append(AuxvEntry(AuxvType.AT_ENTRY, self.entry_point))
+        self.auxv.append(AuxvEntry(AuxvType.AT_UID, 1000))
+        self.auxv.append(AuxvEntry(AuxvType.AT_EUID, 1000))
+        self.auxv.append(AuxvEntry(AuxvType.AT_GID, 1000))
+        self.auxv.append(AuxvEntry(AuxvType.AT_EGID, 1000))
+        self.auxv.append(AuxvEntry(AuxvType.AT_CLKTCK, 100))
+        self.auxv.append(AuxvEntry(AuxvType.AT_SECURE, 0))
+        
+        random_bytes = random.randbytes(16)
+        random_addr = self._allocate_auxv_storage(random_bytes)
+        self.auxv.append(AuxvEntry(AuxvType.AT_RANDOM, random_addr))
+        
+        self.auxv.append(AuxvEntry(AuxvType.AT_NULL, 0))
+    
+    def _allocate_auxv_storage(self, data: bytes) -> int:
+        stack_region = self.memory.get(self.stack_bottom)
+        if stack_region:
+            offset = len(stack_region.data) - len(data) - 256
+            stack_region.data[offset:offset + len(data)] = data
+            return self.stack_bottom + offset
+        return 0
+    
+    def run_init_functions(self, cpu_emulator: Any) -> None:
+        for func_addr in self.preinit_functions:
+            logger.debug(f"Running preinit function at 0x{func_addr:x}")
+        
+        for func_addr in self.init_functions:
+            logger.debug(f"Running init function at 0x{func_addr:x}")
+        
+        self.initialized = True
+    
+    def run_fini_functions(self, cpu_emulator: Any) -> None:
+        for func_addr in reversed(self.fini_functions):
+            logger.debug(f"Running fini function at 0x{func_addr:x}")
+    
+    def read_memory(self, addr: int, size: int) -> bytes:
+        result = bytearray()
+        for i in range(size):
+            cur_addr = addr + i
+            region = None
+            for start, r in self.memory.items():
+                if r.start <= cur_addr < r.start + r.size:
+                    region = r
+                    break
+            if region is None:
+                raise MemoryAccessError(cur_addr, False)
+            offset = cur_addr - region.start
+            result.append(region.data[offset])
+        return bytes(result)
+    
+    def write_memory(self, addr: int, data: bytes) -> None:
+        for i, byte in enumerate(data):
+            cur_addr = addr + i
+            region = None
+            for start, r in self.memory.items():
+                if r.start <= cur_addr < r.start + r.size:
+                    region = r
+                    break
+            if region is None:
+                raise MemoryAccessError(cur_addr, True)
+            offset = cur_addr - region.start
+            region.data[offset] = byte
+    
+    def read_int(self, addr: int, size: int, signed: bool = False) -> int:
+        data = self.read_memory(addr, size)
+        fmt_map = {1: 'B', 2: 'H', 4: 'I', 8: 'Q'}
+        fmt = fmt_map.get(size, 'I')
+        if signed:
+            fmt = fmt.lower()
+        return struct.unpack('<' + fmt, data)[0]
+    
+    def write_int(self, addr: int, value: int, size: int) -> None:
+        fmt_map = {1: 'B', 2: 'H', 4: 'I', 8: 'Q'}
+        fmt = fmt_map.get(size, 'I')
+        max_val = 1 << (size * 8)
+        data = struct.pack('<' + fmt, value & (max_val - 1))
+        self.write_memory(addr, data)
+    
+    def setup_argv_envp(self, argv: List[str], envp: Dict[str, str]) -> Tuple[int, int]:
+        ptr_size = 8 if not self.parser.is_32bit else 4
+        
+        total_size = 0
+        for arg in argv:
+            total_size += len(arg.encode()) + 1
+        for key, val in envp.items():
+            total_size += len(f"{key}={val}".encode()) + 1
+        
+        total_size += (len(argv) + 1) * ptr_size
+        total_size += (len(envp) + 1) * ptr_size
+        total_size += 8 * ptr_size
+        
+        total_size = align_up(total_size, 16)
+        
+        stack_region = self.memory.get(self.stack_bottom)
+        if not stack_region:
+            return 0, 0
+        
+        sp = self.stack_top - total_size
+        sp = align_down(sp, 16)
+        
+        data_ptr = sp + (len(argv) + 1 + len(envp) + 1 + 2) * ptr_size
+        
+        argc = len(argv)
+        self._write_memory_int(sp, argc, ptr_size)
+        current = sp + ptr_size
+        
+        for i, arg in enumerate(argv):
+            arg_bytes = arg.encode() + b'\x00'
+            self._write_memory(current, arg_bytes)
+            self._write_memory_int(current, data_ptr, ptr_size)
+            self._write_memory_int(sp + (i + 1) * ptr_size, data_ptr, ptr_size)
+            data_ptr += len(arg_bytes)
+            current += ptr_size
+        
+        self._write_memory_int(current, 0, ptr_size)
+        current += ptr_size
+        
+        envp_start = current
+        for i, (key, val) in enumerate(envp.items()):
+            env_str = f"{key}={val}".encode() + b'\x00'
+            self._write_memory(current, env_str)
+            self._write_memory_int(current, data_ptr, ptr_size)
+            self._write_memory_int(envp_start + i * ptr_size, data_ptr, ptr_size)
+            data_ptr += len(env_str)
+            current += ptr_size
+        
+        self._write_memory_int(current, 0, ptr_size)
+        current += ptr_size
+        
+        for auxv in self.auxv:
+            if self.parser.is_32bit:
+                self._write_memory_int(current, auxv.key, 4)
+                self._write_memory_int(current + 4, auxv.value, 4)
+                current += 8
+            else:
+                self._write_memory_int(current, auxv.key, 8)
+                self._write_memory_int(current + 8, auxv.value, 8)
+                current += 16
+        
+        return sp, argc
+    
+    def set_external_symbol_resolver(self, resolver: Callable[[str], Optional[int]]) -> None:
+        self._external_symbol_resolver = resolver
     
     def _read_memory(self, addr: int, size: int) -> bytes:
-        """从内存读取"""
         for region in self.memory.values():
             if region.contains(addr):
                 return region.read(addr, size)
-        raise MemoryError(f"无法读取内存: addr=0x{addr:x}")
+        raise MemoryAccessError(f"Cannot read memory at 0x{addr:x}")
     
-    def _read_memory_int(self, addr: int, size: int, signed: bool = False) -> int:
-        """从内存读取整数"""
-        for region in self.memory.values():
-            if region.contains(addr):
-                return region.read_int(addr, size, signed)
-        raise MemoryError(f"无法读取内存: addr=0x{addr:x}")
-    
-    def _write_memory_int(self, addr: int, value: int, size: int):
-        """向内存写入整数"""
-        for region in self.memory.values():
-            if region.contains(addr):
-                region.write_int(addr, value, size)
-                return
-        raise MemoryError(f"无法写入内存: addr=0x{addr:x}")
-    
-    def _get_string_from_data(self, data: bytes, offset: int) -> str:
-        """从数据中获取字符串"""
-        if offset >= len(data):
-            return ""
-        end = data.find(b'\x00', offset)
-        if end == -1:
-            end = len(data)
-        return data[offset:end].decode('utf-8', errors='replace')
-    
-    def read_memory(self, addr: int, size: int) -> bytes:
-        """从内存读取（公共接口）"""
-        return self._read_memory(addr, size)
-    
-    def write_memory(self, addr: int, data: bytes):
-        """向内存写入（公共接口）"""
+    def _write_memory(self, addr: int, data: bytes) -> None:
         for region in self.memory.values():
             if region.contains(addr):
                 region.write(addr, data)
                 return
-        raise MemoryError(f"无法写入内存: addr=0x{addr:x}")
+        raise MemoryAccessError(f"Cannot write memory at 0x{addr:x}")
     
-    def read_int(self, addr: int, size: int, signed: bool = False) -> int:
-        """读取整数（公共接口）"""
-        return self._read_memory_int(addr, size, signed)
+    def _read_memory_int(self, addr: int, size: int, signed: bool = False) -> int:
+        for region in self.memory.values():
+            if region.contains(addr):
+                return region.read_int(addr, size, signed)
+        raise MemoryAccessError(f"Cannot read memory at 0x{addr:x}")
     
-    def write_int(self, addr: int, value: int, size: int):
-        """写入整数（公共接口）"""
-        self._write_memory_int(addr, value, size)
+    def _write_memory_int(self, addr: int, value: int, size: int) -> None:
+        for region in self.memory.values():
+            if region.contains(addr):
+                region.write_int(addr, value, size)
+                return
+        raise MemoryAccessError(f"Cannot write memory at 0x{addr:x}")
     
-    def get_stack_top(self) -> int:
-        """获取栈顶地址"""
-        return self.stack_top
-    
-    def get_entry_point(self) -> int:
-        """获取入口点地址"""
-        return self.entry_point
-    
-    def brk_extend(self, new_brk: int) -> int:
-        """扩展堆"""
-        new_brk = new_brk & 0xFFFFFFFFFFFFFFFF
-        if new_brk < self.heap_start:
-            return self.brk
-        
-        if new_brk <= self.brk:
-            return self.brk
-        
-        page_size = 0x1000
-        new_end = (new_brk + page_size - 1) // page_size * page_size
-        
-        heap_region_key = None
-        heap_region = None
-        for key, region in self.memory.items():
-            if region.name == "heap":
-                heap_region_key = key
-                heap_region = region
+    def _read_string(self, addr: int) -> str:
+        result = bytearray()
+        while True:
+            byte = self._read_memory_int(addr, 1)
+            if byte == 0:
                 break
-        
-        if heap_region is None:
-            region = MemoryRegion(
-                start=self.heap_start,
-                size=new_end - self.heap_start,
-                data=bytearray(new_end - self.heap_start),
-                flags=0x6,
-                name="heap"
-            )
-            self.memory[self.heap_start] = region
-        else:
-            if new_end > heap_region.end:
-                old_data = heap_region.data
-                new_size = new_end - heap_region.start
-                new_data = bytearray(new_size)
-                new_data[:len(old_data)] = old_data
-                heap_region.data = new_data
-                heap_region.size = new_size
-        
-        self.brk = new_brk
-        return self.brk
+            result.append(byte)
+            addr += 1
+        return result.decode('utf-8', errors='replace')
+    
+    def get_memory_region(self, addr: int) -> Optional[MemoryRegion]:
+        for region in self.memory.values():
+            if region.contains(addr):
+                return region
+        return None
+    
+    def get_symbol_at(self, addr: int) -> Optional[str]:
+        return self.symbols_by_addr.get(addr)
+    
+    def get_all_symbols(self) -> Dict[str, int]:
+        return dict(self.symbols)
+    
+    def get_memory_map(self) -> List[Tuple[int, int, str, int]]:
+        result = []
+        for start, region in self.memory.items():
+            result.append((start, region.size, region.name, region.flags))
+        return sorted(result, key=lambda x: x[0])
     
     def resolve_symbol(self, name: str) -> Optional[int]:
-        """解析符号地址"""
-        return self.symbols.get(name)
+        if name in self.symbols:
+            return self.symbols[name]
+        return self._resolve_external_symbol(name)
     
-    def get_memory_map(self) -> List[Tuple[int, int, str]]:
-        """获取内存映射"""
-        result = []
-        for start, region in sorted(self.memory.items()):
-            result.append((start, region.end, region.name))
-        return result
+    def get_tls_block(self) -> Optional[Tuple[int, int]]:
+        if self.tls_info:
+            return (self.tls_info.template_addr, self.tls_info.memsz)
+        return None
+    
+    def is_position_independent(self) -> bool:
+        return self.parser.header.e_type == ELFType.ET_DYN
+    
+    def get_load_bias(self) -> int:
+        if self.parser.header.e_type == ELFType.ET_EXEC:
+            return 0
+        return self.base_addr
+    
+    def __repr__(self) -> str:
+        return (f"ELFLoader(entry=0x{self.entry_point:x}, "
+                f"base=0x{self.base_addr:x}, "
+                f"segments={len(self.segments)}, "
+                f"symbols={len(self.symbols)}, "
+                f"loaded={self.loaded})")

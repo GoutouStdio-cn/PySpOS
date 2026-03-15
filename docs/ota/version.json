@@ -1,13 +1,26 @@
 {
-  "version": "3.0.1-pre",
-  "release_date": "2026-02-28",
+  "version": "3.1.0",
+  "release_date": "2026-03-15",
   "develop_stage": "beta",
-  "release_notes": "PySpOS 更新包",
-  "download_url": "PySpOS-3.0.1-pre-20260228.zip",
-  "sha256": "7549405d5c585a41836b5b77d2ad265a3555f9689ad8e987c099ba214778a76b",
+  "release_notes": "添加ELF运行功能（Windows也可以跑）\n优化网页。\n使用部分C代码写ELF程序。",
+  "download_url": "PySpOS-3.1.0-20260315.zip",
+  "sha256": "3a702b282681b6c760ea5db349f3a8fbd6e533cebfb94879815e535e149e0d05",
   "min_version": "3.0.0",
-  "file_size": 38542,
+  "file_size": 41602,
   "changelog": [
+    {
+      "version": "3.1.0",
+      "date": "2026-03-15",
+      "type": "release",
+      "download_url": "PySpOS-3.1.0-20260315.zip",
+      "sha256": "3a702b282681b6c760ea5db349f3a8fbd6e533cebfb94879815e535e149e0d05",
+      "file_size": 41602,
+      "changes": [
+        "添加ELF运行功能（Windows也可以跑）",
+        "优化网页。",
+        "使用部分C代码写ELF程序。"
+      ]
+    },
     {
       "version": "3.0.1-pre(重构建)",
       "date": "2026-02-05",
