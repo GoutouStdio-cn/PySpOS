@@ -60,7 +60,7 @@ REQUIRED_CORE_FILES = [
 ]
 
 # 必要的文件夹
-REQUIRED_DIRS = ["apps", "etc", "spfapps"]
+REQUIRED_DIRS = ["apps", "spfapps"]
 
 # 版本比较函数
 def compare_versions(v1: str, v2: str) -> int:
@@ -192,18 +192,22 @@ def _fetch_with_requests(url: str) -> dict:
 # 使用urllib获取云端文件
 def _fetch_with_urllib(url: str) -> dict:
     import urllib.request
+    import gzip
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json, text/plain, */*',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
         'Referer': 'https://pyspos.us.ci/',
         'Cache-Control': 'max-age=0'
     }
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=15) as response:
-        data = json.loads(response.read().decode('utf-8'))
+        raw_data = response.read()
+        # 检查是否是 gzip 压缩
+        if raw_data[:2] == b'\x1f\x8b':
+            raw_data = gzip.decompress(raw_data)
+        data = json.loads(raw_data.decode('utf-8'))
         return data
 
 # 使用curl命令获取云端文件
@@ -216,7 +220,6 @@ def _fetch_with_curl(url: str) -> dict:
             '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             '-H', 'Accept: application/json, text/plain, */*',
             '-H', 'Accept-Language: zh-CN,zh;q=0.9,en;q=0.8',
-            '-H', 'Accept-Encoding: gzip, deflate, br',
             '-H', 'Connection: keep-alive',
             '-H', 'Referer: https://pyspos.us.ci/',
             '-H', 'Cache-Control: max-age=0',
@@ -224,27 +227,32 @@ def _fetch_with_curl(url: str) -> dict:
             url
         ],
         capture_output=True,
-        text=True,
         timeout=15
     )
     if result.returncode == 0:
-        return json.loads(result.stdout)
+        return json.loads(result.stdout.decode('utf-8'))
     else:
-        raise Exception(f"curl命令失败: {result.stderr}")
+        raise Exception(f"curl命令失败: {result.stderr.decode('utf-8', errors='ignore')}")
 
 # 下载更新包
-def download_update_package(remote_url: str, local_path: str) -> bool:
+def download_update_package(remote_url: str, local_path: str, expected_size: int = 0) -> bool:
     try:
+        if os.path.exists(local_path):
+            local_size = os.path.getsize(local_path)
+            if expected_size > 0 and local_size == expected_size:
+                logk.printl("ota", f"本地已存在相同大小的更新包，跳过下载", boot_time)
+                return True
+            elif local_size > 0:
+                logk.printl("ota", f"本地已存在更新包 ({local_size} bytes)", boot_time)
+        
         logk.printl("ota", f"下载更新包: {remote_url}", boot_time)
         
         start_time = time.time()
         
-        # 使用带完整请求头的方式下载
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': '*/*',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
             'Referer': 'https://pyspos.us.ci/',
             'Cache-Control': 'max-age=0'
@@ -264,7 +272,6 @@ def download_update_package(remote_url: str, local_path: str) -> bool:
                     f.write(chunk)
                     downloaded += len(chunk)
                     
-                    # 显示进度
                     if total_size > 0:
                         percent = min(100, (downloaded / total_size) * 100)
                         if int(percent) % 5 == 0:
@@ -388,6 +395,7 @@ def check_cloud_update() -> dict:
             'download_url': download_url,
             'is_rebuild': bool(is_rebuild),
             'sha256': remote_info.get('sha256'),
+            'file_size': remote_info.get('file_size', 0),
             'release_notes': remote_info.get('release_notes', '')
         }
     else:
@@ -415,14 +423,14 @@ def download_and_install_update() -> bool:
     if is_rebuild:
         # 如果是重构版，使用version.json中的文件名
         package_name = update_info['download_url'].split('/')[-1]
-        logk.printl("ota", f"检测到重构版，使用文件名: {package_name}", boot_time)
+        logk.printl("ota", f"检测到重构版/新版格式，使用文件名: {package_name}", boot_time)
     else:
         # 否则使用默认的update.zip
         package_name = OTA_PACKAGE_NAME
     
     package_path = os.path.join(OTA_PACKAGE_DIR, package_name)
     
-    if not download_update_package(update_info['download_url'], package_path):
+    if not download_update_package(update_info['download_url'], package_path, update_info.get('file_size', 0)):
         return False
     
     if not verify_update_package(package_path, update_info.get('sha256')):
@@ -454,20 +462,20 @@ def restart_system() -> None:
     import sys
     
     try:
-        # 获取当前 Python 解释器路径
         python_exe = sys.executable
         
-        # 获取根目录中的 main.py 路径
-        main_py = os.path.join(root_dir, "main.py")
+        launcher_py = os.path.join(root_dir, "launcher.py")
         
-        # 使用新进程启动 main.py
-        subprocess.Popen([python_exe, main_py], cwd=root_dir)
+        if os.path.exists(launcher_py):
+            subprocess.Popen([python_exe, launcher_py], cwd=root_dir)
+        else:
+            slot = get_current_slot()
+            slot_main = os.path.join(root_dir, slot, "main.py")
+            subprocess.Popen([python_exe, slot_main], cwd=os.path.join(root_dir, slot))
         
-        # 延迟退出，确保新进程启动
         import time
         time.sleep(0.5)
         
-        # 退出当前进程
         sys.exit(0)
     except Exception as e:
         logk.printl("ota", f"重启失败: {str(e)}", boot_time)
@@ -694,12 +702,9 @@ def get_current_version() -> str:
 
 # 获取更新包版本
 def get_update_version() -> str:
-    # 首先尝试默认的更新包
     package_path = os.path.join(OTA_PACKAGE_DIR, OTA_PACKAGE_NAME)
     
-    # 如果默认更新包不存在，查找其他可能的更新包（如重构版）
     if not os.path.exists(package_path):
-        # 查找OTA_PACKAGE_DIR中的所有zip文件
         try:
             for filename in os.listdir(OTA_PACKAGE_DIR):
                 if filename.endswith('.zip'):
@@ -710,9 +715,12 @@ def get_update_version() -> str:
     
     try:
         with zipfile.ZipFile(package_path, 'r') as zip_ref:
-            if VERSION_FILE in zip_ref.namelist():
-                with zip_ref.open(VERSION_FILE) as f:
-                    return f.read().decode().strip()
+            possible_paths = [VERSION_FILE, f'src/{VERSION_FILE}']
+            for path in possible_paths:
+                if path in zip_ref.namelist():
+                    with zip_ref.open(path) as f:
+                        return f.read().decode().strip()
+            logk.printl("ota", f"更新包中未找到版本文件", boot_time)
     except Exception as e:
         logk.printl("ota", f"读取更新包版本失败: {str(e)}", boot_time)
     return "未知版本"
@@ -796,7 +804,22 @@ def install_update() -> bool:
     
     try:
         with zipfile.ZipFile(package_path, 'r') as zip_ref:
-            zip_ref.extractall(target_slot) # 解压更新包
+            namelist = zip_ref.namelist()
+            has_src_prefix = any(n.startswith('src/') for n in namelist)
+            
+            for member in namelist:
+                if member.endswith('/'):
+                    continue
+                
+                if has_src_prefix and member.startswith('src/'):
+                    target_path = os.path.join(target_slot, member[4:])
+                else:
+                    target_path = os.path.join(target_slot, member)
+                
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                with zip_ref.open(member) as src, open(target_path, 'wb') as dst:
+                    dst.write(src.read())
+        
         logk.printl("ota", "解压完成", boot_time)
     except Exception as e:
         logk.printl("ota", f"解压失败: {str(e)}", boot_time)
