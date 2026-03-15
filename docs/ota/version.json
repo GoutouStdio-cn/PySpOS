@@ -4,17 +4,17 @@
   "develop_stage": "beta",
   "release_notes": "PySpOS 更新包",
   "download_url": "PySpOS-3.1.0-20260315.zip",
-  "sha256": "e6d60d38badba1217640cdbf4b4ec780e50472b936497eb8e5c06c0cdb857329",
+  "sha256": "71071326215fa17a3d913857216cd5134d0478bb7a6d788d6f8e447e83bef64e",
   "min_version": "3.0.0",
-  "file_size": 166770,
+  "file_size": 167000,
   "changelog": [
     {
       "version": "3.1.0",
       "date": "2026-03-15",
       "type": "release",
       "download_url": "PySpOS-3.1.0-20260315.zip",
-      "sha256": "e6d60d38badba1217640cdbf4b4ec780e50472b936497eb8e5c06c0cdb857329",
-      "file_size": 166770,
+      "sha256": "71071326215fa17a3d913857216cd5134d0478bb7a6d788d6f8e447e83bef64e",
+      "file_size": 167000,
       "changes": [
         "添加ELF运行功能（Windows也可以跑）",
         "优化网页。",
