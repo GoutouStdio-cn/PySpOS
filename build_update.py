@@ -4,37 +4,47 @@ import hashlib
 import json
 from datetime import datetime
 
+# 排除的目录和文件
+EXCLUDE_DIRS = {'docs', 'slot_a', 'slot_b', '__pycache__', 'etc', '.oldcode', '.git'}
+EXCLUDE_FILES = {'.hotreset'}
+
 # 创建PySpOS更新包
 def create_zip_file(version):
-    # 生成新的文件名格式：PySpOS-版本-创建日期.zip
     create_date = datetime.now().strftime("%Y%m%d")
     zip_filename = f"PySpOS-{version}-{create_date}.zip"
     
-    # 目标zip文件路径，放到docs/ota目录
     zip_path = os.path.join('docs', 'ota', zip_filename)
-    
-    # 确保ota目录存在
     os.makedirs(os.path.dirname(zip_path), exist_ok=True)
     
-    # 要包含的文件和目录（从src目录，不包括docs）
-    src_dir = 'src'
-    include_items = ['apps', 'spfapps', 'btcfg.py', 'current_slot', 'fs.py', 'kernel.py', 'logk.py', 'main.py', 'ota.py', 'parse_spf.py', 'printk.py', 'pyspos.py', 'recovery.py', 'sync.py', 'version.txt', 'launcher.py']
-    
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for item in include_items:
-            item_path = os.path.join(src_dir, item)
-            if os.path.isdir(item_path):
-                # 处理目录
-                for root, _, files in os.walk(item_path):
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        # 使用相对于src的路径作为zip中的路径
-                        arcname = os.path.relpath(file_path, src_dir)
-                        zipf.write(file_path, arcname)
-            elif os.path.isfile(item_path):
-                # 处理文件
-                arcname = os.path.relpath(item_path, src_dir)
-                zipf.write(item_path, arcname)
+        # 复制 src 目录
+        for root, dirs, files in os.walk('src'):
+            # 排除特定目录
+            dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS and not d.startswith('__pycache__')]
+            
+            for file in files:
+                if file in EXCLUDE_FILES or file.endswith('.pyc'):
+                    continue
+                file_path = os.path.join(root, file)
+                arcname = file_path
+                zipf.write(file_path, arcname)
+        
+        # 复制 splibc 目录
+        if os.path.exists('splibc'):
+            for root, dirs, files in os.walk('splibc'):
+                dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS and not d.startswith('__pycache__')]
+                for file in files:
+                    if file in EXCLUDE_FILES or file.endswith('.pyc'):
+                        continue
+                    file_path = os.path.join(root, file)
+                    arcname = file_path
+                    zipf.write(file_path, arcname)
+        
+        # 复制根目录文件
+        root_files = ['launcher.py', 'start.bat', 'start.sh', 'current_slot', 'build_update.py']
+        for file in root_files:
+            if os.path.exists(file):
+                zipf.write(file, file)
     
     return zip_path, zip_filename
 
