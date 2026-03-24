@@ -35,7 +35,7 @@ def run():
 import sys
 sys._launcher_detected = True
 for name in list(sys.modules.keys()):
-    if not name.startswith('_') and name not in ('sys', 'os', 'builtins', '__builtin__', 'importlib', 'types'):
+    if not name.startswith('_') and not name.startswith('os') and name not in ('sys', 'builtins', '__builtin__', 'importlib', 'types'):
         del sys.modules[name]
 import kernel
 kernel.loop()

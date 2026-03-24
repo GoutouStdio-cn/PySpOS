@@ -398,27 +398,37 @@ def cmd_run(args: str):
             printk.error(f"run: 未知选项: {token}\n")
             return
         else:
-            # 第一个非选项参数作为 ELF 路径
             if elf_path is None:
                 elf_path = token
                 i += 1
             else:
-                # 额外的参数，忽略或报错
                 i += 1
-    
-    # 显示版本信息
+
+    if elf_path == 'moo':
+        print("                 (__)")
+        print("                 (oo)")
+        print("           /------\\/ ")
+        print("          / |    ||  ")
+        print("         *  /\\---/\\  ")
+        print("            ~~   ~~  ")
+        print('..."Have you mooed today?"...')
+        print()
+        print("       想要更多超级牛力吗？试试 run -v！")
+        return
+
     if show_version:
-        print(f"ELF/SPE on PySpOS (in {pyspos.OS_NAME} {pyspos.OS_VERSION} {pyspos.OS_DEVELOP_STAGE}) {ELF_LOADER_VERSION}")
-        print("Copyright (C) 2022-2026 GoutouStdio.")
-        print("This is free software; see the source for copying conditions.  There is NO")
-        print("warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.")
+        print(f"ELF/SPE 运行于 PySpOS (在 {pyspos.OS_NAME} {pyspos.OS_VERSION} {pyspos.OS_DEVELOP_STAGE} 中) {ELF_LOADER_VERSION}")
+        print("版权所有 (C) 2022-2026 GoutouStdio。")
+        print("本程序是自由软件；请参阅源代码以了解复制条件。本软件不提供任何保证，")
+        print("即使是适销性或特定用途适用性的默示保证也不存在。")
         print()
-        print(f"Home page: <https://pyspos.us.ci/pyspos.html>")
-        print(f"Source code: <https://github.com/GoutouStdio-cn/PySpOS>")
-        print(f"Bug reports: <https://github.com/GoutouStdio-cn/PySpOS/issues>")
-        print(f"             or <goutoustdio@outlook.com>")
+        print(f"主页: <https://pyspos.us.ci/pyspos.html>")
+        print(f"源代码: <https://github.com/GoutouStdio-cn/PySpOS>")
+        print(f"问题反馈: <https://github.com/GoutouStdio-cn/PySpOS/issues>")
+        print(f"         或 <goutoustudio@outlook.com>")
         print()
-        # 如果只指定了 -v 而没有指定文件路径，直接返回
+        print("     本 ELF/SPE on Windows 具有超级牛力。")
+        print()
         if elf_path is None:
             return
         print("执行ELF程序...")

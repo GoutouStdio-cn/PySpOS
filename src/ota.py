@@ -170,8 +170,9 @@ def fetch_remote_version() -> dict:
 # 使用requests库获取云端文件
 def _fetch_with_requests(url: str) -> dict:
     try:
-        import requests
-        session = requests.Session()
+        import requests as _requests
+        logk.printl("ota", f"requests 版本: {_requests.__version__}", boot_time)
+        session = _requests.Session()
         session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'application/json, text/plain, */*',
@@ -182,10 +183,13 @@ def _fetch_with_requests(url: str) -> dict:
             'Cache-Control': 'max-age=0'
         })
         response = session.get(url, timeout=15, allow_redirects=True)
-        response.raise_for_status()  # 检查HTTP错误
+        response.raise_for_status()
         return response.json()
-    except ImportError:
-        raise Exception("requests库未安装")
+    except ImportError as e:
+        import sys
+        logk.printl("ota", f"Python 路径: {sys.executable}", boot_time)
+        logk.printl("ota", f"sys.path: {sys.path[:3]}...", boot_time)
+        raise Exception(f"requests库未安装: {e}")
     except Exception as e:
         raise
 

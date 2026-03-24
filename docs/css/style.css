@@ -823,188 +823,172 @@ section {
     padding: 80px 0 100px;
 }
 
-.requirements-container {
-    max-width: 1200px;
+.requirements-table-wrapper {
+    max-width: 1000px;
     margin: 0 auto;
-}
-
-.requirements-block {
-    margin-bottom: 60px;
-    background: rgba(30, 41, 59, 0.4);
+    overflow-x: auto;
     border-radius: 16px;
-    padding: 40px;
-    border: 1px solid rgba(99, 102, 241, 0.1);
-}
-
-.requirements-block:last-child {
-    margin-bottom: 0;
-}
-
-.requirements-block.minimum {
-    border-color: rgba(245, 158, 11, 0.2);
-    background: rgba(245, 158, 11, 0.05);
-}
-
-.requirements-block.recommended {
-    border-color: rgba(16, 185, 129, 0.2);
-    background: rgba(16, 185, 129, 0.05);
-}
-
-.requirements-block-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 32px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid rgba(99, 102, 241, 0.1);
-}
-
-.requirements-block.minimum .requirements-block-title {
-    border-bottom-color: rgba(245, 158, 11, 0.3);
-}
-
-.requirements-block.recommended .requirements-block-title {
-    border-bottom-color: rgba(16, 185, 129, 0.3);
-}
-
-.requirements-block-title i {
-    font-size: 24px;
-    color: var(--primary-color);
-}
-
-.requirements-block.minimum .requirements-block-title i {
-    color: #f59e0b;
-}
-
-.requirements-block.recommended .requirements-block-title i {
-    color: #10b981;
-}
-
-.requirements-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 20px;
-}
-
-.requirement-card {
-    padding: 32px 24px;
-    background: rgba(30, 41, 59, 0.7);
-    border-radius: 12px;
+    background: rgba(30, 41, 59, 0.5);
     border: 1px solid rgba(99, 102, 241, 0.15);
-    text-align: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.requirements-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    display: table;
+}
+
+.requirements-table thead {
+    background: rgba(15, 23, 42, 0.6);
+    display: table-header-group;
+}
+
+.requirements-table tbody {
+    display: table-row-group;
+}
+
+.requirements-table tr {
+    display: table-row;
+}
+
+.requirements-table th,
+.requirements-table td {
+    display: table-cell;
+}
+
+.requirements-table th {
+    padding: 20px 24px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid rgba(99, 102, 241, 0.2);
+}
+
+.req-col-component {
+    width: 25%;
+    color: var(--text-muted);
+}
+
+.req-col-minimum,
+.req-col-recommended {
+    width: 37.5%;
+}
+
+.req-header-badge {
+    display: inline-flex;
     align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 13px;
 }
 
-.requirement-card:hover {
-    transform: translateY(-6px);
-    border-color: var(--primary-color);
-    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.2);
-    background: rgba(30, 41, 59, 0.9);
+.req-header-badge.minimum {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
-.requirements-block.minimum .requirement-card {
-    background: rgba(30, 41, 59, 0.7);
-    border-color: rgba(245, 158, 11, 0.15);
+.req-header-badge.recommended {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-.requirements-block.minimum .requirement-card:hover {
-    border-color: #f59e0b;
-    box-shadow: 0 12px 32px rgba(245, 158, 11, 0.2);
-    background: rgba(30, 41, 59, 0.9);
+.req-header-badge i {
+    font-size: 14px;
 }
 
-.requirements-block.recommended .requirement-card {
-    background: rgba(30, 41, 59, 0.7);
-    border-color: rgba(16, 185, 129, 0.15);
+.requirements-table tbody tr {
+    transition: background 0.2s ease;
 }
 
-.requirements-block.recommended .requirement-card:hover {
-    border-color: #10b981;
-    box-shadow: 0 12px 32px rgba(16, 185, 129, 0.2);
-    background: rgba(30, 41, 59, 0.9);
+.requirements-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.05);
 }
 
-.requirement-icon {
-    width: 72px;
-    height: 72px;
+.requirements-table tbody tr:not(:last-child) td {
+    border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+}
+
+.requirements-table td {
+    padding: 20px 24px;
+    vertical-align: middle;
+}
+
+.req-component {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.req-component-icon {
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(99, 102, 241, 0.1);
-    border-radius: 16px;
-    margin-bottom: 20px;
-    transition: all 0.3s ease;
+    background: rgba(99, 102, 241, 0.12);
+    border-radius: 10px;
+    flex-shrink: 0;
 }
 
-.requirement-card:hover .requirement-icon {
-    transform: scale(1.1);
-}
-
-.requirement-icon i {
-    font-size: 32px;
+.req-component-icon i {
+    font-size: 18px;
     color: var(--primary-color);
 }
 
-.requirements-block.minimum .requirement-icon {
-    background: rgba(245, 158, 11, 0.1);
-}
-
-.requirements-block.minimum .requirement-icon i {
-    color: #f59e0b;
-}
-
-.requirements-block.recommended .requirement-icon {
-    background: rgba(16, 185, 129, 0.1);
-}
-
-.requirements-block.recommended .requirement-icon i {
-    color: #10b981;
-}
-
-.requirement-card h3 {
-    font-size: 17px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.requirement-main {
-    color: #cbd5e1;
-    font-size: 15px;
+.req-component-name {
     font-weight: 600;
-    margin-bottom: 8px;
-    line-height: 1.5;
+    font-size: 15px;
+    color: #fff;
 }
 
-.requirement-detail {
-    color: #94a3b8;
+.req-value {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.req-value-text {
+    font-weight: 600;
+    font-size: 15px;
+    color: #e2e8f0;
+}
+
+.req-value-sub {
     font-size: 13px;
-    line-height: 1.6;
-    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.req-value.minimum .req-value-text {
+    color: #fcd34d;
+}
+
+.req-value.recommended .req-value-text {
+    color: #6ee7b7;
 }
 
 .requirements-note {
-    max-width: 1200px;
-    margin: 50px auto 0;
-    padding: 24px 28px;
+    max-width: 1000px;
+    margin: 40px auto 0;
+    padding: 20px 24px;
     background: rgba(99, 102, 241, 0.08);
     border-radius: 12px;
     border: 1px solid rgba(99, 102, 241, 0.15);
     display: flex;
     align-items: flex-start;
-    gap: 16px;
+    gap: 14px;
 }
 
 .requirements-note i {
-    font-size: 22px;
+    font-size: 20px;
     color: var(--primary-color);
     flex-shrink: 0;
     margin-top: 2px;
@@ -1013,7 +997,7 @@ section {
 .requirements-note p {
     color: #cbd5e1;
     font-size: 14px;
-    line-height: 1.8;
+    line-height: 1.7;
     margin: 0;
 }
 
@@ -2255,37 +2239,44 @@ footer {
     }
     
     /* Requirements 响应式优化 */
-    .requirements-block {
-        padding: 24px 20px;
+    .requirements-table-wrapper {
+        border-radius: 12px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
-    .requirements-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+    .requirements-table {
+        min-width: 600px;
     }
     
-    .requirement-card {
-        padding: 24px 16px;
+    .requirements-table th,
+    .requirements-table td {
+        padding: 16px;
     }
     
-    .requirement-icon {
-        width: 56px;
-        height: 56px;
+    .req-component-icon {
+        width: 36px;
+        height: 36px;
     }
     
-    .requirement-icon i {
-        font-size: 24px;
+    .req-component-icon i {
+        font-size: 16px;
     }
     
-    .requirement-card h3 {
-        font-size: 15px;
-    }
-    
-    .requirement-main {
+    .req-component-name {
         font-size: 14px;
     }
     
-    .requirement-detail {
+    .req-value-text {
+        font-size: 14px;
+    }
+    
+    .req-value-sub {
+        font-size: 12px;
+    }
+    
+    .req-header-badge {
+        padding: 6px 12px;
         font-size: 12px;
     }
     
@@ -2370,43 +2361,50 @@ footer {
     }
     
     /* Requirements 手机端优化 */
-    .requirements-block {
-        padding: 20px 16px;
+    .requirements-table-wrapper {
+        border-radius: 10px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
-    .requirements-grid {
-        grid-template-columns: 1fr;
-        gap: 14px;
+    .requirements-table {
+        min-width: 500px;
     }
     
-    .requirement-card {
-        padding: 20px 16px;
+    .requirements-table th,
+    .requirements-table td {
+        padding: 12px 10px;
     }
     
-    .requirement-icon {
-        width: 48px;
-        height: 48px;
+    .req-component {
+        gap: 10px;
     }
     
-    .requirement-icon i {
-        font-size: 20px;
+    .req-component-icon {
+        width: 32px;
+        height: 32px;
     }
     
-    .requirement-card h3 {
+    .req-component-icon i {
         font-size: 14px;
     }
     
-    .requirement-main {
+    .req-component-name {
         font-size: 13px;
     }
     
-    .requirement-detail {
+    .req-value-text {
+        font-size: 13px;
+    }
+    
+    .req-value-sub {
         font-size: 11px;
     }
     
-    .requirements-block-title {
-        font-size: 18px;
-        margin-bottom: 24px;
+    .req-header-badge {
+        padding: 5px 10px;
+        font-size: 11px;
+        gap: 6px;
     }
     
     .requirements-note {
