@@ -1,6 +1,7 @@
 # PySpOS 3.1.0 模拟操作系统
 
 <span style="color:cyan">***这是一个使用Python制作的模拟操作系统，方便让新手理解操作系统基本操作。***</span>
+**⚠️ 注意：此存储库已归档不再维护，请前往[这儿](https://github.com/ViudiraTech/PySpOS)查看最新代码。**
 
 ## 当前版本
 
